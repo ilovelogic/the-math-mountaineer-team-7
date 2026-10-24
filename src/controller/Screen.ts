@@ -11,6 +11,6 @@ export type Outcome =
 export interface Screen {
   /** Draws the screen and listens for input. Calls `onDone` exactly once. */
   start(onDone: (outcome: Outcome) => void): void;
-  /** Removes everything the screen drew and stops listening for input. */
+  /** Removes everything the screen drew and stops listening; never calls `onDone` after this. */
   stop(): void;
 }
