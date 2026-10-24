@@ -1,3 +1,5 @@
+// Entry point and the only place that wires the game together: it builds the stage,
+// views and controllers and starts GameFlow. Until those land, it draws a placeholder.
 import Konva from 'konva';
 
 const WIDTH = 960;
