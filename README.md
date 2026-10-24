@@ -19,7 +19,7 @@ Name the branch after the issue: `<issue number>-<short-name>`.
 - **One task per PR.** If you find a second related task/patch that needs implementing, open an issue for it instead of fixing it in the same PR.
 - **Tests go in the same PR** as the code they test.
 - **Aim for under about 300 changed lines.** If a task is bigger, split it into PRs that each still build and pass the tests, such as "model + tests" and then "view".
-- **Only touch your own folder.** Changing a file someone else owns (for example `GameFlow` or `view/components`) means asking their permission and coordinating with them first.
+- **Only touch your own files.** Changing a file someone else owns (for example `GameFlow` or `view/components`) means asking their permission and coordinating with them first.
 
 ### 3. Title
 
@@ -51,7 +51,7 @@ Write it as a command that finishes the sentence "This PR will…". Keep it unde
 
 ### 4. Description 𓂃✍︎
 
-Fill in the template (it appears when you open a PR):
+Fill in this template. Once #101 adds it to the repo, it appears automatically when you open a PR; until then, copy it from here:
 
 ```markdown
 Closes #‹insert your task’s issue number here›
