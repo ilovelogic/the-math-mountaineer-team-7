@@ -77,9 +77,9 @@ The first line links the PR to your task (for example, `Closes #17`). When the P
 - Read your own diff on GitHub first, then delete stray `console.log`s and commented-out code.
 - CI must be green.
 - Open the PR as a **Draft** while you're still working, and mark it **Ready for review** when it's done.
-- Request your reviewer:
+- Request a review from your usual reviewer below. Any teammate can approve, though, so if they haven't gotten to it, whoever has time first can review it.
 
-| Author | Reviewer |
+| Author | Usual reviewer |
 |---|---|
 | Andrew, Toby, Angel | Anne |
 | Anne, Jonathan | Andrew |
