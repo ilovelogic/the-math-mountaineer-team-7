@@ -1,5 +1,6 @@
 import Konva from 'konva';
 
+/** The size views draw in. On screen, the stage scales to fit the window. */
 export const STAGE_WIDTH = 960;
 export const STAGE_HEIGHT = 540;
 
@@ -23,5 +24,16 @@ export function createStage(containerId: string): { stage: Konva.Stage; layers: 
     ui: new Konva.Layer(),
   };
   stage.add(layers.background, layers.sprites, layers.ui);
+  fitToWindow(stage);
+  window.addEventListener('resize', () => fitToWindow(stage));
   return { stage, layers };
+}
+
+// Sizes the canvas to the largest 16:9 box that fits the window, and scales
+// everything on it by the same factor. Views keep using 960×540 coordinates,
+// and Konva maps clicks back through the scale.
+function fitToWindow(stage: Konva.Stage): void {
+  const scale = Math.min(window.innerWidth / STAGE_WIDTH, window.innerHeight / STAGE_HEIGHT);
+  stage.size({ width: STAGE_WIDTH * scale, height: STAGE_HEIGHT * scale });
+  stage.scale({ x: scale, y: scale });
 }
