@@ -1,21 +1,21 @@
 import Konva from 'konva';
 
-/** The size views draw in. On screen, the stage scales to fit the window. */
+/** Views always draw in this 960×540 space, and the stage scales it up or down to fit the window. */
 export const STAGE_WIDTH = 960;
 export const STAGE_HEIGHT = 540;
 
-/** The layers every view draws into, back to front. Views get these passed in. */
+/** The layers every view draws into, listed back to front, which views receive instead of making their own. */
 export interface Layers {
   /**
-   * Scenery that rarely changes. Each layer is its own canvas, so drawing on the
-   * other layers never redraws this one. It ignores clicks.
+   * For scenery that rarely changes. Each layer is its own canvas, so drawing on
+   * the other layers never redraws this one, and it ignores clicks.
    */
   background: Konva.Layer;
   sprites: Konva.Layer;
   ui: Konva.Layer;
 }
 
-/** Creates the game's only stage. Called once, from `main.ts`. */
+/** Creates the game's only stage, which `main.ts` calls once at startup. */
 export function createStage(containerId: string): { stage: Konva.Stage; layers: Layers } {
   const stage = new Konva.Stage({ container: containerId, width: STAGE_WIDTH, height: STAGE_HEIGHT });
   const layers: Layers = {
