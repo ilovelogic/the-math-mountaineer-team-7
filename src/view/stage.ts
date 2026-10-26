@@ -28,7 +28,7 @@ export function createStage(containerId: string): { stage: Konva.Stage; layers: 
   window.addEventListener('resize', () => fitToWindow(stage));
   return { stage, layers };
 }
-// Appendix of relevant documentation
+// Optional documentation
 // - new Konva.Layer({ listening: false }): Konva skips this layer when working out what was clicked or hovered; its shapes still draw.
 // - stage.add(a, b, c): adds several layers in one call; later arguments draw on top of earlier ones.
 // - window.addEventListener('resize', handler): runs the handler every time the browser window changes size, for as long as the page is open.
@@ -44,6 +44,6 @@ function fitToWindow(stage: Konva.Stage): void {
   stage.size({ width: STAGE_WIDTH * scale, height: STAGE_HEIGHT * scale });
   stage.scale({ x: scale, y: scale });
 }
-// Appendix of relevant documentation
+// Optional documentation
 // - window.innerWidth / window.innerHeight: the visible page area in CSS pixels, without the browser's toolbars.
 // - stage.size({ width, height }): sets both dimensions at once and resizes every layer's canvas to match; Konva redraws at the new size, so nothing blurs.

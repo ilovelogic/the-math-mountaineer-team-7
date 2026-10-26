@@ -13,5 +13,5 @@ layers.ui.add(
     fontSize: 40,
   }),
 );
-// Appendix of relevant documentation
+// Optional documentation
 // - Konva.Text align: 'center' / verticalAlign: 'middle': centres the text within the box set by `width` and `height`.
