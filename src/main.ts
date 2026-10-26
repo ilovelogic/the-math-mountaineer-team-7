@@ -2,6 +2,8 @@ import Konva from 'konva';
 import { createStage, STAGE_HEIGHT, STAGE_WIDTH } from './view/stage';
 
 const { layers } = createStage('game');
+// Appendix of relevant documentation
+// - const { layers } = ...: destructuring; takes the `layers` property out of the returned object into its own variable.
 
 layers.ui.add(
   new Konva.Text({
@@ -13,3 +15,5 @@ layers.ui.add(
     fontSize: 40,
   }),
 );
+// Appendix of relevant documentation
+// - Konva.Text align: 'center' / verticalAlign: 'middle': centres the text within the box set by `width` and `height`.
