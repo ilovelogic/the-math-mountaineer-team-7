@@ -1,9 +1,7 @@
 import Konva from 'konva';
 import { createStage, STAGE_HEIGHT, STAGE_WIDTH } from './view/stage';
 
-const { layers } = createStage('game');
-// Appendix of relevant documentation
-// - const { layers } = ...: destructuring; takes the `layers` property out of the returned object into its own variable.
+const layers = createStage('game').layers;
 
 layers.ui.add(
   new Konva.Text({
