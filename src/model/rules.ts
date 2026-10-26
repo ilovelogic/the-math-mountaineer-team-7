@@ -1,11 +1,11 @@
 import { Settings } from '../content/settings';
 
-/** What happens when the player lays a log across the chasm. */
+/** How a picked log compares to the gap it has to cross. */
 export type PickResult = 'fits' | 'tooShort' | 'tooLong';
 
 /**
- * Points a chasm pick earns. Only the log that fits earns any: a short log
- * falls in, and a long one smashes the item it was worth.
+ * Only the log that fits earns points, since a short log falls into the chasm
+ * and a long one smashes the item waiting on the other side.
  */
 export function pointsFor(result: PickResult, settings: Settings): number {
   if (result === 'fits') return settings.pointsPerChasm;
