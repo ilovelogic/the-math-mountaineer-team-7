@@ -29,9 +29,11 @@ export function createStage(containerId: string): { stage: Konva.Stage; layers: 
   return { stage, layers };
 }
 
-// Sizes the canvas to the largest 16:9 box that fits the window, and scales
-// everything on it by the same factor. Views keep using 960×540 coordinates,
-// and Konva maps clicks back through the scale.
+/**
+ * Sizes the canvas to the largest 16:9 box that fits the window, and scales
+ * everything on it by the same factor. Views keep using 960×540 coordinates,
+ * and Konva maps clicks back through the scale.
+ */
 function fitToWindow(stage: Konva.Stage): void {
   const scale = Math.min(window.innerWidth / STAGE_WIDTH, window.innerHeight / STAGE_HEIGHT);
   stage.size({ width: STAGE_WIDTH * scale, height: STAGE_HEIGHT * scale });
