@@ -1,4 +1,4 @@
-/** Every color in the game. Names match the Palette styles in the Figma mockups. */
+/** Every color in the game, named after the matching Palette style in the Figma mockups. */
 export const colors = {
   skyDay: '#C9E6E9',
   skyNight: '#162C43',
@@ -35,18 +35,18 @@ export const colors = {
 const FONT = 'Inter, sans-serif';
 
 /**
- * Text styles from the mockups, ready to spread into a `Konva.Text`:
- * `new Konva.Text({ ...text.body, text: 'Hi' })`. They're all ink colored, so
- * set `fill` after the spread for white text on a button or the top bar.
+ * Text styles from the mockups, meant to be spread into a `Konva.Text` like
+ * `new Konva.Text({ ...text.body, text: 'Hi' })`. They all default to ink, so
+ * set `fill` after the spread when you need white text on a button or the top bar.
  */
 export const text = {
   title: { fontFamily: FONT, fontSize: 40, fontStyle: '600', lineHeight: 1.25, fill: colors.ink },
   subtitle: { fontFamily: FONT, fontSize: 18, fontStyle: 'normal', lineHeight: 1.33, fill: colors.ink },
   dialog: { fontFamily: FONT, fontSize: 20, fontStyle: 'normal', lineHeight: 1.4, fill: colors.ink },
   body: { fontFamily: FONT, fontSize: 16, fontStyle: 'normal', lineHeight: 1.5, fill: colors.ink },
-  /** Buttons, the top bar and the side-length tags on logs. */
+  /** Used for buttons, the top bar and the side-length tags on logs. */
   label: { fontFamily: FONT, fontSize: 16, fontStyle: '600', lineHeight: 1.25, fill: colors.ink },
-  /** Side lengths on the chasm drawing, such as `12 m` and `c = ?`. */
+  /** Used for the side lengths on the chasm drawing, such as `12 m` and `c = ?`. */
   math: { fontFamily: FONT, fontSize: 18, fontStyle: '600', lineHeight: 1.33, fill: colors.ink },
   formula: { fontFamily: FONT, fontSize: 28, fontStyle: '600', lineHeight: 1.29, fill: colors.ink },
 } as const;
