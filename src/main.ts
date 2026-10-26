@@ -1,19 +1,15 @@
 import Konva from 'konva';
+import { createStage, STAGE_HEIGHT, STAGE_WIDTH } from './view/stage';
 
-const WIDTH = 960;
-const HEIGHT = 540;
+const { layers } = createStage('game');
 
-const stage = new Konva.Stage({ container: 'game', width: WIDTH, height: HEIGHT });
-const layer = new Konva.Layer();
-
-layer.add(
+layers.ui.add(
   new Konva.Text({
     text: 'The Math Mountaineer',
-    width: WIDTH,
-    height: HEIGHT,
+    width: STAGE_WIDTH,
+    height: STAGE_HEIGHT,
     align: 'center',
     verticalAlign: 'middle',
     fontSize: 40,
   }),
 );
-stage.add(layer);
