@@ -9,6 +9,11 @@ const script: DialogueLine[] = [
   { speaker: 'Narrator', text: 'Pick the log that is exactly the right length.' },
 ];
 
+/** Clicks once per transition, so every click is accepted. */
+function clickThrough(dialogue: Dialogue, clicks: number): void {
+  for (let i = 0; i < clicks; i++) dialogue.advance(i * TRANSITION_MS);
+}
+
 describe('Dialogue', () => {
   it('starts on the first box and is not finished', () => {
     const dialogue = new Dialogue(script, TRANSITION_MS);
@@ -20,38 +25,52 @@ describe('Dialogue', () => {
   it('moves exactly one box per click', () => {
     const dialogue = new Dialogue(script, TRANSITION_MS);
 
-    expect(dialogue.advance()).toBe(true);
+    expect(dialogue.advance(0)).toBe(true);
     expect(dialogue.current()).toEqual(script[1]);
-    expect(dialogue.advance()).toBe(true);
+    expect(dialogue.advance(TRANSITION_MS)).toBe(true);
     expect(dialogue.current()).toEqual(script[2]);
     expect(dialogue.isFinished()).toBe(false);
   });
 
   it('finishes after a click on the last box and stays on it', () => {
     const dialogue = new Dialogue(script, TRANSITION_MS);
-    dialogue.advance();
-    dialogue.advance();
+    clickThrough(dialogue, 2);
 
-    expect(dialogue.advance()).toBe(true);
+    expect(dialogue.advance(2 * TRANSITION_MS)).toBe(true);
     expect(dialogue.isFinished()).toBe(true);
     expect(dialogue.current()).toEqual(script[2]);
   });
 
   it('ignores clicks after it finishes', () => {
     const dialogue = new Dialogue(script, TRANSITION_MS);
-    dialogue.advance();
-    dialogue.advance();
-    dialogue.advance();
+    clickThrough(dialogue, 3);
 
-    expect(dialogue.advance()).toBe(false);
+    expect(dialogue.advance(10 * TRANSITION_MS)).toBe(false);
     expect(dialogue.current()).toEqual(script[2]);
   });
 
   it('finishes a one-box script after one click', () => {
     const dialogue = new Dialogue([script[0]], TRANSITION_MS);
 
-    expect(dialogue.advance()).toBe(true);
+    expect(dialogue.advance(0)).toBe(true);
     expect(dialogue.isFinished()).toBe(true);
+  });
+
+  it('ignores a fast second click during the transition', () => {
+    const dialogue = new Dialogue(script, TRANSITION_MS);
+    dialogue.advance(1000);
+
+    expect(dialogue.advance(1000 + 50)).toBe(false);
+    expect(dialogue.current()).toEqual(script[1]);
+  });
+
+  it('accepts a click exactly when the transition ends', () => {
+    const dialogue = new Dialogue(script, TRANSITION_MS);
+    dialogue.advance(1000);
+
+    expect(dialogue.advance(1000 + TRANSITION_MS - 1)).toBe(false);
+    expect(dialogue.advance(1000 + TRANSITION_MS)).toBe(true);
+    expect(dialogue.current()).toEqual(script[2]);
   });
 
   it('throws on an empty script', () => {
