@@ -24,6 +24,20 @@ export class Dialogue {
     return this.lines[this.index];
   }
 
+  /**
+   * Handles one click: moves to the next box, or finishes on the last one.
+   * Returns whether the click was accepted, so the controller knows to redraw or report.
+   */
+  advance(): boolean {
+    if (this.finished) return false;
+    if (this.index === this.lines.length - 1) {
+      this.finished = true;
+    } else {
+      this.index++;
+    }
+    return true;
+  }
+
   /** True once the player has clicked past the last box. */
   isFinished(): boolean {
     return this.finished;
