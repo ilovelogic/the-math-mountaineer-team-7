@@ -73,6 +73,35 @@ describe('Dialogue', () => {
     expect(dialogue.current()).toEqual(script[2]);
   });
 
+  it('never skips a box over 200 rapid clicks', () => {
+    const longScript: DialogueLine[] = Array.from({ length: 20 }, (_, i) => ({
+      speaker: 'Narrator',
+      text: `Box ${i + 1}`,
+    }));
+    const dialogue = new Dialogue(longScript, TRANSITION_MS);
+    const shown = [dialogue.current().text];
+
+    for (let i = 0; i < 200; i++) {
+      if (dialogue.advance(i * 10)) shown.push(dialogue.current().text);
+    }
+
+    // Clicks every 10 ms over 1990 ms: one is accepted at 0, 300, ..., 1800 ms.
+    expect(shown).toEqual(longScript.slice(0, 8).map((line) => line.text));
+  });
+
+  it('passes the last box’s choices through unchanged', () => {
+    const levelDone: DialogueLine[] = [
+      {
+        speaker: 'Narrator',
+        text: 'You earned 80% of the points on Level 1.',
+        choices: ['Begin level 1 again', 'Continue on to next level'],
+      },
+    ];
+    const dialogue = new Dialogue(levelDone, TRANSITION_MS);
+
+    expect(dialogue.current().choices).toEqual(['Begin level 1 again', 'Continue on to next level']);
+  });
+
   it('throws on an empty script', () => {
     expect(() => new Dialogue([], TRANSITION_MS)).toThrow();
   });
