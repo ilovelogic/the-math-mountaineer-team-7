@@ -10,6 +10,18 @@ import type { Layers } from '../../src/view/stage';
  * the "Pick a log" mockup.
  */
 
+/**
+ * Konva makes a canvas for every layer and for measuring text, and Node has no
+ * canvas. Until the shared test canvas from #11 lands, this hands Konva a stand-in
+ * whose drawing calls do nothing and which measures text at 9 px per character.
+ * Nothing here checks pixels, so that's enough. Delete it once #11 is merged.
+ */
+const context = new Proxy({} as Record<PropertyKey, unknown>, {
+  get: (stored, key) =>
+    key in stored ? stored[key] : key === 'measureText' ? (value: string) => ({ width: value.length * 9 }) : () => {},
+});
+Konva.Util.createCanvasElement = () => ({ style: {}, getContext: () => context }) as unknown as HTMLCanvasElement;
+
 const chasm = { a: 5, b: 12, logs: [5, 13, 17] };
 
 let layers: Layers;
@@ -64,6 +76,8 @@ describe('view/ChasmScreen', () => {
 });
 
 // Optional documentation
+// - new Proxy(target, { get }): an object whose property reads all go through `get`. Properties Konva sets are stored and read back; anything else reads as a do-nothing function, except measureText.
+// - Konva.Util.createCanvasElement: the one function Konva calls to get a canvas; replacing it is how Konva's own Node backends plug in a canvas too.
 // - beforeEach(fn): runs fn before every it(...), so each test starts with a freshly drawn screen.
 // - layer.find<Konva.Text>('Text'): every node of that type anywhere inside the layer; '.log-button' instead finds nodes by their `name`.
 // - node.fire('click'): runs the node's click handlers as if it had been clicked, without a real mouse.
