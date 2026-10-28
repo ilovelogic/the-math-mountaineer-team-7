@@ -1,21 +1,19 @@
 // Entry point and the only place that wires the game together: it builds the stage,
 // views and controllers and starts GameFlow. Until those land, it draws a placeholder.
 import Konva from 'konva';
+import { createStage, STAGE_HEIGHT, STAGE_WIDTH } from './view/stage';
 
-const WIDTH = 960;
-const HEIGHT = 540;
+const layers = createStage('game').layers;
 
-const stage = new Konva.Stage({ container: 'game', width: WIDTH, height: HEIGHT });
-const layer = new Konva.Layer();
-
-layer.add(
+layers.ui.add(
   new Konva.Text({
     text: 'The Math Mountaineer',
-    width: WIDTH,
-    height: HEIGHT,
+    width: STAGE_WIDTH,
+    height: STAGE_HEIGHT,
     align: 'center',
     verticalAlign: 'middle',
     fontSize: 40,
   }),
 );
-stage.add(layer);
+// Optional documentation
+// - Konva.Text align: 'center' / verticalAlign: 'middle': centres the text within the box set by `width` and `height`.
