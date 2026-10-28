@@ -18,9 +18,17 @@ export function makeRng(seed: number): () => number {
         return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
     };
 }
-/*
 
-*/
+function makeWrongLog(c: number, rng: () => number): number {
+    let value: number;
+
+    do {
+        value = 1 + Math.floor(rng() * (2*c));
+    } while (value === c); // make sure our new value is not the same as c
+
+    return value;
+}
+
 export const triplesByLevel = [
     // Lvl 1
     [
@@ -49,10 +57,13 @@ export const triplesByLevel = [
 ];
 
 export function makeChasm(seed: number, level: number, index: number): Chasm {
-    if (!Number.isInteger(level) || level < 1) {
+    if (!Number.isInteger(level) || level < 1 || level > 3) {
         throw new Error("Level must be a positive integer");
     }
 
+    if (!Number.isInteger(seed) || seed < 0) {
+        throw new Error("Seed must be 0 or a positive integer")
+    }
     const rng = makeRng(seed);
 
     const levelTriples = triplesByLevel[level - 1];
@@ -69,7 +80,13 @@ export function makeChasm(seed: number, level: number, index: number): Chasm {
 
     const [a,b,c] = shuffledTriples[index];
 
-    const logs = [c - 1, c, c + 1];
+    const wrong1 = makeWrongLog(c, rng);
+    let wrong2  = makeWrongLog(c, rng);
+
+    while (wrong2 === wrong1) {
+        wrong2 = makeWrongLog(c, rng);
+    }
+    const logs = [wrong1, c, wrong2];
 
     // Shuffle correct answer and too short/long answers randomly each time
     for (let i = logs.length - 1; i > 0; i--) {

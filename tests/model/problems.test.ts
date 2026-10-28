@@ -15,6 +15,7 @@ describe('makeChasm', () => {
 
             expect(fittingLogs.length).toBe(1);
             expect(chasm.logs[chasm.correct]).toBe(chasm.c);
+            console.log(chasm.logs, 'C:', chasm.c, 'Level:', level)
         }
     }
 
@@ -40,6 +41,22 @@ describe('makeChasm', () => {
             seen.add(tripleKey);
         }
     });
+
+    it('should generate three different log lengths within a triple', () => {
+        const chasm = makeChasm(42, 1, 0);
+        const uniqueLogs = new Set(chasm.logs);
+
+        expect(uniqueLogs.size).toBe(3);
+    });
+
+    it('should generate only positive log lengths within a triple', () => {
+        const chasm = makeChasm(42, 1, 0);
+
+        for(const log of chasm.logs) {
+            expect(log).toBeGreaterThan(0);
+        }
+    });
+
 });
 
 describe('checkPick', () =>  {
