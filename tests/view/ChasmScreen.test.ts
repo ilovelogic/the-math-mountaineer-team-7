@@ -1,7 +1,10 @@
 import Konva from 'konva';
 import { beforeEach, describe, expect, it } from 'vitest';
+import { makeChasm } from '../../src/model/problems';
 import { ChasmScreen } from '../../src/view/ChasmScreen';
-import type { Layers } from '../../src/view/stage';
+import { STAGE_WIDTH, type Layers } from '../../src/view/stage';
+
+const QUESTION = 'Which log fits across this gap?';
 
 /**
  * Checks what the chasm screen shows and what it reports. The screen is drawn
@@ -9,18 +12,6 @@ import type { Layers } from '../../src/view/stage';
  * `fire('click')`, so no browser is needed. The chasm is the 5-12-13 one from
  * the "Pick a log" mockup.
  */
-
-/**
- * Konva makes a canvas for every layer and for measuring text, and Node has no
- * canvas. Until the shared test canvas from #11 lands, this hands Konva a stand-in
- * whose drawing calls do nothing and which measures text at 9 px per character.
- * Nothing here checks pixels, so that's enough. Delete it once #11 is merged.
- */
-const context = new Proxy({} as Record<PropertyKey, unknown>, {
-  get: (stored, key) =>
-    key in stored ? stored[key] : key === 'measureText' ? (value: string) => ({ width: value.length * 9 }) : () => {},
-});
-Konva.Util.createCanvasElement = () => ({ style: {}, getContext: () => context }) as unknown as HTMLCanvasElement;
 
 const chasm = { a: 5, b: 12, logs: [5, 13, 17] };
 
@@ -63,7 +54,25 @@ describe('view/ChasmScreen', () => {
     screen.lock();
     buttons()[0].fire('click');
     expect(picks).toEqual([1]);
-    expect(buttons().map((button) => button.opacity())).toEqual([1, 0.5, 1]);
+    expect(buttons().map((button) => button.opacity())).toEqual([1, 0.4, 1]);
+  });
+
+  it('lines up the log buttons on the stage, clear of each other and of the question, for every chasm', () => {
+    for (let seed = 0; seed < 10; seed++) {
+      for (const level of [1, 2, 3]) {
+        for (let index = 0; index < 5; index++) {
+          screen.destroy();
+          screen = new ChasmScreen(layers, makeChasm(seed, level, index));
+          screen.draw();
+          const row = buttons().map((button) => button.getClientRect({ relativeTo: layers.ui }));
+          const question = layers.ui.findOne((node: Konva.Node) => node instanceof Konva.Text && node.text() === QUESTION);
+          const box = question!.getParent()!.getClientRect({ relativeTo: layers.ui });
+          row.slice(1).forEach((rect, i) => expect(rect.x).toBeGreaterThan(row[i].x + row[i].width));
+          expect(row[row.length - 1].x + row[row.length - 1].width).toBeLessThanOrEqual(STAGE_WIDTH);
+          for (const rect of row) expect(rect.y + rect.height).toBeLessThan(box.y);
+        }
+      }
+    }
   });
 
   it('removes everything it drew, and reports nothing afterwards', () => {
@@ -76,9 +85,10 @@ describe('view/ChasmScreen', () => {
 });
 
 // Optional documentation
-// - new Proxy(target, { get }): an object whose property reads all go through `get`. Properties Konva sets are stored and read back; anything else reads as a do-nothing function, except measureText.
-// - Konva.Util.createCanvasElement: the one function Konva calls to get a canvas; replacing it is how Konva's own Node backends plug in a canvas too.
 // - beforeEach(fn): runs fn before every it(...), so each test starts with a freshly drawn screen.
 // - layer.find<Konva.Text>('Text'): every node of that type anywhere inside the layer; '.log-button' instead finds nodes by their `name`.
 // - node.fire('click'): runs the node's click handlers as if it had been clicked, without a real mouse.
 // - expect.arrayContaining([...]): passes when the array holds all of these values, in any order and among others.
+// - getClientRect({ relativeTo: layers.ui }): where a node is drawn and how big it is, measured from what's inside it, in the layer's coordinates.
+// - findOne((node) => ...): the first node inside the layer for which the function returns true.
+// - question!: the `!` tells TypeScript the value isn't null here; the test would throw if it were.

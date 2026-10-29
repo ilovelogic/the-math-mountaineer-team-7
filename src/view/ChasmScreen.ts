@@ -1,4 +1,6 @@
 import Konva from 'konva';
+import { createDialogBox } from './components/dialogBox';
+import { createLogButton, type LogButton } from './components/logButton';
 import type { Layers } from './stage';
 import { colors, text } from './theme';
 
@@ -31,7 +33,7 @@ export class ChasmScreen {
   private readonly scenery = new Konva.Group();
   private readonly props = new Konva.Group();
   private readonly controls = new Konva.Group();
-  private readonly buttons: Konva.Group[] = [];
+  private readonly buttons: LogButton[] = [];
   private onClick: ((index: number) => void) | null = null;
   private picked: number | null = null;
   private locked = false;
@@ -62,7 +64,7 @@ export class ChasmScreen {
   lock(): void {
     this.locked = true;
     this.controls.listening(false);
-    if (this.picked !== null) this.buttons[this.picked].opacity(0.5);
+    if (this.picked !== null) this.buttons[this.picked].setState('used');
   }
 
   /** Removes everything this screen drew. The screen can't be drawn again afterwards. */
@@ -120,30 +122,30 @@ export class ChasmScreen {
   /** One button per log */
   private drawLogButtons(): void {
     this.chasm.logs.forEach((length, i) => {
-      const button = logButton(length);
-      button.on('click tap', () => {
+      const log = createLogButton(`${length} m`, () => {
         if (this.locked) return;
         this.picked = i;
         this.onClick?.(i);
       });
-      this.buttons.push(button);
+      log.group.name('log-button');
+      this.buttons.push(log);
     });
     const heading = new Konva.Text({ ...text.label, fill: colors.white, text: 'Logs:' });
-    const row = [heading, ...this.buttons];
-    let x = 936 - row.reduce((sum, node) => sum + node.width(), 0) - 10 * (row.length - 1);
-    for (const node of row) {
-      node.position({ x, y: 438 - node.height() / 2 });
-      x += node.width() + 10;
-    }
+    const row = [heading, ...this.buttons.map((log) => log.group)];
     this.controls.add(...row);
+
+    const size = (node: Konva.Node) => node.getClientRect({ relativeTo: this.controls });
+    let x = 936 - row.reduce((sum, node) => sum + size(node).width, 0) - 10 * (row.length - 1);
+    for (const node of row) {
+      node.position({ x, y: 438 - size(node).height / 2 });
+      x += size(node).width + 10;
+    }
   }
 
-  /** A plain stand-in for the shared Dialog box (#11). */
   private drawPrompt(): void {
-    this.controls.add(
-      new Konva.Rect({ x: 1, y: 471, width: 958, height: 68, fill: colors.white, stroke: colors.ink, strokeWidth: 2 }),
-      new Konva.Text({ ...text.dialog, text: QUESTION, x: 30, y: 471, height: 68, verticalAlign: 'middle' }),
-    );
+    const prompt = createDialogBox(() => {});
+    prompt.show(QUESTION, []);
+    this.controls.add(prompt.group);
   }
 }
 
@@ -180,21 +182,6 @@ function pileLog(length: number, width: number, x: number, y: number): Konva.Gro
     new Konva.Circle({ x: 12, y: 40, radius: 12, fill: colors.woodDark }),
     new Konva.Circle({ x: width - 12, y: 40, radius: 12, fill: colors.woodDark }),
     centeredAt(tag(`${length} m`, text.label), width / 2, 12),
-  );
-  return group;
-}
-
-/** A plain stand-in for the shared Log button (#11): a log icon and the length on a white button. */
-function logButton(length: number): Konva.Group {
-  const label = new Konva.Text({ ...text.label, text: `${length} m`, x: 52, y: 10 });
-  const width = label.x() + label.width() + 14;
-  const group = new Konva.Group({ name: 'log-button', width, height: 40 });
-  group.add(
-    new Konva.Rect({ width, height: 40, fill: colors.white, stroke: colors.ink, strokeWidth: 1.5, cornerRadius: 6 }),
-    new Konva.Rect({ x: 18, y: 15, width: 22, height: 10, fill: colors.wood }),
-    new Konva.Ellipse({ x: 19, y: 20, radiusX: 5, radiusY: 6, fill: colors.woodDark }),
-    new Konva.Ellipse({ x: 39, y: 20, radiusX: 5, radiusY: 6, fill: colors.woodDark }),
-    label,
   );
   return group;
 }
