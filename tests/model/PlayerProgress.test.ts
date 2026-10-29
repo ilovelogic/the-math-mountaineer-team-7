@@ -47,14 +47,20 @@ describe('PlayerProgress', () => {
     expect(progress.points).toBe(15);
   });
 
-  it('spends points but never goes below 0', () => {
+  it('accepts 0 points, since a wrong pick earns nothing', () => {
     const progress = new PlayerProgress(42, level1);
     progress.addPoints(10);
-    progress.addPoints(-4);
+    progress.addPoints(0);
 
-    expect(progress.points).toBe(6);
-    expect(() => progress.addPoints(-7)).toThrow();
-    expect(progress.points).toBe(6);
+    expect(progress.points).toBe(10);
+  });
+
+  it('throws on negative points and leaves the total alone', () => {
+    const progress = new PlayerProgress(42, level1);
+    progress.addPoints(10);
+
+    expect(() => progress.addPoints(-1)).toThrow();
+    expect(progress.points).toBe(10);
   });
 
   it('records each pick with the step it was made on', () => {

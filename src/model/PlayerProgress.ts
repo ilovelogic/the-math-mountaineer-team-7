@@ -1,12 +1,9 @@
-import type { checkPick } from './problems';
-
-/** How a picked log compared to the gap: what `checkPick` returns. */
-export type Fit = ReturnType<typeof checkPick>;
+import type { PickResult } from './rules';
 
 /** One pick the player made: which step it was on and how the log fit. */
-export interface PickResult {
+export interface Answer {
   step: number;
-  result: Fit;
+  result: PickResult;
 }
 
 /** Where the player is in the game's script: the level and topic of the current step. */
@@ -26,7 +23,7 @@ export interface SavedProgress {
   step: number;
   points: number;
   topic: string;
-  answers: PickResult[];
+  answers: Answer[];
 }
 
 /**
@@ -38,7 +35,7 @@ export type ProgressView = Pick<
   'seed' | 'level' | 'step' | 'points' | 'topic' | 'answers'
 >;
 
-const FITS: readonly Fit[] = ['fits', 'tooShort', 'tooLong'];
+const FITS: readonly PickResult[] = ['fits', 'tooShort', 'tooLong'];
 
 /**
  * Where the player is and how they're doing. GameFlow owns it and is the only
@@ -53,7 +50,7 @@ export class PlayerProgress {
   private _step: number;
   private _points: number;
   private _topic: string;
-  private _answers: PickResult[];
+  private _answers: Answer[];
 
   /** A new game: level 1, step 0, no points and no answers yet. */
   constructor(seed: number, place: Place = { level: 1, topic: '' }) {
@@ -85,18 +82,13 @@ export class PlayerProgress {
   }
 
   /** Every pick so far, oldest first. Read-only so callers can't change the record. */
-  get answers(): readonly PickResult[] {
+  get answers(): readonly Answer[] {
     return this._answers;
   }
 
-  /** Adds `n` points. A negative `n` spends points, but never below 0. */
+  /** Adds `n` points. `n` can be 0, since a wrong pick earns nothing, but never negative. */
   addPoints(n: number): void {
-    if (!Number.isInteger(n)) {
-      throw new Error('Points must be a whole number');
-    }
-    if (this._points + n < 0) {
-      throw new Error('Not enough points');
-    }
+    checkWholeNumber('points', n, 0);
     this._points += n;
   }
 
@@ -115,7 +107,7 @@ export class PlayerProgress {
   }
 
   /** Records a pick on the current step. */
-  recordAnswer(result: Fit): void {
+  recordAnswer(result: PickResult): void {
     if (!FITS.includes(result)) {
       throw new Error(`Unknown pick result: ${String(result)}`);
     }
