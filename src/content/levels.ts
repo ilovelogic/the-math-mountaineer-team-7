@@ -10,9 +10,37 @@ export type Step =
   | { kind: 'levelDone'; level: number }
   | { kind: 'medal' };
 
-/** The game's script: every step in the order it happens. */
+const TOPIC_2D = 'Pythagorean theorem in 2D';
+
+/**
+ * The game's script: every step in the order it happens. Each chasm is its own step,
+ * so a closed tab loses at most one chasm. Its problem comes from the game's seed plus
+ * `level` and `index`, so every game gets different problems.
+ */
 export const steps: Step[] = [
   { kind: 'title' },
   { kind: 'dialogue', script: 'intro' },
   { kind: 'dialogue', script: 'tutorial' },
+
+  { kind: 'chasm', level: 1, topic: TOPIC_2D, index: 0 },
+  { kind: 'chasm', level: 1, topic: TOPIC_2D, index: 1 },
+  { kind: 'chasm', level: 1, topic: TOPIC_2D, index: 2 },
+  { kind: 'chasm', level: 1, topic: TOPIC_2D, index: 3 },
+  { kind: 'chasm', level: 1, topic: TOPIC_2D, index: 4 },
+  { kind: 'levelDone', level: 1 },
+
+  { kind: 'chasm', level: 2, topic: TOPIC_2D, index: 0 },
+  { kind: 'chasm', level: 2, topic: TOPIC_2D, index: 1 },
+  { kind: 'chasm', level: 2, topic: TOPIC_2D, index: 2 },
+  { kind: 'chasm', level: 2, topic: TOPIC_2D, index: 3 },
+  { kind: 'chasm', level: 2, topic: TOPIC_2D, index: 4 },
+  { kind: 'levelDone', level: 2 },
+
+  // The last level goes straight to the medal, with no Level done message.
+  { kind: 'chasm', level: 3, topic: TOPIC_2D, index: 0 },
+  { kind: 'chasm', level: 3, topic: TOPIC_2D, index: 1 },
+  { kind: 'chasm', level: 3, topic: TOPIC_2D, index: 2 },
+  { kind: 'chasm', level: 3, topic: TOPIC_2D, index: 3 },
+  { kind: 'chasm', level: 3, topic: TOPIC_2D, index: 4 },
+  { kind: 'medal' },
 ];
