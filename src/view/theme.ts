@@ -42,6 +42,8 @@ const FONT = 'Inter, sans-serif';
 export const text = {
   title: { fontFamily: FONT, fontSize: 40, fontStyle: '600', lineHeight: 1.25, fill: colors.ink },
   subtitle: { fontFamily: FONT, fontSize: 18, fontStyle: 'normal', lineHeight: 1.33, fill: colors.ink },
+  /** Used for short headings, such as the game title in the top bar. */
+  heading: { fontFamily: FONT, fontSize: 18, fontStyle: '600', lineHeight: 1.33, fill: colors.ink },
   dialog: { fontFamily: FONT, fontSize: 20, fontStyle: 'normal', lineHeight: 1.4, fill: colors.ink },
   body: { fontFamily: FONT, fontSize: 16, fontStyle: 'normal', lineHeight: 1.5, fill: colors.ink },
   /** Used for buttons, the top bar and the side-length tags on logs. */
