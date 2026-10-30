@@ -1,5 +1,5 @@
 import Konva from 'konva';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { makeChasm } from '../../src/model/problems';
 import { ChasmScreen } from '../../src/view/ChasmScreen';
 import { STAGE_WIDTH, type Layers } from '../../src/view/stage';
@@ -27,6 +27,8 @@ beforeEach(() => {
   screen.draw();
 });
 
+afterEach(() => vi.restoreAllMocks());
+
 const texts = (layer: Konva.Layer) => layer.find<Konva.Text>('Text').map((node) => node.text());
 const buttons = () => layers.ui.find<Konva.Group>('.log-button');
 
@@ -47,6 +49,32 @@ describe('view/ChasmScreen', () => {
     buttons()[2].fire('click');
     buttons()[0].fire('click');
     expect(picks).toEqual([2, 0]);
+  });
+
+  it('logs clicks to the console until a handler is registered', () => {
+    const log = vi.spyOn(console, 'log').mockImplementation(() => {});
+    screen.destroy();
+    screen = new ChasmScreen(layers, chasm);
+    screen.draw();
+    buttons()[1].fire('click');
+    expect(log).toHaveBeenCalledWith('Log 1 (13 m) was clicked');
+  });
+
+  it('shows a pointer over a log button until the mouse leaves or the screen locks', () => {
+    // A stage with no page to draw on, given a stand-in <div> to set the cursor on.
+    const stage = new Konva.Stage({ width: STAGE_WIDTH, height: 540 } as Konva.StageConfig);
+    stage.add(layers.background, layers.sprites, layers.ui);
+    const container = { style: { cursor: '' } };
+    vi.spyOn(stage, 'container').mockReturnValue(container as never);
+    buttons()[0].fire('mouseenter');
+    expect(container.style.cursor).toBe('pointer');
+    buttons()[0].fire('mouseleave');
+    expect(container.style.cursor).toBe('default');
+    buttons()[0].fire('mouseenter');
+    screen.lock();
+    expect(container.style.cursor).toBe('default');
+    buttons()[0].fire('mouseenter');
+    expect(container.style.cursor).toBe('default');
   });
 
   it('stops reporting clicks once locked, and greys out the picked log', () => {
@@ -91,4 +119,7 @@ describe('view/ChasmScreen', () => {
 // - expect.arrayContaining([...]): passes when the array holds all of these values, in any order and among others.
 // - getClientRect({ relativeTo: layers.ui }): where a node is drawn and how big it is, measured from what's inside it, in the layer's coordinates.
 // - findOne((node) => ...): the first node inside the layer for which the function returns true.
+// - vi.spyOn(obj, 'name').mockReturnValue(x): replaces obj.name with a stand-in that returns x; vi.restoreAllMocks() puts the real one back.
+// - mockImplementation(() => {}): the stand-in does nothing, so console.log prints nothing during the test but still records its calls.
+// - container as never: tells TypeScript to accept the stand-in where a <div> is expected; it only has the `style.cursor` the screen sets.
 // - question!: the `!` tells TypeScript the value isn't null here; the test would throw if it were.
