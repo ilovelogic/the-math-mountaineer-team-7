@@ -9,6 +9,40 @@ const limits: MedalLimits = {
 };
 
 describe('medalFor', () => {
+  
+it('throws an error for negative points', () => {
+  expect(() => medalFor(-10, limits)).toThrow(
+    'Points must be a non-negative number'
+  );
+});
+
+it('throws an error for incorrect medal limits', () => {
+  const invalidLimits = {
+    diamond: 100,
+    gold: 90,
+    silver: 70,
+    bronze: 95,
+  };
+
+  expect(() => medalFor(80, invalidLimits)).toThrow(
+    'Invalid medal limits'
+  );
+});
+
+it('throws an error for negative medal limits', () => {
+  const invalidLimits = {
+    diamond: 100,
+    gold: 90,
+    silver: 70,
+    bronze: -5,
+  };
+
+  expect(() => medalFor(80, invalidLimits)).toThrow(
+    'Invalid medal limits'
+  );
+});
+
+
   it('returns diamond at the correct threshold', () => {
     expect(medalFor(89, limits)).toBe('gold');
     expect(medalFor(90, limits)).toBe('diamond');
