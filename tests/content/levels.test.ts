@@ -10,7 +10,7 @@ describe('content/levels', () => {
     expect(steps.slice(0, 3)).toEqual([
       { kind: 'title' },
       { kind: 'dialogue', script: 'intro' },
-      { kind: 'dialogue', script: 'tutorial' },
+      { kind: 'dialogue', script: 'howCrossingWorks' },
     ]);
   });
 

@@ -20,7 +20,7 @@ const TOPIC_2D = 'Pythagorean theorem in 2D';
 export const steps: Step[] = [
   { kind: 'title' },
   { kind: 'dialogue', script: 'intro' },
-  { kind: 'dialogue', script: 'tutorial' },
+  { kind: 'dialogue', script: 'howCrossingWorks' },
 
   { kind: 'chasm', level: 1, topic: TOPIC_2D, index: 0 },
   { kind: 'chasm', level: 1, topic: TOPIC_2D, index: 1 },
