@@ -1,6 +1,23 @@
 # The Math Mountaineer
 A fun and educational game presented by JAPASTA
 
+## Getting Started
+
+### Requirements
+...
+
+### Installation
+...
+
+### Run the Game
+...
+
+### Test the Project
+...
+
+### Project Structure
+...
+
 ## Pull Request Details 𖠿
 
 One task → one branch → one pull request (PR). Every PR is squashed into a single commit on `main`, so **the PR title is the commit message**. Commits on your own branch can say anything.
