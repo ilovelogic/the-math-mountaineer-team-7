@@ -4,6 +4,7 @@ import { STAGE_WIDTH, STAGE_HEIGHT } from './stage';
 import { colors, text } from './theme';
 import { createButton } from './components/button';
 
+/** Every medal the end screen can show, best first, with 'none' for a score below bronze. */
 export type MedalType =
   | 'diamond'
   | 'gold'
@@ -11,12 +12,20 @@ export type MedalType =
   | 'bronze'
   | 'none';
 
+/** What the medal screen shows. Whoever draws it works out the medal and points, and the screen only displays them. */
 export interface MedalScreenData {
   medal: MedalType;
   points: number;
+  /** Called when the player presses See Results. */
   onSeeResults: () => void;
 }
 
+/**
+ * Draws the end screen like the "End: medal" mockup: the medal the player
+ * earned, a sentence about it, the medal requirements and a See Results button.
+ * It returns a function that removes everything it drew, to call when the
+ * screen ends.
+ */
 export function drawMedalScreen(
   layers: Layers,
   data: MedalScreenData,
@@ -172,7 +181,8 @@ export function drawMedalScreen(
 
   panel.add(resultsButton);
 
-  // Medal requirements from Figma
+  // These percentages come from the Medal requirements card in the mockups, so the
+  // medal limits in settings need to stay in step with them.
   panel.add(
     new Konva.Text({
       ...text.label,
@@ -201,3 +211,14 @@ export function drawMedalScreen(
     panel.destroy();
   };
 }
+// Optional documentation
+// - import type { Layers }: imports only the type, for checking; nothing from stage.ts runs because of this line.
+// - mountainPeaks.forEach((top, i) => ...): runs the function once per peak, also passing its position, starting at 0.
+// - new Konva.Circle({ x, y, radius }): a circle whose centre is at (x, y), unlike a Rect, whose x and y are its top-left corner.
+// - dash: [12, 10]: draws the outline as 12 px dashes with 10 px gaps.
+// - new Konva.RegularPolygon({ sides: 4, radius }): a shape with equal sides around its centre; with 4 sides it stands on a point, like a diamond, and radius is the distance to each point.
+// - { ...text.body, x: 30, ... }: the spread `...` copies every property of text.body into the new object; the properties after it add to or override them.
+// - width: 900 / align: 'left' on a Konva.Text: the text wraps onto new lines to fit the width, and each line starts at the left edge.
+// - `You finished with ${data.points} points`: a template literal, which puts the value inside `${}` into the string.
+// - resultsButton.position({ x, y }): moves the button so its top-left corner is at (x, y).
+// - destroy(): removes the group and everything in it for good; it can't be drawn again afterwards.
