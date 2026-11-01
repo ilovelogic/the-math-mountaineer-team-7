@@ -214,9 +214,9 @@ export function drawMedalScreen(
 // Optional documentation
 // - import type { Layers }: imports only the type, for checking; nothing from stage.ts runs because of this line.
 // - mountainPeaks.forEach((top, i) => ...): runs the function once per peak, also passing its position, starting at 0.
-// - new Konva.Circle({ x, y, radius }): a circle whose centre is at (x, y), unlike a Rect, whose x and y are its top-left corner.
+// - new Konva.Circle({ x, y, radius }): a circle whose center is at (x, y), unlike a Rect, whose x and y are its top-left corner.
 // - dash: [12, 10]: draws the outline as 12 px dashes with 10 px gaps.
-// - new Konva.RegularPolygon({ sides: 4, radius }): a shape with equal sides around its centre; with 4 sides it stands on a point, like a diamond, and radius is the distance to each point.
+// - new Konva.RegularPolygon({ sides: 4, radius }): a shape with equal sides around its center; with 4 sides it stands on a point, like a diamond, and radius is the distance to each point.
 // - { ...text.body, x: 30, ... }: the spread `...` copies every property of text.body into the new object; the properties after it add to or override them.
 // - width: 900 / align: 'left' on a Konva.Text: the text wraps onto new lines to fit the width, and each line starts at the left edge.
 // - `You finished with ${data.points} points`: a template literal, which puts the value inside `${}` into the string.
