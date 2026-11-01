@@ -166,13 +166,11 @@ export function drawMedalScreen(
     new Konva.Text({
       ...text.body,
       x: 310, y: 478, width: 620,
-      fontSize: 14,
       text: 'Diamond: 100%   |   Gold: 90–99%   |   Silver: 70–89%',
     }),
     new Konva.Text({
       ...text.body,
       x: 310, y: 502, width: 620,
-      fontSize: 14,
       text: 'Bronze: 50–69%   |   No medal: below 50%',
     }),
   );
