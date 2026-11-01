@@ -71,52 +71,68 @@ export function drawMedalScreen(
   });
 
   const medalColors = {
-    diamond: colors.ice,
     gold: colors.gold,
     silver: colors.silver,
     bronze: colors.bronze,
-    none: colors.mutedText,
   };
 
-  // Medal ribbons
-  medal.add(
-    new Konva.Rect({
-      x: 445,
-      y: 110,
-      width: 30,
-      height: 100,
-      fill: colors.teal,
-    }),
-    new Konva.Rect({
-      x: 485,
-      y: 110,
-      width: 30,
-      height: 100,
-      fill: colors.orange,
-    }),
-  );
+  if (data.medal === 'none') {
+    // Like "No medal" in the mockups' Medal requirements card: an empty dashed outline with no ribbons.
+    medal.add(
+      new Konva.Circle({
+        x: STAGE_WIDTH / 2,
+        y: 220,
+        radius: 75,
+        stroke: colors.mutedText,
+        strokeWidth: 4,
+        dash: [12, 10],
+      }),
+    );
+  } else {
+    // Medal ribbons
+    medal.add(
+      new Konva.Rect({
+        x: 445,
+        y: 110,
+        width: 30,
+        height: 100,
+        fill: colors.teal,
+      }),
+      new Konva.Rect({
+        x: 485,
+        y: 110,
+        width: 30,
+        height: 100,
+        fill: colors.orange,
+      }),
+    );
 
-  medal.add(
-    new Konva.Circle({
-      x: STAGE_WIDTH / 2,
-      y: 220,
-      radius: 75,
-      fill: medalColors[data.medal],
-      stroke: colors.white,
-      strokeWidth: 6,
-    }),
-  );
-
-  medal.add(
-    new Konva.Text({
-      ...text.subtitle,
-      x: 360,
-      y: 205,
-      width: 240,
-      align: 'center',
-      text: data.medal.toUpperCase(),
-    }),
-  );
+    if (data.medal === 'diamond') {
+      // The mockups draw the diamond medal as an outlined diamond rather than a circle.
+      medal.add(
+        new Konva.RegularPolygon({
+          x: STAGE_WIDTH / 2,
+          y: 220,
+          sides: 4,
+          radius: 75,
+          fill: colors.ice,
+          stroke: colors.ink,
+          strokeWidth: 3,
+        }),
+      );
+    } else {
+      medal.add(
+        new Konva.Circle({
+          x: STAGE_WIDTH / 2,
+          y: 220,
+          radius: 75,
+          fill: medalColors[data.medal],
+          stroke: colors.white,
+          strokeWidth: 6,
+        }),
+      );
+    }
+  }
 
   // White results panel
   panel.add(
