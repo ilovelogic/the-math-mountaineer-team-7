@@ -1,6 +1,6 @@
 # model/
 
-Game state and math in plain TypeScript: problems, rules, medals, `Dialogue`, `PlayerProgress` and `SaveStore`.
+Maintains the game state and math in plain TypeScript. From it, get problems, rules, medals, `Dialogue`, `PlayerProgress` and `SaveStore`.
 
 Never imports Konva, `view/` or `controller/`, so every model runs in Vitest without a browser. Take seeds and times as parameters instead of calling `Math.random()` or `Date.now()`.
 
@@ -19,10 +19,10 @@ Never imports Konva, `view/` or `controller/`, so every model runs in Vitest wit
 
 ## Overview
 
-The model is everything the game *knows*, kept apart from everything it *draws*. It may read `content/` (for example, `rules` reads point values from `content/settings`), but nothing in here knows that screens exist. That's what lets every file in this folder be tested with plain inputs and outputs.
+The model is everything the game knows, kept apart from all it draws. It may read `content/` (e.g. `rules` reads point values from `content/settings`), but nothing in here is aware that screens exist. That's what lets each file in this folder be tested with plain inputs and outputs.
 
-Two habits hold the folder together:
-   - **Nothing random or time-based is read directly.** Problems come from a seed, and `Dialogue` is handed the click's time. So the same inputs always give the same result, in the game and in tests.
+Two decisions are essential to the folder:
+   - **Nothing random or time-based is read directly.** Problems come from a seed, and `Dialogue` is handed the click's time. As a result, the same inputs always give the same result, in the game and in tests.
    - **Only GameFlow changes progress.** Everything else reads it through a read-only view, so there's one place where points and steps can change.
 
 ---
@@ -30,7 +30,7 @@ Two habits hold the folder together:
 ## PlayerProgress
 
 **Purpose**\
-Where the player is and how they're doing: the game's seed, the current level, step and topic, the points so far, and every answer they've given. GameFlow owns it and is the only thing that changes it.
+Where the player is and how they're doing. Here, we have the game's seed, the current level, step and topic, the points so far, and every answer they've given. GameFlow owns it and is the only thing that changes it.
 
 **What it holds**
    - `seed`: Picked once when a game starts and never changed. Every chasm is rebuilt from it, so a saved game gets the same chasms back.
@@ -39,7 +39,7 @@ Where the player is and how they're doing: the game's seed, the current level, s
    - `answers`: Every pick so far, oldest first, each recording the step it was made on and whether the log fit, was too short or was too long.
 
 **How it changes**
-   - **`addPoints`** adds to the total. Zero is allowed, since a wrong pick earns nothing; a negative number is refused.
+   - **`addPoints`** adds to the total. Zero is allowed, since a wrong pick earns nothing, but a negative number is refused.
    - **`moveTo`** goes to another step, and also changes the level and topic when a new level starts.
    - **`recordAnswer`** adds a pick to `answers`.
 
@@ -70,7 +70,7 @@ Makes the chasms and checks the player's pick.
 Each level has a list of five whole-number right triangles (`triplesByLevel`), such as 3-4-5 and 5-12-13 in Level 1, with larger numbers in later levels. **`makeChasm`** takes the game's seed, the level and the chasm's position in that level. It shuffles the level's triangles using the seed, so every game meets them in a different order, then picks the one at that position.
 
 **The logs**\
-Every chasm offers three logs: the one that fits (the hypotenuse, `c`) and two wrong lengths, shuffled. The wrong logs are always different from `c` and from each other. Each could be too short or too long, so a chasm can have two short logs.
+Every chasm offers three logs: the one that fits (the hypotenuse, `c`) and two wrong lengths, shuffled. The wrong logs are always different from `c` and from each other. Each could be too short or too long, so a chasm can have two logs that are both shorter than the correct one.
 
 **Checking a pick**\
 **`checkPick`** compares the picked log to `c` and reports `'fits'`, `'tooShort'` or `'tooLong'`.

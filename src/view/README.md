@@ -35,7 +35,7 @@ Everything is drawn in a fixed **960 × 540** space, the size of the Figma mocku
 
 **Purpose**\
 Creates the game's one Konva stage, inside the page's `game` element, with three layers listed back to front:
-   - `background`: Scenery that rarely changes. It ignores clicks, and since each layer is its own canvas, redrawing the others never redraws it.
+   - `background`: Scenery that rarely changes and ignores clicks. With each layer being its own canvas, changing the others doesn't redraw it.
    - `sprites`: Characters and props.
    - `ui`: Buttons, boxes and the Hud.
 
@@ -48,9 +48,9 @@ The stage is scaled to the largest 16:9 box that fits the browser window, and re
 ### theme
 
 **Purpose**\
-Every color and text style from the mockups, in one place.
+Keeps every color from the mockups, and the text styles we use so far, in one place in the code.
    - `colors`: Named after the matching Palette styles in Figma, such as `skyDay`, `ink` and `teal`.
-   - `text`: Styles such as `title`, `heading`, `dialog`, `body`, `label` and `math`. A view spreads one into a Konva text node instead of writing the font, size and color by hand. They all default to the ink color, so white text on a button sets its color after the style.
+   - `text`: Defines styles such as `title`, `heading`, `dialog`, `body`, `label` and `math`. A view spreads one into a Konva text node instead of writing the font, size, and color by hand. They all default to the ink color, so white text on a button sets its color after the style.
 
 ### fonts and assets
 
@@ -58,21 +58,21 @@ Every color and text style from the mockups, in one place.
 Inter is bundled with the game instead of loaded from Google, so it works offline and on school networks that block font sites. **`loadFonts`** waits for its regular (400) and semi bold (600) weights, so text is drawn in the right font from the first frame.
 
 **assets**\
-**`loadAssets`** loads every image and sound listed at the top of the file, once, before anything is drawn. Views then get them by name with **`image`** and **`sound`**. To add one, put the file in `public/assets/images/` (or `sounds/`) and add a line to the list.
+**`loadAssets`** loads every image and sound listed at the file's top just one time before anything is drawn. Views then get them by name with **`image`** and **`sound`**. To add one, put the file in `public/assets/images/` (or `sounds/`) and add a line to the list.
 
 **Neither one can stop the game**\
-`main.ts` waits for both before drawing. If a file fails or takes too long, it's reported in the console and replaced: a missing image shows as a purple box with a "?", a missing sound plays silence, and a missing font weight falls back to sans-serif.
+`main.ts` waits for both fonts and assets before drawing. If a file fails or takes too long, it's reported in the console and replaced, with a missing image showing as a purple box with a "?", a missing sound playing silence, and a missing font weight falling back to sans-serif.
 
 ---
 
 ## Shared components
 
-Each matches a component on the Resources page of the mockups, and each is a function that builds a Konva group for a screen to place. They report clicks through a callback and leave deciding what a click means to whoever created them.
+Each matches a component on the Resources page of the mockups, and each is a function that builds a Konva group for a screen to place, along with a way to update it where needed. The clickable ones report clicks through a callback, and leave it to whoever passed in that callback to decide what the click means.
 
-   - **Button**: A rounded button that grows to fit its label, in a `primary` (teal) or `secondary` (outlined) style. It responds to clicks and to taps, since school Chromebooks often have touchscreens.
-   - **Log button**: One of the logs the player picks from, with a log icon and its length. It has three looks: `default`, `selected`, and `used`, which is faded and ignores clicks.
+   - **Button**: A rounded button that grows to fit its label, in a `primary` (teal) or `secondary` (outlined) style. It responds both to clicks and to taps, since school Chromebooks often have touchscreens.
+   - **Log button**: One of the logs the player picks from, with a log icon and its length. It has three looks, which are `default`, `selected`, and `used` (faded and ignores clicks).
    - **Top bar**: The dark bar across the top of every play screen, with the game title on the left and the topic, level and points on the right.
-   - **Dialog box**: The white box along the bottom that shows one line of the story and up to three choices. It resizes to fit its text and stays pinned to the bottom of the stage. A choice reports its position (0 for the first), the same number a screen reports to GameFlow.
+   - **Dialog box**: The white box along the bottom that shows one line of the story and up to three choices. It resizes to fit its text and stays pinned to the bottom of the stage. A choice reports its position (0 for the first), which is the same number a screen reports to GameFlow.
 
 ---
 
@@ -84,7 +84,7 @@ Each matches a component on the Resources page of the mockups, and each is a fun
 *The "Pick a log" mockup that ChasmScreen follows.*
 
 **Purpose**\
-Draws one chasm: the sky and mountains, the two cliffs and the gap, the right triangle with its side lengths (such as `12 m`, `5 m` and `c = ?`), the pile of logs, one log button per log, and the question "Which log fits across this gap?" in a dialog box.
+Draws one chasm, which is made up of the sky and mountains, the two cliffs and the gap, the right triangle with its side lengths (such as `12 m`, `5 m` and `c = ?`), the pile of logs, one log button per log, and the question "Which log fits across this gap?" in a dialog box.
 
 **What it's given**\
 The stage's layers and a chasm to draw: its two sides and the log lengths, in the order the buttons show them.
@@ -95,7 +95,7 @@ Each click on a log button reports that log's position in the list. Once its con
 ### Hud
 
 **Purpose**\
-Everything the player always sees while playing: the top bar, a progress line such as "Level 1 of 3 · Chasm 2 of 5", and a "+10 points" tag that floats up and fades after a correct pick.
+Everything the player always sees while playing, including the top bar, a progress line such as "Level 1 of 3 · Chasm 2 of 5", and a "+10 points" tag that floats up and fades after a correct pick.
 
 **How it's used**\
 GameFlow calls **`update`** with the latest progress whenever it changes, and **`showPointsGained`** after a pick that earned points. The Hud receives a read-only `ProgressView` (see [model/](../model/README.md#playerprogress)), so it can show progress but never change it.

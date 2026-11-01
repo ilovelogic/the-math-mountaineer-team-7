@@ -1,6 +1,6 @@
 # The Math Mountaineer
 
-Here comes a fun + educational game presented by JAPASTA. Students climb a mountain to find a missing friend, crossing each chasm by picking the log that fits, which is the hypotenuse of a right triangle. Built in TypeScript, with [Konva](https://konvajs.org/) drawing on a canvas, [Vite](https://vite.dev/) running and building the game, and [Vitest](https://vitest.dev/) for tests.
+Here comes a fun and educational game presented by JAPASTA! Students climb a mountain to find a missing friend, crossing each chasm by picking the log that fits, which is the hypotenuse of a right triangle. Built in TypeScript, with [Konva](https://konvajs.org/) drawing on a canvas, [Vite](https://vite.dev/) running and building the game, and [Vitest](https://vitest.dev/) for tests.
 
 ---
 
@@ -13,7 +13,6 @@ Here comes a fun + educational game presented by JAPASTA. Students climb a mount
 - [Project Structure](#project-structure)
 - [Design Docs](#design-docs)
 - [Pull Request Details](#pull-request-details-𖠿)
-- [Before the End of Sprint 1](#before-the-end-of-sprint-1)
 
 ---
 
@@ -21,11 +20,11 @@ Here comes a fun + educational game presented by JAPASTA. Students climb a mount
 
 *Written November 1, 2026*
 
-The pieces of a chasm are built and tested: the problems, the chasm screen, the points, the player's progress and the Hud. What isn't built yet is the part that joins them into a game. GameFlow, which plays the game's steps in order, and the controllers that run each screen are next. Until they land, `npm run dev` shows the game title and nothing more.
+We built and tested the pieces of the chasm, including the problems, the chasm screen, the points, the player's progress and the Hud. What we are currenrly working on is the part that joins them into a game. Next up are GameFlow, which plays the game's steps in order, and the controllers that run each screen. Until they land, `npm run dev` shows the game title and nothing more.
 
-What this means if you're joining now:
-   - **Model, view and content code can be built and tested on its own.** Nothing in those folders needs the game to be running.
-   - **To see a screen you're working on**, draw it from `main.ts` on your own branch, and leave that change out of your PR.
+What this means for our team:
+   - **Model, view, and content code can be built and tested on its own.** (Nothing in those folders needs the game to be running.)
+   - **To see a screen you're working on**, draw it in `main.ts` on your own branch, and leave that change out of your PR.
    - **To find something to pick up**, the [task dependencies](https://www.figma.com/design/gtavIfNmnKuW2m81SbVA6L) show what's merged, what's in review and what can start now, and the [project board](https://github.com/users/ilovelogic/projects/4) has every task.
 
 ---
@@ -63,18 +62,18 @@ These are the same two checks CI runs on every pull request, so if both pass on 
 
 ## Features So Far
 
-Grouped by what they're for. Each links to its section in the folder docs, which go into more detail.
+These are grouped by what they're for. Each links to its section in the folder docs, which share greater detail.
 
 1. **The canvas and the look of the game**:
    - [stage](src/view/README.md#stage): The game draws in a fixed 960 × 540 space, and the stage scales it to the largest 16:9 box that fits the browser window.
-   - [theme](src/view/README.md#theme): Every color and text style from the Figma mockups, in one place.
-   - [fonts and assets](src/view/README.md#fonts-and-assets): The Inter font and the game's images ship with the game and load once, before anything is drawn (sounds will load the same way once they're added). A file that fails is swapped for a placeholder instead of stopping the game.
+   - [theme](src/view/README.md#theme): Every color and text style from the Figma mockups, kept in one place in the code.
+   - [fonts and assets](src/view/README.md#fonts-and-assets): The Inter font and the game's images ship with the game and load once, before anything is drawn. Sounds will load the same way once they're added. A file that fails is swapped for a placeholder instead of stopping the game.
    - [Shared components](src/view/README.md#shared-components): The button, log button, top bar and dialog box from the mockups, for every screen to reuse.
 
 2. **Crossing a chasm**:
-   - [problems](src/model/README.md#problems): Each chasm is a whole-number right triangle (like 5-12-13) with three logs, one of which fits. Chasms come from the game's seed, so a saved game rebuilds the same ones.
+   - [problems](src/model/README.md#problems): Generates the details of each chasm. Each chasm is a whole-number right triangle (like 5-12-13) with three logs, one of which fits. Chasms come from the game's seed, so a saved game rebuilds the same ones.
    - [ChasmScreen](src/view/README.md#chasmscreen): Draws the cliffs, the triangle with its side lengths, the log pile, and a clickable button for each log.
-   - [rules](src/model/README.md#rules): Only the log that fits earns points, 10 per chasm.
+   - [rules](src/model/README.md#rules): Ensures only the log that fits earns the corresponding 10 points.
 
 3. **Story and progress**:
    - [dialogueScripts](src/content/README.md#dialoguescripts): The intro and "how crossing works" scenes.
@@ -84,29 +83,29 @@ Grouped by what they're for. Each links to its section in the folder docs, which
    - [Hud](src/view/README.md#hud): The top bar with topic, level and points, a "Level 1 of 3 · Chasm 2 of 5" line, and a "+10 points" tag after a correct pick.
 
 **In review**: the medal rules (PR #121), the medal screen (PR #136) and the tests for fitting the stage to the window (PR #141).\
-**Next up**: see [Before the End of Sprint 1](#before-the-end-of-sprint-1).
+**Next up**: GameFlow (#6), ChasmController (#24), DialogueController (#18), SaveStore (#67) and publishing the game to GitHub Pages (#9).
 
 ---
 
 ## Architecture Overview
 
 <img src="docs/images/module-view.png" width="900" />\
-*The module view: which modules exist and what each one may use. Faded boxes aren't built yet. The live version is in [Figma](https://www.figma.com/board/UqaCm5s3LuddFWG7xfzhlS).*
+*The module view showing which modules exist and what each one may use. Faded boxes aren't built yet. View the live version in [Figma](https://www.figma.com/board/UqaCm5s3LuddFWG7xfzhlS).*
 
-We follow Model-View-Controller, with a fourth folder for data. Each one is a folder in `src/` with its own README:
+We follow MVC, with a fourth folder for data. Each of these is a folder in `src/` and offers its own README:
 
-1. **[model/](src/model/README.md)**: Game state and math in plain TypeScript, with no drawing, so all of it can be tested without a browser. Problems, rules, the dialogue position and the player's progress live here.
-2. **[view/](src/view/README.md)**: Everything drawn with Konva. A view reads the model to know what to draw and reports clicks through callbacks it's given, but it never decides what a click means or changes game state.
-3. **[controller/](src/controller/README.md)**: Decides what happens next. GameFlow will play the game's steps one screen at a time, and every screen follows the same `Screen` contract: GameFlow starts it, and it reports back once, through `onDone`, with what the player chose.
-4. **[content/](src/content/README.md)**: The game's text and numbers as data, so changing the story or a point value never means editing game code.
+1. **[model/](src/model/README.md)**: Stores and offers game state and math in plain TypeScript, with no drawing, allowing it to be tested without a browser. Herein live problems, rules, the dialogue position, and the player's progress.
+2. **[view/](src/view/README.md)**: Handles everything drawn with Konva. A view may read the model to know what to draw and reports clicks through callbacks it's given, but it never decides what a click means or changes game state.
+3. **[controller/](src/controller/README.md)**: Decides what happens next. GameFlow will play the game's steps one screen at a time, and every screen follows the same `Screen` contract. For each one, GameFlow starts it, and it reports back once, via `onDone`, with what the player chose.
+4. **[content/](src/content/README.md)**: Has the game's text and numbers as data, so changing the story or a point value never requires editing the game code itself.
 
-`main.ts` ties it together. It waits for the images and fonts, creates the stage, and (once GameFlow lands) starts the game.
+`main.ts` brings it all together. It waits for the images and fonts, creates the stage, and (once GameFlow lands) starts the game.
 
 **What may use what**\
-The arrows in the diagram are rules, not just pictures: `controller/` may use the other three; `view/` may read `model/` and `content/`; `model/` may read `content/`; and `content/` uses nothing. Only `main.ts` uses `controller/`. Reviews treat breaking one of these as a must-fix.
+The arrows in the diagram are rules we follow: `controller/` may use the other three; `view/` may read `model/` and `content/`; `model/` may read `content/`; and `content/` uses nothing. Only `main.ts` uses `controller/`. Our reviews treat breaking one of these as a must-fix.
 
-**The idea that holds it together**\
-Screens report what the player *chose*, and only GameFlow decides what it *means*. GameFlow is also the only thing that changes the player's progress. So a rule change, like a new way to score, happens in one place, and a new screen only has to draw and report.
+**The central idea**\
+Screens report what the player chose, and only GameFlow can decide what that choice means. GameFlow is also the only thing that changes the player's progress. Accordingly, a rule change (e.g. a new way to score) happens in one place, and a new screen only has to draw and report.
 
 ---
 
@@ -114,8 +113,8 @@ Screens report what the player *chose*, and only GameFlow decides what it *means
 
 ```
 src/
-  main.ts          Startup: loads images and fonts, creates the stage
-  model/           Game state and math (no Konva)
+  main.ts          Starts it up: loads images and fonts, creates the stage
+  model/           Game state and math (no Konva!)
   view/            Everything drawn with Konva
     components/    The shared button, log button, top bar and dialog box
   controller/      The Screen contract; GameFlow and the controllers come next
@@ -126,13 +125,13 @@ docs/images/       Pictures used in these docs
 .github/           CI, plus the pull request and issue templates
 ```
 
-Each test file opens with a comment saying what it checks and how, which makes the tests a quick way to learn what a module promises.
+Each test file opens with a comment saying what it checks and how, which makes the tests a quick way to learn what a module is promising.
 
 ---
 
 ## Design Docs
 
-Each link answers one question. The images in these docs are exported from these files, so the files are the up-to-date versions.
+Each link here answers one question. The images in our docs are exported from these files, so these files are the up-to-date versions.
 
    - [Mockups](https://www.figma.com/design/fsqgQpE8683nCpVlTI6OZd): What should each screen look like? The Resources page has the shared components, colors and text styles.
    - [Module view](https://www.figma.com/board/UqaCm5s3LuddFWG7xfzhlS) and its [supplementary board](https://www.figma.com/board/aRndxZrbIowLRfEmkPv8Fk): Which modules exist, what may each one use, and who owns it?
@@ -140,13 +139,13 @@ Each link answers one question. The images in these docs are exported from these
    - [Task dependencies](https://www.figma.com/design/gtavIfNmnKuW2m81SbVA6L): What's merged, what's in review, and what can I start now?
    - [Project board](https://github.com/users/ilovelogic/projects/4): Every task, with its owner, sprint and status.
 
-In the diagrams, faded boxes and anything marked "Not built yet" are planned, not missing.
+In the diagrams, faded boxes and anything marked "Not built yet" are planned and not missing.
 
 ---
 
 ## Pull Request Details 𖠿
 
-One task → one branch → one pull request (PR). Every PR is squashed into a single commit on `main`, so **the PR title is the commit message**. Commits on your own branch can say anything.
+One task ⇒ one branch ⇒ one pull request (PR). Every PR is squashed into a single commit on `main`, so **the PR title is the commit message**. Commits on your own branch can say anything.
 
 ### 1. Branch Name
 
@@ -250,32 +249,3 @@ The first line links the PR to your task (for example, `Closes #17`). When the P
 - Merge needs **1 approval and green CI**.
 - The **author** clicks **Squash and merge**, checks that the commit title matches the PR title, and deletes the branch.
 - If `main` moved on and your branch is out of date, use **Update branch** on the PR page, re-run the tests, and then merge.
-
----
-
-## Before the End of Sprint 1
-
-Sprint 1 wraps up with integration on Monday, November 2, where we play the game from the intro, through the chasms, to the medal. Most of what's left is the part that joins the pieces above into a game, so the work below is mainly about how those pieces talk to each other, rather than about drawing anything new.
-
-1. **Joining the pieces into a game**:
-   - [GameFlow](https://github.com/ilovelogic/the-math-mountaineer-team-7/issues/6): Plays the steps in `content/levels` in order, one screen at a time. When a screen reports what the player chose, GameFlow decides what that choice means: it checks the pick with `problems`, gets the points from `rules`, updates `PlayerProgress` and the Hud, and moves to the next step. Since it is the only thing that changes the player's progress, every rule about what happens next ends up in one place.
-   - [ChasmController](https://github.com/ilovelogic/the-math-mountaineer-team-7/issues/24): Runs one chasm as a `Screen`. It hands the chasm to `ChasmScreen`, takes the player's first pick, locks the logs so a second click can't count, and reports the pick to GameFlow. In other words, the controller is what makes "one pick per chasm" true, while the screen only draws and listens.
-   - [DialogueController and DialogueBox](https://github.com/ilovelogic/the-math-mountaineer-team-7/issues/18): Shows any dialogue scene one box per click, using the `Dialogue` model to decide when a click counts and the shared dialog box to draw it. When the last box is clicked, it reports back to GameFlow, along with which button was picked if the scene ended with choices.
-
-2. **Keeping the player's progress**:
-   - [SaveStore](https://github.com/ilovelogic/the-math-mountaineer-team-7/issues/67): Puts one checkpoint into the browser's storage and gets it back. It takes the storage as a parameter instead of reaching for it directly, which lets its tests use a pretend storage that can be empty, hold garbage, or refuse to work, all without a browser. Saving after every step and the Continue button come in Sprint 2, so this sprint it only needs to save and load.
-
-3. **Finishing the game**:
-   - [medals](https://github.com/ilovelogic/the-math-mountaineer-team-7/issues/41): Turns the final points into a medal, with the cut-offs kept in `content/settings` (in review in PR #121).
-   - [The medal screen](https://github.com/ilovelogic/the-math-mountaineer-team-7/issues/42): Draws the medal and the points at the end (in review in PR #136).
-   - [MedalController](https://github.com/ilovelogic/the-math-mountaineer-team-7/issues/43): Runs the medal screen as a `Screen`, getting the medal from `medals` and telling GameFlow when the player is done.
-   - [The Level done messages](https://github.com/ilovelogic/the-math-mountaineer-team-7/issues/44): The message at the end of Levels 1 and 2, with one version for earning every point and one for less. These are mostly new scenes in `content/dialogueScripts`, shown by the DialogueController, with GameFlow choosing which version to show.
-
-4. **Putting it in front of players**:
-   - [Publishing to GitHub Pages](https://github.com/ilovelogic/the-math-mountaineer-team-7/issues/9): Builds the game and publishes it to a public link every time `main` changes, so anyone can play the latest version without installing anything. Integration is played on that link.
-   - [Testing how the stage fits the window](https://github.com/ilovelogic/the-math-mountaineer-team-7/issues/140): Moves the scaling math into a function of its own and tests it across many window sizes (in review in PR #141).
-
-5. **Integration: play it end to end**:\
-   Once the pieces above are merged, `main.ts` creates GameFlow and starts it, and we play the deployed game together, start to finish. Anything that breaks along the way becomes an issue for Sprint 2.
-
-The [task dependencies](https://www.figma.com/design/gtavIfNmnKuW2m81SbVA6L) show which of these can start now and which are waiting on another to merge first.
