@@ -34,7 +34,8 @@ export class ChasmScreen {
   private readonly props = new Konva.Group();
   private readonly controls = new Konva.Group();
   private readonly buttons: LogButton[] = [];
-  private onClick: ((index: number) => void) | null = null;
+  // Until ChasmController (#24) registers its own handler, clicks are only logged.
+  private onClick: ((index: number) => void) | null = (index) => console.log(`Log ${index} (${this.chasm.logs[index]} m) was clicked`);
   private picked: number | null = null;
   private locked = false;
 
@@ -55,7 +56,10 @@ export class ChasmScreen {
     this.layers.ui.add(this.controls);
   }
 
-  /** Calls `cb` with the log's position in `chasm.logs` each time a log button is clicked, until `lock()`. */
+  /**
+   * Calls `cb` with the log's position in `chasm.logs` each time a log button is clicked, until `lock()`.
+   * Eventually a controller will call this to set and replace the default handler
+   */
   onLogClicked(cb: (index: number) => void): void {
     this.onClick = cb;
   }
@@ -63,6 +67,7 @@ export class ChasmScreen {
   /** Stops reporting clicks and greys out the log that was picked, if any. */
   lock(): void {
     this.locked = true;
+    this.setCursor('default');
     this.controls.listening(false);
     if (this.picked !== null) this.buttons[this.picked].setState('used');
   }
@@ -71,6 +76,7 @@ export class ChasmScreen {
   destroy(): void {
     this.locked = true;
     this.onClick = null;
+    this.setCursor('default');
     this.scenery.destroy();
     this.props.destroy();
     this.controls.destroy();
@@ -128,6 +134,8 @@ export class ChasmScreen {
         this.onClick?.(i);
       });
       log.group.name('log-button');
+      log.group.on('mouseenter', () => this.setCursor(this.locked ? 'default' : 'pointer'));
+      log.group.on('mouseleave', () => this.setCursor('default'));
       this.buttons.push(log);
     });
     const heading = new Konva.Text({ ...text.label, fill: colors.white, text: 'Logs:' });
@@ -140,6 +148,11 @@ export class ChasmScreen {
       node.position({ x, y: 438 - size(node).height / 2 });
       x += size(node).width + 10;
     }
+  }
+
+  private setCursor(cursor: string): void {
+    const stage = this.controls.getStage();
+    if (stage) stage.container().style.cursor = cursor;
   }
 
   private drawPrompt(): void {
