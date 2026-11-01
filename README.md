@@ -1,6 +1,6 @@
 # The Math Mountaineer
 
-A fun and educational game presented by JAPASTA. Students climb a mountain to find a missing friend, crossing each chasm by picking the log that fits, which is the hypotenuse of a right triangle. Built in TypeScript, with [Konva](https://konvajs.org/) drawing on a canvas, [Vite](https://vite.dev/) running and building the game, and [Vitest](https://vitest.dev/) for tests.
+Here comes a fun + educational game presented by JAPASTA. Students climb a mountain to find a missing friend, crossing each chasm by picking the log that fits, which is the hypotenuse of a right triangle. Built in TypeScript, with [Konva](https://konvajs.org/) drawing on a canvas, [Vite](https://vite.dev/) running and building the game, and [Vitest](https://vitest.dev/) for tests.
 
 ---
 
@@ -13,12 +13,13 @@ A fun and educational game presented by JAPASTA. Students climb a mountain to fi
 - [Project Structure](#project-structure)
 - [Design Docs](#design-docs)
 - [Pull Request Details](#pull-request-details-𖠿)
+- [Before the End of Sprint 1](#before-the-end-of-sprint-1)
 
 ---
 
 ## Where the Project Stands
 
-*As of November 1, 2026, the end of Sprint 1.*
+*Written November 1, 2026*
 
 The pieces of a chasm are built and tested: the problems, the chasm screen, the points, the player's progress and the Hud. What isn't built yet is the part that joins them into a game. GameFlow, which plays the game's steps in order, and the controllers that run each screen are next. Until they land, `npm run dev` shows the game title and nothing more.
 
@@ -83,7 +84,7 @@ Grouped by what they're for. Each links to its section in the folder docs, which
    - [Hud](src/view/README.md#hud): The top bar with topic, level and points, a "Level 1 of 3 · Chasm 2 of 5" line, and a "+10 points" tag after a correct pick.
 
 **In review**: the medal rules (PR #121), the medal screen (PR #136) and the tests for fitting the stage to the window (PR #141).\
-**Next up**: GameFlow (#6), ChasmController (#24), DialogueController (#18), SaveStore (#67) and publishing the game to GitHub Pages (#9).
+**Next up**: see [Before the End of Sprint 1](#before-the-end-of-sprint-1).
 
 ---
 
@@ -249,3 +250,32 @@ The first line links the PR to your task (for example, `Closes #17`). When the P
 - Merge needs **1 approval and green CI**.
 - The **author** clicks **Squash and merge**, checks that the commit title matches the PR title, and deletes the branch.
 - If `main` moved on and your branch is out of date, use **Update branch** on the PR page, re-run the tests, and then merge.
+
+---
+
+## Before the End of Sprint 1
+
+Sprint 1 wraps up with integration on Monday, November 2, where we play the game from the intro, through the chasms, to the medal. Most of what's left is the part that joins the pieces above into a game, so the work below is mainly about how those pieces talk to each other, rather than about drawing anything new.
+
+1. **Joining the pieces into a game**:
+   - [GameFlow](https://github.com/ilovelogic/the-math-mountaineer-team-7/issues/6): Plays the steps in `content/levels` in order, one screen at a time. When a screen reports what the player chose, GameFlow decides what that choice means: it checks the pick with `problems`, gets the points from `rules`, updates `PlayerProgress` and the Hud, and moves to the next step. Since it is the only thing that changes the player's progress, every rule about what happens next ends up in one place.
+   - [ChasmController](https://github.com/ilovelogic/the-math-mountaineer-team-7/issues/24): Runs one chasm as a `Screen`. It hands the chasm to `ChasmScreen`, takes the player's first pick, locks the logs so a second click can't count, and reports the pick to GameFlow. In other words, the controller is what makes "one pick per chasm" true, while the screen only draws and listens.
+   - [DialogueController and DialogueBox](https://github.com/ilovelogic/the-math-mountaineer-team-7/issues/18): Shows any dialogue scene one box per click, using the `Dialogue` model to decide when a click counts and the shared dialog box to draw it. When the last box is clicked, it reports back to GameFlow, along with which button was picked if the scene ended with choices.
+
+2. **Keeping the player's progress**:
+   - [SaveStore](https://github.com/ilovelogic/the-math-mountaineer-team-7/issues/67): Puts one checkpoint into the browser's storage and gets it back. It takes the storage as a parameter instead of reaching for it directly, which lets its tests use a pretend storage that can be empty, hold garbage, or refuse to work, all without a browser. Saving after every step and the Continue button come in Sprint 2, so this sprint it only needs to save and load.
+
+3. **Finishing the game**:
+   - [medals](https://github.com/ilovelogic/the-math-mountaineer-team-7/issues/41): Turns the final points into a medal, with the cut-offs kept in `content/settings` (in review in PR #121).
+   - [The medal screen](https://github.com/ilovelogic/the-math-mountaineer-team-7/issues/42): Draws the medal and the points at the end (in review in PR #136).
+   - [MedalController](https://github.com/ilovelogic/the-math-mountaineer-team-7/issues/43): Runs the medal screen as a `Screen`, getting the medal from `medals` and telling GameFlow when the player is done.
+   - [The Level done messages](https://github.com/ilovelogic/the-math-mountaineer-team-7/issues/44): The message at the end of Levels 1 and 2, with one version for earning every point and one for less. These are mostly new scenes in `content/dialogueScripts`, shown by the DialogueController, with GameFlow choosing which version to show.
+
+4. **Putting it in front of players**:
+   - [Publishing to GitHub Pages](https://github.com/ilovelogic/the-math-mountaineer-team-7/issues/9): Builds the game and publishes it to a public link every time `main` changes, so anyone can play the latest version without installing anything. Integration is played on that link.
+   - [Testing how the stage fits the window](https://github.com/ilovelogic/the-math-mountaineer-team-7/issues/140): Moves the scaling math into a function of its own and tests it across many window sizes (in review in PR #141).
+
+5. **Integration: play it end to end**:\
+   Once the pieces above are merged, `main.ts` creates GameFlow and starts it, and we play the deployed game together, start to finish. Anything that breaks along the way becomes an issue for Sprint 2.
+
+The [task dependencies](https://www.figma.com/design/gtavIfNmnKuW2m81SbVA6L) show which of these can start now and which are waiting on another to merge first.
