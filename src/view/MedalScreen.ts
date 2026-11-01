@@ -21,9 +21,13 @@ export function drawMedalScreen(
   layers: Layers,
   data: MedalScreenData,
 ): () => void {
-  const screen = new Konva.Group();
+  // The Hud draws the top bar on the ui layer, so the sky and mountains go on the
+  // background layer and the medal on sprites, where they can't cover it.
+  const scenery = new Konva.Group();
+  const medal = new Konva.Group();
+  const panel = new Konva.Group();
 
-  screen.add(
+  scenery.add(
     new Konva.Rect({
       x: 0,
       y: 0,
@@ -42,7 +46,7 @@ export function drawMedalScreen(
   ];
 
   mountainPeaks.forEach((top, i) => {
-    screen.add(
+    scenery.add(
       new Konva.Rect({
         x: i * 40,
         y: top,
@@ -55,7 +59,7 @@ export function drawMedalScreen(
 
   // Snow caps on mountain peaks
   [3, 6, 10, 13, 17].forEach((i) => {
-    screen.add(
+    scenery.add(
       new Konva.Rect({
         x: i * 40,
         y: mountainPeaks[i],
@@ -66,41 +70,6 @@ export function drawMedalScreen(
     );
   });
 
-  // Dark top bar
-  screen.add(
-    new Konva.Rect({
-      x: 0,
-      y: 0,
-      width: STAGE_WIDTH,
-      height: 48,
-      fill: colors.ink,
-    }),
-  );
-
-  // Text displayed in the top bar
-  screen.add(
-    new Konva.Text({
-      ...text.heading,
-      x: 24,
-      y: 0,
-      height: 48,
-      verticalAlign: 'middle',
-      text: 'Math Mountaineer',
-      fill: colors.white,
-    }),
-    new Konva.Text({
-      ...text.label,
-      x: STAGE_WIDTH - 200,
-      y: 0,
-      width: 176,
-      height: 48,
-      align: 'right',
-      verticalAlign: 'middle',
-      text: `Points: ${data.points}`,
-      fill: colors.white,
-    }),
-  );
-
   const medalColors = {
     diamond: colors.ice,
     gold: colors.gold,
@@ -110,7 +79,7 @@ export function drawMedalScreen(
   };
 
   // Medal ribbons
-  screen.add(
+  medal.add(
     new Konva.Rect({
       x: 445,
       y: 110,
@@ -127,7 +96,7 @@ export function drawMedalScreen(
     }),
   );
 
-  screen.add(
+  medal.add(
     new Konva.Circle({
       x: STAGE_WIDTH / 2,
       y: 220,
@@ -138,7 +107,7 @@ export function drawMedalScreen(
     }),
   );
 
-  screen.add(
+  medal.add(
     new Konva.Text({
       ...text.subtitle,
       x: 360,
@@ -150,7 +119,7 @@ export function drawMedalScreen(
   );
 
   // White results panel
-  screen.add(
+  panel.add(
     new Konva.Rect({
       x: 0,
       y: 389,
@@ -162,7 +131,7 @@ export function drawMedalScreen(
     }),
   );
 
-  screen.add(
+  panel.add(
     new Konva.Text({
       ...text.body,
       x: 30,
@@ -185,10 +154,10 @@ export function drawMedalScreen(
     y: 475,
   });
 
-  screen.add(resultsButton);
+  panel.add(resultsButton);
 
   // Medal requirements from Figma
-  screen.add(
+  panel.add(
     new Konva.Text({
       ...text.label,
       x: 310, y: 454, width: 620,
@@ -208,9 +177,13 @@ export function drawMedalScreen(
     }),
   );
 
-  layers.ui.add(screen);
+  layers.background.add(scenery);
+  layers.sprites.add(medal);
+  layers.ui.add(panel);
 
   return () => {
-    screen.destroy();
+    scenery.destroy();
+    medal.destroy();
+    panel.destroy();
   };
 }
