@@ -51,7 +51,7 @@ Write it as a command that finishes the sentence "This PR will…". Keep it unde
 
 ### 4. Description 𓂃✍︎
 
-Fill in this template. Once #101 adds it to the repo, it appears automatically when you open a PR; until then, copy it from here:
+Fill in this template. It appears automatically when you open a PR (it lives in `.github/pull_request_template.md`), so keep the two in sync if you change it:
 
 ```markdown
 Closes #‹insert your task’s issue number here›

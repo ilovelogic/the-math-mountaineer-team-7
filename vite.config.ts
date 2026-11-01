@@ -5,5 +5,6 @@ export default defineConfig({
   base: './',
   test: {
     include: ['tests/**/*.test.ts'],
+    setupFiles: ['tests/konva-setup.ts'],
   },
 });
