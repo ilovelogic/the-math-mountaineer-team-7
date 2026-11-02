@@ -41,5 +41,15 @@ export const dialogueScripts = {
           text: "Do you want to restart Level {level} so you can get closer to earning your desired medal?",
           choices: ["Begin level {level} again", "Continue on to next level"]
         }
+    ],
+    // This stands in for the title screen until the real one (#70) exists, so the game still
+    // opens on its title. It isn't named by a dialogue step; the screen factory plays it for
+    // the title step.
+    titlePlaceholder: [
+        {
+          speaker: "Narrator",
+          text: "The Math Mountaineer",
+          choices: ["Start"]
+        }
     ]
 };
