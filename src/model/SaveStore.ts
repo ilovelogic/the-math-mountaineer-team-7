@@ -22,7 +22,7 @@ export class SaveStore {
         return null;
       }
 
-      return JSON.parse(saved) as SavedProgress;
+      return PlayerProgress.fromJSON(JSON.parse(saved)).toJSON();
     } catch {
       return null;
     }
