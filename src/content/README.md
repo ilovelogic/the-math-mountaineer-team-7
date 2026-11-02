@@ -51,4 +51,4 @@ Add a new key with its boxes, and then add a `dialogue` step naming that key in 
 ## settings
 
 **Purpose**\
-Keeps the values we expect to tweak while playtesting, each with a comment explaining what it does. Today, that's just `pointsPerChasm` (10, matching the "+10" in the mockups). Medal limits and feature toggles will join it as those features land.
+Keeps the values we expect to tweak while playtesting, each with a comment explaining what it does. Today, that's `pointsPerChasm` (10, matching the "+10" in the mockups) and `medalLimits` (the points for each medal, matching the Medal requirements card). Feature toggles will join them as those features land.
