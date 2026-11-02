@@ -1,9 +1,151 @@
 # The Math Mountaineer
-A fun and educational game presented by JAPASTA
+
+Here comes a fun and educational game presented by JAPASTA! Students climb a mountain to find a missing friend, crossing each chasm by picking the log that fits, which is the hypotenuse of a right triangle. Built in TypeScript, with [Konva](https://konvajs.org/) drawing on a canvas, [Vite](https://vite.dev/) running and building the game, and [Vitest](https://vitest.dev/) for tests.
+
+---
+
+## Table of Contents
+
+- [Where the Project Stands](#where-the-project-stands)
+- [Getting Started](#getting-started)
+- [Features So Far](#features-so-far)
+- [Architecture Overview](#architecture-overview)
+- [Project Structure](#project-structure)
+- [Design Docs](#design-docs)
+- [Pull Request Details](#pull-request-details-𖠿)
+
+---
+
+## Where the Project Stands
+
+*Written November 1, 2026*
+
+We built and tested the pieces of the chasm, including the problems, the chasm screen, the points, the player's progress and the Hud. What we are currently working on is the part that joins them into a game. Next up are GameFlow, which plays the game's steps in order, and the controllers that run each screen. Until they land, `npm run dev` shows the game title and nothing more.
+
+What this means for our team:
+   - **Model, view, and content code can be built and tested on its own.** (Nothing in those folders needs the game to be running.)
+   - **To see a screen you're working on**, draw it in `main.ts` on your own branch, and leave that change out of your PR.
+   - **To find something to pick up**, the [task dependencies](https://www.figma.com/design/gtavIfNmnKuW2m81SbVA6L) show what's merged, what's in review and what can start now, and the [project board](https://github.com/users/ilovelogic/projects/4) has every task.
+
+---
+
+## Getting Started
+
+**Requirements**\
+Node.js 24 (the version in `.nvmrc`) and npm, which comes with it. If you use nvm, `nvm use` in the project folder switches to the right version.
+
+**Installation**
+```bash
+npm install
+```
+Run this again whenever `package.json` changes on `main`. If tests fail with "Cannot find package 'canvas'", this is the fix.
+
+**Run the Game**
+```bash
+npm run dev
+```
+Vite prints a local address (usually http://localhost:5173). Open it in a browser, and the page reloads each time you save a file.
+
+**Test the Project**
+```bash
+npm test
+```
+```bash
+npm run typecheck
+```
+These are the same two checks CI runs on every pull request, so if both pass on your machine, CI should pass too. `npm run test:watch` reruns the tests each time you save.
+
+**Build**\
+`npm run build` type-checks the code and writes the finished game to `dist/`, and `npm run preview` serves that build locally.
+
+---
+
+## Features So Far
+
+These are grouped by what they're for. Each links to its section in the folder docs, which share greater detail.
+
+1. **The canvas and the look of the game**:
+   - [stage](src/view/README.md#stage): The game draws in a fixed 960 × 540 space, and the stage scales it to the largest 16:9 box that fits the browser window.
+   - [theme](src/view/README.md#theme): Every color from the Figma mockups, and the text styles we use so far, kept in one place in the code.
+   - [fonts and assets](src/view/README.md#fonts-and-assets): The Inter font and the game's images ship with the game and load once, before anything is drawn. Sounds will load the same way once they're added. A file that fails is swapped for a placeholder instead of stopping the game.
+   - [Shared components](src/view/README.md#shared-components): The button, log button, top bar and dialog box from the mockups, for every screen to reuse.
+
+2. **Crossing a chasm**:
+   - [problems](src/model/README.md#problems): Generates the details of each chasm. Each chasm is a whole-number right triangle (like 5-12-13) with three logs, one of which fits. Chasms come from the game's seed, so a saved game rebuilds the same ones.
+   - [ChasmScreen](src/view/README.md#chasmscreen): Draws the cliffs, the triangle with its side lengths, the log pile, and a clickable button for each log.
+   - [rules](src/model/README.md#rules): Ensures only the log that fits earns the corresponding 10 points.
+
+3. **Story and progress**:
+   - [dialogueScripts](src/content/README.md#dialoguescripts): The intro and "how crossing works" scenes.
+   - [Dialogue](src/model/README.md#dialogue): Tracks which dialogue box is showing, one box per click, and ignores fast double clicks.
+   - [levels](src/content/README.md#levels): The game's steps in order: the title, the intro, 15 chasms over 3 levels, a Level done step after Levels 1 and 2, and the medal.
+   - [PlayerProgress](src/model/README.md#playerprogress): The player's level, step, points, topic and every answer, in a form that can be saved.
+   - [Hud](src/view/README.md#hud): The top bar with topic, level and points, a "Level 1 of 3 · Chasm 2 of 5" line, and a "+10 points" tag after a correct pick.
+
+**In review**: the medal rules (PR #121), the medal screen (PR #136) and the tests for fitting the stage to the window (PR #141).\
+**Next up**: GameFlow (#6), ChasmController (#24), DialogueController (#18), SaveStore (#67) and publishing the game to GitHub Pages (#9).
+
+---
+
+## Architecture Overview
+
+<img src="docs/images/module-view.png" width="900" />\
+*The module view showing which modules exist and what each one may use. Faded boxes aren't built yet. View the live version in [Figma](https://www.figma.com/board/UqaCm5s3LuddFWG7xfzhlS).*
+
+We follow MVC, with a fourth folder for data. Each of these is a folder in `src/` and offers its own README:
+
+1. **[model/](src/model/README.md)**: Stores and offers game state and math in plain TypeScript, with no drawing, allowing it to be tested without a browser. Herein live problems, rules, the dialogue position, and the player's progress.
+2. **[view/](src/view/README.md)**: Handles everything drawn with Konva. A view may read the model to know what to draw and reports clicks through callbacks it's given, but it never decides what a click means or changes game state.
+3. **[controller/](src/controller/README.md)**: Decides what happens next. GameFlow will play the game's steps one screen at a time, and every screen follows the same `Screen` contract. For each one, GameFlow starts it, and it reports back once, via `onDone`, with what the player chose.
+4. **[content/](src/content/README.md)**: Has the game's text and numbers as data, so changing the story or a point value never requires editing the game code itself.
+
+`main.ts` brings it all together. It waits for the images and fonts, creates the stage, and (once GameFlow lands) starts the game.
+
+**What may use what**\
+The arrows in the diagram are rules we follow: `controller/` may use the other three; `view/` may read `model/` and `content/`; `model/` may read `content/`; and `content/` uses nothing. Only `main.ts` uses `controller/`. Our reviews treat breaking one of these as a must-fix.
+
+**The central idea**\
+Screens report what the player chose, and only GameFlow can decide what that choice means. GameFlow is also the only thing that changes the player's progress. Accordingly, a rule change (e.g., a new way to score) happens in one place, and a new screen only has to draw and report.
+
+---
+
+## Project Structure
+
+```
+src/
+  main.ts          Starts it up: loads images and fonts, creates the stage
+  model/           Game state and math (no Konva!)
+  view/            Everything drawn with Konva
+    components/    The shared button, log button, top bar and dialog box
+  controller/      The Screen contract; GameFlow and the controllers come next
+  content/         Level steps, dialogue scripts and settings
+tests/             Mirrors src/, with one test file per module
+public/assets/     Images (and soon sounds), served as they are
+docs/images/       Pictures used in these docs
+.github/           CI, plus the pull request and issue templates
+```
+
+Most test files open with a comment saying what they check and how, which makes the tests a quick way to learn what a module is promising.
+
+---
+
+## Design Docs
+
+Each link here answers one question. The images in our docs are exported from these files, so these files are the up-to-date versions.
+
+   - [Mockups](https://www.figma.com/design/fsqgQpE8683nCpVlTI6OZd): What should each screen look like? The Resources page has the shared components, colors and text styles.
+   - [Module view](https://www.figma.com/board/UqaCm5s3LuddFWG7xfzhlS) and its [supplementary board](https://www.figma.com/board/aRndxZrbIowLRfEmkPv8Fk): Which modules exist, what may each one use, and who owns it?
+   - [Runtime (C&C) view](https://www.figma.com/design/LLtfHewfTMLycUXFUVuyEH): What happens, step by step, while the game runs?
+   - [Task dependencies](https://www.figma.com/design/gtavIfNmnKuW2m81SbVA6L): What's merged, what's in review, and what can I start now?
+   - [Project board](https://github.com/users/ilovelogic/projects/4): Every task, with its owner, sprint and status.
+
+In the diagrams, faded boxes and anything marked "Not built yet" are planned and not missing.
+
+---
 
 ## Pull Request Details 𖠿
 
-One task → one branch → one pull request (PR). Every PR is squashed into a single commit on `main`, so **the PR title is the commit message**. Commits on your own branch can say anything.
+One task ⇒ one branch ⇒ one pull request (PR). Every PR is squashed into a single commit on `main`, so **the PR title is the commit message**. Commits on your own branch can say anything.
 
 ### 1. Branch Name
 
