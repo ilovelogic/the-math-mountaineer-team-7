@@ -7,7 +7,8 @@ import type { Outcome, Screen } from './Screen';
 /**
  * Plays one dialogue scene, such as the intro or a Level done message, one box per
  * click. Clicks during the short change between boxes are ignored, so a fast double
- * click never skips a box. After the last box it tells GameFlow the scene is done.
+ * click never skips a box. After the last box it tells GameFlow the scene is done, or,
+ * when that box has choices, which one was picked.
  */
 export class DialogueController implements Screen {
   private dialogue: Dialogue | null = null;
@@ -27,23 +28,30 @@ export class DialogueController implements Screen {
   start(onDone: (outcome: Outcome) => void): void {
     this.onDone = onDone;
     this.dialogue = new Dialogue(this.lines, settings.dialogueTransitionMs);
-    this.box = new DialogueBox(this.layers, () => this.pick());
+    this.box = new DialogueBox(this.layers, (index) => this.pick(index));
     this.box.show(this.dialogue.current());
   }
 
   stop(): void {
+    this.onDone = null;
     this.box?.destroy();
     this.box = null;
   }
 
-  /** Moves on one box, or reports the scene done after the last one. Ignored clicks change nothing. */
-  private pick(): void {
+  /**
+   * Moves on one box, or ends the scene after the last one. `index` is the clicked
+   * button's position, which only matters on a last box with choices. Ignored clicks change nothing.
+   */
+  private pick(index: number): void {
     if (!this.dialogue || !this.dialogue.advance(this.now())) return;
     if (!this.dialogue.isFinished()) {
       this.box?.show(this.dialogue.current());
       return;
     }
-    this.onDone?.({ kind: 'done' });
+    const outcome: Outcome = this.dialogue.current().choices ? { kind: 'choice', index } : { kind: 'done' };
+    const onDone = this.onDone;
+    this.onDone = null;
+    onDone?.(outcome);
   }
 }
 // Optional documentation
@@ -51,4 +59,5 @@ export class DialogueController implements Screen {
 // - private readonly layers in the constructor's parameters: declares a field and sets it from the argument in one step.
 // - now: () => number = () => performance.now(): a parameter with a default; the game leaves it out and gets the browser's clock, in ms since the page opened.
 // - this.box?.destroy(): calls destroy only if box isn't null, so stop() is safe before start() or twice.
-// - () => this.pick(): an arrow function keeps `this` pointing at the controller when the box calls it later.
+// - (index) => this.pick(index): an arrow function keeps `this` pointing at the controller when the box calls it later.
+// - const onDone = this.onDone; this.onDone = null: clears the callback before calling it, so even if GameFlow calls stop() or clicks arrive during the call, it can't run twice.

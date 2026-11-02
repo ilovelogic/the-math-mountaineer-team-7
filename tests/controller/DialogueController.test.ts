@@ -88,6 +88,39 @@ describe('controller/DialogueController', () => {
     expect(outcomes).toEqual([{ kind: 'done' }]);
   });
 
+  it('reports the picked choice when the last box has choices, like Level done', () => {
+    play([
+      { speaker: 'Narrator', text: 'You earned 80% of the points on Level 1.' },
+      { speaker: 'Narrator', text: 'Do you want to restart Level 1?', choices: ['Begin level 1 again', 'Continue on to next level'] },
+    ]);
+    clickLater('Continue');
+    clickLater('Continue on to next level');
+    clickLater('Begin level 1 again');
+    expect(outcomes).toEqual([{ kind: 'choice', index: 1 }]);
+  });
+
+  it('ignores a choice clicked during the change onto its box', () => {
+    play([
+      { speaker: 'Narrator', text: 'Level 1 done.' },
+      { speaker: 'Narrator', text: 'Restart?', choices: ['Begin level 1 again', 'Continue on to next level'] },
+    ]);
+    clickLater('Continue');
+    button('Begin level 1 again').fire('click');
+    expect(outcomes).toEqual([]);
+    clickLater('Continue on to next level');
+    expect(outcomes).toEqual([{ kind: 'choice', index: 1 }]);
+  });
+
+  it('never reports after it is stopped', () => {
+    const controller = play(script);
+    clickLater('Continue');
+    const last = button('Continue');
+    controller.stop();
+    time += settings.dialogueTransitionMs;
+    last.fire('click');
+    expect(outcomes).toEqual([]);
+  });
+
   it('removes everything it drew when stopped', () => {
     const controller = play(script);
     controller.stop();
