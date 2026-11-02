@@ -27,6 +27,9 @@ export interface GameFlowOptions {
   playCue?: (cue: PickResult) => void;
 }
 
+/** On the "under 100%" Level done message, the first choice restarts the level (see model/levelDone). */
+const RESTART = 0;
+
 /** A seed for a new game. `random` is passed in so tests can get a fixed one. */
 export function newSeed(random: () => number = Math.random): number {
   return Math.floor(random() * 2 ** 31);
@@ -110,6 +113,12 @@ export class GameFlow {
     const step = this.steps[index];
     if (request.kind === 'chasm' && step.kind === 'chasm' && outcome.kind === 'choice') {
       this.score(request.chasm, outcome.index, step.index + 1);
+    }
+    const missedPoints = request.kind === 'levelDone' && request.points < request.possiblePoints;
+    if (missedPoints && outcome.kind === 'choice' && outcome.index === RESTART) {
+      // Restarting earns the level's points again, so take back what this attempt earned.
+      this.progress.removePoints(request.points);
+      return this.chasmStepsOf(request.level)[0];
     }
     return index + 1;
   }

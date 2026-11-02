@@ -150,6 +150,61 @@ describe('controller/GameFlow', () => {
     expect(kinds().filter((kind) => kind === 'levelDone')).toHaveLength(2);
   });
 
+  /** Plays Level 1's five chasms from its first one, getting the first `right` of them right. */
+  function playLevel1(right: number): void {
+    for (let i = 0; i < 5; i++) {
+      if (i < right) pickRight();
+      else pickWrong();
+    }
+  }
+
+  it('gives Level done the points earned on that level alone', () => {
+    play(steps, 3);
+    playLevel1(3);
+    expect(last().request).toEqual({ kind: 'levelDone', level: 1, points: 30, possiblePoints: 50 });
+    expect(progress.points).toBe(30);
+  });
+
+  it('restarts the level and takes back its points when the player picks Begin again', () => {
+    progress.addPoints(5);
+    play(steps, 3);
+    playLevel1(2);
+    last().report({ kind: 'choice', index: 0 });
+    expect([progress.step, progress.points]).toEqual([3, 5]);
+    expect(last().request).toEqual({ kind: 'chasm', chasm: makeChasm(SEED, 1, 0) });
+
+    playLevel1(4);
+    expect(last().request).toEqual({ kind: 'levelDone', level: 1, points: 40, possiblePoints: 50 });
+    expect(progress.points).toBe(45);
+  });
+
+  it('moves on when the player picks Continue on to next level', () => {
+    play(steps, 3);
+    playLevel1(2);
+    last().report({ kind: 'choice', index: 1 });
+    expect(last().request).toEqual({ kind: 'chasm', chasm: makeChasm(SEED, 2, 0) });
+    expect(progress.points).toBe(20);
+  });
+
+  it('moves on from Level done after every point, where choice 0 means continue', () => {
+    play(steps, 3);
+    playLevel1(5);
+    last().report({ kind: 'choice', index: 0 });
+    expect(last().request).toEqual({ kind: 'chasm', chasm: makeChasm(SEED, 2, 0) });
+    expect(progress.points).toBe(50);
+  });
+
+  it('counts a level’s points from a save after a restart', () => {
+    play(steps, 3);
+    playLevel1(1);
+    last().report({ kind: 'choice', index: 0 });
+    playLevel1(5);
+    progress = PlayerProgress.fromJSON(saves.at(-1)!);
+    screens = [];
+    play();
+    expect(last().request).toEqual({ kind: 'levelDone', level: 1, points: 50, possiblePoints: 50 });
+  });
+
   it('resumes from the step a save points at', () => {
     progress = PlayerProgress.fromJSON({ version: 1, seed: SEED, level: 1, step: 5, points: 20, topic: TOPIC, answers: [] });
     play();
