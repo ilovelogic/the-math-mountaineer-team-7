@@ -10,9 +10,12 @@ export interface Settings {
    * requirements card in the mockups. Change them together with that card.
    */
   medalLimits: MedalLimits;
+  /** How long clicks are ignored after a dialogue box changes, so a fast double click never skips a box. */
+  dialogueTransitionMs: number;
 }
 
 export const settings: Settings = {
   pointsPerChasm: 10,
   medalLimits: { diamond: 150, gold: 135, silver: 105, bronze: 75 },
+  dialogueTransitionMs: 250,
 };
