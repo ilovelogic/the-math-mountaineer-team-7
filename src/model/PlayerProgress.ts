@@ -93,6 +93,18 @@ export class PlayerProgress {
   }
 
   /**
+   * Takes back `n` points, when the player restarts a level and its points are earned again.
+   * The answers stay, since they're the record of every pick. Never takes more than the player has.
+   */
+  removePoints(n: number): void {
+    checkWholeNumber('points', n, 0);
+    if (n > this._points) {
+      throw new Error(`Can't remove ${n} points from ${this._points}`);
+    }
+    this._points -= n;
+  }
+
+  /**
    * Moves to another step. Pass `place` when the step starts a new level or topic;
    * leave it out to stay on the same level, such as the next chasm.
    */
