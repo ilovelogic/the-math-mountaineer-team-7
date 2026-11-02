@@ -11,7 +11,7 @@ import { pointsFor } from '../../src/model/rules';
 
 describe('pointsFor', () => {
   it('awards the points in settings for the log that fits', () => {
-    expect(pointsFor('fits', { pointsPerChasm: 7 })).toBe(7);
+    expect(pointsFor('fits', { ...settings, pointsPerChasm: 7 })).toBe(7);
     expect(pointsFor('fits', settings)).toBe(settings.pointsPerChasm);
   });
 
