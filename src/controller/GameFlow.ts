@@ -1,8 +1,8 @@
 import type { Step } from '../content/levels';
 import { settings } from '../content/settings';
-import type { Place, PlayerProgress } from '../model/PlayerProgress';
-import { makeChasm, type Chasm } from '../model/problems';
-import { pointsFor } from '../model/rules';
+import type { Place, PlayerProgress, SavedProgress } from '../model/PlayerProgress';
+import { checkPick, makeChasm, type Chasm } from '../model/problems';
+import { pointsFor, type PickResult } from '../model/rules';
 import type { Hud } from '../view/Hud';
 import type { Outcome, Screen } from './Screen';
 
@@ -21,6 +21,10 @@ export type ScreenRequest =
 /** The parts of the game GameFlow keeps up to date. Each is optional, so tests pass only what they check. */
 export interface GameFlowOptions {
   hud?: Pick<Hud, 'update' | 'showPointsGained'>;
+  /** Stores a checkpoint, such as SaveStore's `save`. */
+  save?: (saved: SavedProgress) => void;
+  /** Plays the sound for how a pick went. */
+  playCue?: (cue: PickResult) => void;
 }
 
 /** A seed for a new game. `random` is passed in so tests can get a fixed one. */
@@ -49,6 +53,7 @@ export class GameFlow {
   run(fromStep: number = this.progress.step): void {
     if (!this.steps[fromStep]) throw new RangeError(`There is no step ${fromStep}.`);
     this.stop();
+    this.progress.moveTo(fromStep, this.placeOf(fromStep));
     this.play(fromStep);
   }
 
@@ -74,6 +79,8 @@ export class GameFlow {
       if (next >= this.steps.length) return;
       this.stop();
       this.progress.moveTo(next, this.placeOf(next));
+      // The checkpoint points at the step to play next, so a closed tab loses at most that step.
+      this.options.save?.(this.progress.toJSON());
       this.play(next);
     });
   }
@@ -99,8 +106,23 @@ export class GameFlow {
   }
 
   /** Acts on what the screen reported and gives the position of the step to play next. */
-  private nextAfter(index: number, _request: ScreenRequest, _outcome: Outcome): number {
+  private nextAfter(index: number, request: ScreenRequest, outcome: Outcome): number {
+    const step = this.steps[index];
+    if (request.kind === 'chasm' && step.kind === 'chasm' && outcome.kind === 'choice') {
+      this.score(request.chasm, outcome.index, step.index + 1);
+    }
     return index + 1;
+  }
+
+  /** The "crossing one chasm" path: check the pick, award its points, record it, and show and play how it went. */
+  private score(chasm: Chasm, log: number, chasmNumber: number): void {
+    const result = checkPick(chasm, log);
+    const points = pointsFor(result, settings);
+    this.progress.recordAnswer(result);
+    this.progress.addPoints(points);
+    this.options.hud?.update(this.progress, chasmNumber);
+    this.options.hud?.showPointsGained(points);
+    this.options.playCue?.(result);
   }
 
   /** The level and topic to move to, when the step at `index` is a chasm. */
@@ -136,5 +158,5 @@ export class GameFlow {
 // - 2 ** 31: 2 to the power of 31; Math.floor(random() * 2 ** 31) gives a whole number from 0 up to about 2 billion.
 // - ++this.current: adds 1 and gives the new value, so each screen remembers its own number.
 // - switch (step.kind) with a return in every case: TypeScript checks every kind of step is handled.
-// - _request, _outcome: the leading _ marks parameters that aren't used yet, which the compiler allows.
+// - this.options.save?.(...): calls save only if it was passed in; `?.` skips the call when it's undefined.
 // - .at(-1): the last item of an array, or undefined when it's empty.
