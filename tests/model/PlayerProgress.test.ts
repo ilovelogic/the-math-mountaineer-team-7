@@ -63,6 +63,27 @@ describe('PlayerProgress', () => {
     expect(progress.points).toBe(10);
   });
 
+  it('takes points back for a level restart, and keeps the answers', () => {
+    const progress = new PlayerProgress(42, level1);
+    progress.addPoints(30);
+    progress.recordAnswer('fits');
+
+    progress.removePoints(20);
+
+    expect(progress.points).toBe(10);
+    expect(progress.answers).toHaveLength(1);
+  });
+
+  it('never takes back more points than the player has, or a bad amount', () => {
+    const progress = new PlayerProgress(42, level1);
+    progress.addPoints(10);
+
+    expect(() => progress.removePoints(11)).toThrow();
+    expect(() => progress.removePoints(-1)).toThrow();
+    expect(() => progress.removePoints(1.5)).toThrow();
+    expect(progress.points).toBe(10);
+  });
+
   it('records each pick with the step it was made on', () => {
     const progress = new PlayerProgress(42, level1);
     progress.recordAnswer('tooShort');
