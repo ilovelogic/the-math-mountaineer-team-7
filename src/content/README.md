@@ -41,7 +41,7 @@ Starts with the title, the intro, and the "how crossing works" scene, followed b
 ## dialogueScripts
 
 **Purpose**\
-Stores the story text, with one scene per key. Each scene is a list of boxes, and each box has a speaker and a line of text. Today, there are two scenes, which are `intro` (the avalanche and the missing friend) and `howCrossingWorks` (how to pick a log).
+Stores the story text, with one scene per key. Each scene is a list of boxes, and each box has a speaker and a line of text. Today, there are four scenes, which are `intro` (the avalanche and the missing friend), `howCrossingWorks` (how to pick a log), and the two Level done messages, `levelDoneAllPoints` and `levelDoneUnder100`. The Level done scenes mark where the level number goes with `{level}`, which `model/levelDone` fills in, so the same words serve every level.
 
 **Adding a scene**\
 Add a new key with its boxes, and then add a `dialogue` step naming that key in `levels`.
@@ -51,4 +51,4 @@ Add a new key with its boxes, and then add a `dialogue` step naming that key in 
 ## settings
 
 **Purpose**\
-Keeps the values we expect to tweak while playtesting, each with a comment explaining what it does. Today, that's `pointsPerChasm` (10, matching the "+10" in the mockups) and `medalLimits` (the points for each medal, matching the Medal requirements card). Feature toggles will join them as those features land.
+Keeps the values we expect to tweak while playtesting, each with a comment explaining what it does. Today, that's `pointsPerChasm` (10, matching the "+10" in the mockups), `medalLimits` (150, 135, 105 and 75, which are 100%, 90%, 70% and 50% of the 150 points a player can earn, matching the Medal requirements card), and `dialogueTransitionMs` (250, how long clicks are ignored after a dialogue box changes). Feature toggles will join them as those features land.

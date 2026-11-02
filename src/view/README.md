@@ -16,6 +16,8 @@ May import Konva, other `view/` files, and `model/` or `content/` to read what t
 - [Shared components](#shared-components)
 - [Screens and the Hud](#screens-and-the-hud)
   - [ChasmScreen](#chasmscreen)
+  - [DialogueBox](#dialoguebox)
+  - [MedalScreen](#medalscreen)
   - [Hud](#hud)
 - [Still to come](#still-to-come)
 
@@ -40,7 +42,7 @@ Creates the game's one Konva stage, inside the page's `game` element, with three
    - `ui`: Buttons, boxes and the Hud.
 
 **Fitting the window**\
-The stage is scaled to the largest 16:9 box that fits the browser window, and rescaled whenever the window changes size. Views keep using 960 × 540 coordinates, and Konva maps clicks back through the scale.
+The stage is scaled to the largest 16:9 box that fits the browser window, and rescaled whenever the window changes size. Views keep using 960 × 540 coordinates, and Konva maps clicks back through the scale. The scale itself comes from **`fitScale`**, a small function kept apart from the resizing so its tests can check many window sizes without a browser.
 
 **How it's used**\
 `main.ts` calls **`createStage`** once at startup. Views receive its layers instead of making their own, and only this file creates a stage (a test checks that).
@@ -92,6 +94,22 @@ The stage's layers and a chasm to draw: its two sides and the log lengths, in th
 **What it reports**\
 Each click on a log button reports that log's position in the list. Once its controller **`lock`**s it, it stops reporting clicks and shows the picked log as used. **`destroy`** removes everything it drew.
 
+### DialogueBox
+
+**Purpose**\
+Shows one dialogue line at a time in the shared dialog box. A line with no choices gets a Continue button, while a line that ends a scene, like a Level done message, shows its own choices instead.
+
+**What it reports**\
+Either way, a click reports the button's position, and the DialogueController decides what it means. **`destroy`** removes the box. The speaker's name isn't drawn yet, since every line so far is the Narrator's.
+
+### MedalScreen
+
+**Purpose**\
+Draws the end screen like the "End: medal" mockup, which is made up of the medal the player earned, a sentence about it, the medal requirements, and a See Results button.
+
+**How it's used**\
+**`drawMedalScreen`** is given the stage's layers, the medal and points (which MedalController works out), and a callback for See Results. It returns a function that removes everything it drew, to call when the screen ends. For now, it draws its own mountain background; the mockup uses the glacier background instead, which #138's plan to load backgrounds as images would fix.
+
 ### Hud
 
 **Purpose**\
@@ -104,7 +122,7 @@ GameFlow calls **`update`** with the latest progress whenever it changes, and **
 
 ## Still to come
 
-   - **MedalScreen**: The end screen with the medal and results. In review in PR #136.
+   - **The solution view** (#48): The "How to find the right log" screen, with the triangle and the worked steps.
    - **audio**: Plays one sound per outcome (#25), once the sound library (#102) lands.
-   - **DialogueBox, TitleScreen, ShopScreen, ZiplineDiagram**: The views for the dialogue, title and shop screens (#18, #70, #52, #61).
+   - **TitleScreen, ShopScreen, ZiplineDiagram**: The views for the title and shop screens (#70, #52, #61).
    - **Background images**: The plan in #138 is to load backgrounds as images exported from Figma, instead of drawing mountains in code, so every screen shares one copy of the art.
