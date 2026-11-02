@@ -55,4 +55,12 @@ describe('SaveStore', () => {
     expect(() => store.save(checkpoint)).not.toThrow();
     expect(store.load()).toBeNull();
   });
+    it('returns null for invalid progress data', () => {
+    const storage = fakeStorage();
+    storage.setItem('math-mountaineer-save', '{"version":2}');
+
+    const store = new SaveStore(storage);
+
+    expect(store.load()).toBeNull();
+  });
 });
