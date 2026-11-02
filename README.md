@@ -20,7 +20,7 @@ Here comes a fun and educational game presented by JAPASTA! Students climb a mou
 
 *Written November 1, 2026*
 
-We built and tested the pieces of the chasm, including the problems, the chasm screen, the points, the player's progress and the Hud. What we are currenrly working on is the part that joins them into a game. Next up are GameFlow, which plays the game's steps in order, and the controllers that run each screen. Until they land, `npm run dev` shows the game title and nothing more.
+We built and tested the pieces of the chasm, including the problems, the chasm screen, the points, the player's progress and the Hud. What we are currently working on is the part that joins them into a game. Next up are GameFlow, which plays the game's steps in order, and the controllers that run each screen. Until they land, `npm run dev` shows the game title and nothing more.
 
 What this means for our team:
    - **Model, view, and content code can be built and tested on its own.** (Nothing in those folders needs the game to be running.)
@@ -66,7 +66,7 @@ These are grouped by what they're for. Each links to its section in the folder d
 
 1. **The canvas and the look of the game**:
    - [stage](src/view/README.md#stage): The game draws in a fixed 960 × 540 space, and the stage scales it to the largest 16:9 box that fits the browser window.
-   - [theme](src/view/README.md#theme): Every color and text style from the Figma mockups, kept in one place in the code.
+   - [theme](src/view/README.md#theme): Every color from the Figma mockups, and the text styles we use so far, kept in one place in the code.
    - [fonts and assets](src/view/README.md#fonts-and-assets): The Inter font and the game's images ship with the game and load once, before anything is drawn. Sounds will load the same way once they're added. A file that fails is swapped for a placeholder instead of stopping the game.
    - [Shared components](src/view/README.md#shared-components): The button, log button, top bar and dialog box from the mockups, for every screen to reuse.
 
@@ -78,7 +78,7 @@ These are grouped by what they're for. Each links to its section in the folder d
 3. **Story and progress**:
    - [dialogueScripts](src/content/README.md#dialoguescripts): The intro and "how crossing works" scenes.
    - [Dialogue](src/model/README.md#dialogue): Tracks which dialogue box is showing, one box per click, and ignores fast double clicks.
-   - [levels](src/content/README.md#levels): The game's steps in order: the title, the intro, 15 chasms over 3 levels, the Level done messages and the medal.
+   - [levels](src/content/README.md#levels): The game's steps in order: the title, the intro, 15 chasms over 3 levels, a Level done step after Levels 1 and 2, and the medal.
    - [PlayerProgress](src/model/README.md#playerprogress): The player's level, step, points, topic and every answer, in a form that can be saved.
    - [Hud](src/view/README.md#hud): The top bar with topic, level and points, a "Level 1 of 3 · Chasm 2 of 5" line, and a "+10 points" tag after a correct pick.
 
@@ -105,7 +105,7 @@ We follow MVC, with a fourth folder for data. Each of these is a folder in `src/
 The arrows in the diagram are rules we follow: `controller/` may use the other three; `view/` may read `model/` and `content/`; `model/` may read `content/`; and `content/` uses nothing. Only `main.ts` uses `controller/`. Our reviews treat breaking one of these as a must-fix.
 
 **The central idea**\
-Screens report what the player chose, and only GameFlow can decide what that choice means. GameFlow is also the only thing that changes the player's progress. Accordingly, a rule change (e.g. a new way to score) happens in one place, and a new screen only has to draw and report.
+Screens report what the player chose, and only GameFlow can decide what that choice means. GameFlow is also the only thing that changes the player's progress. Accordingly, a rule change (e.g., a new way to score) happens in one place, and a new screen only has to draw and report.
 
 ---
 
@@ -125,7 +125,7 @@ docs/images/       Pictures used in these docs
 .github/           CI, plus the pull request and issue templates
 ```
 
-Each test file opens with a comment saying what it checks and how, which makes the tests a quick way to learn what a module is promising.
+Most test files open with a comment saying what they check and how, which makes the tests a quick way to learn what a module is promising.
 
 ---
 

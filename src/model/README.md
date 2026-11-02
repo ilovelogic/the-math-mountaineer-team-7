@@ -1,6 +1,6 @@
 # model/
 
-Maintains the game state and math in plain TypeScript. From it, get problems, rules, medals, `Dialogue`, `PlayerProgress` and `SaveStore`.
+Maintains the game state and math in plain TypeScript. From it, get problems, rules, medals, `Dialogue`, `PlayerProgress` and `SaveStore` (medals and `SaveStore` are still to come).
 
 Never imports Konva, `view/` or `controller/`, so every model runs in Vitest without a browser. Take seeds and times as parameters instead of calling `Math.random()` or `Date.now()`.
 
@@ -19,7 +19,7 @@ Never imports Konva, `view/` or `controller/`, so every model runs in Vitest wit
 
 ## Overview
 
-The model is everything the game knows, kept apart from all it draws. It may read `content/` (e.g. `rules` reads point values from `content/settings`), but nothing in here is aware that screens exist. That's what lets each file in this folder be tested with plain inputs and outputs.
+The model is everything the game knows, kept apart from all it draws. It may read `content/` (e.g., `rules` reads point values from `content/settings`), but nothing in here is aware that screens exist. That's what lets each file in this folder be tested with plain inputs and outputs.
 
 Two decisions are essential to the folder:
    - **Nothing random or time-based is read directly.** Problems come from a seed, and `Dialogue` is handed the click's time. As a result, the same inputs always give the same result, in the game and in tests.
@@ -93,6 +93,6 @@ Small, pure rules that turn outcomes into points and, later, into decisions abou
 ## Still to come
 
    - **medals**: Turns the final points into a medal. In review in PR #121.
-   - **SaveStore**: Saves a checkpoint after every step and loads it back when the player picks Continue (#67).
-   - **More problem types**: The duel question (#56) and the 3D zipline problem (#62), each in its own file next to `problems`.
+   - **SaveStore**: Saves one checkpoint in the browser's storage and loads it back (#67). Saving after every step (#68) and the Continue button (#70) come later and will use it.
+   - **More problem types**: The duel question (#56), which goes in `problems`, and the 3D zipline problem (#62), which gets its own file next to it.
    - **More rules**: Skipping a level after winning the duel (#58), the zipline's points (#63), and the easier round after struggling (#88).
