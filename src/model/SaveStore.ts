@@ -1,5 +1,5 @@
 
-import type { SavedProgress } from './PlayerProgress';
+import { PlayerProgress, type SavedProgress } from './PlayerProgress';
 
 const SAVE_KEY = 'math-mountaineer-save';
 
