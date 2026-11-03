@@ -123,7 +123,7 @@ Turns the final points into a medal, which is diamond, gold, silver, bronze, or 
 Puts one checkpoint into the browser's storage and gets it back, so closing the tab doesn't lose the player's progress.
 
 **The storage is passed in**\
-In the game, `main.ts` will pass in the browser's `localStorage`. In the tests, a pretend storage stands in, one that can be empty, hold garbage, or refuse to work, so every failure case is tested without a browser.
+In the game, `main.ts` passes in the browser's `localStorage`. In the tests, a pretend storage stands in, one that can be empty, hold garbage, or refuse to work, so every failure case is tested without a browser.
 
 **When something goes wrong**\
 **`save`** fails quietly if storage is blocked. **`load`** returns `null` when there's no save, when the save can't be read, or when it isn't a valid save, since it checks each one with `PlayerProgress.fromJSON`. As a result, anything `load` does return is safe to continue from.

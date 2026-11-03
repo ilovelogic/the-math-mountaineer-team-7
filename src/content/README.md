@@ -41,7 +41,7 @@ Starts with the title, the intro, and the "how crossing works" scene, followed b
 ## dialogueScripts
 
 **Purpose**\
-Stores the story text, with one scene per key. Each scene is a list of boxes, and each box has a speaker and a line of text. Today, there are four scenes, which are `intro` (the avalanche and the missing friend), `howCrossingWorks` (how to pick a log), and the two Level done messages, `levelDoneAllPoints` and `levelDoneUnder100`. The Level done scenes mark where the level number goes with `{level}`, which `model/levelDone` fills in, so the same words serve every level.
+Stores the story text, with one scene per key. Each scene is a list of boxes, and each box has a speaker and a line of text. Today, there are five scenes, which are `intro` (the avalanche and the missing friend), `howCrossingWorks` (how to pick a log), the two Level done messages, `levelDoneAllPoints` and `levelDoneUnder100`, and `titlePlaceholder` (the game's title and a Start button, which stands in for the title screen until #70). The Level done scenes mark where the level number goes with `{level}`, which `model/levelDone` fills in, so the same words serve every level. The title placeholder isn't named by any step; the screen factory plays it for the title step.
 
 **Adding a scene**\
 Add a new key with its boxes, and then add a `dialogue` step naming that key in `levels`.

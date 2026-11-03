@@ -12,13 +12,14 @@ May import `model/`, `view/`, and `content/`. Nothing else imports from here exc
 - [Screen](#screen)
 - [GameFlow](#gameflow)
 - [The screen controllers](#the-screen-controllers)
+- [The screen factory](#the-screen-factory)
 - [Crossing one chasm, start to finish](#crossing-one-chasm-start-to-finish)
 
 ---
 
 ## Overview
 
-This is the folder that turns our separate screens into a game. It holds the `Screen` contract, GameFlow, which plays the game's steps, and a controller for each kind of screen built so far. The last piece is in `main.ts`, which still needs to create GameFlow with a screen for each step and start it.
+This is the folder that turns our separate screens into a game. It holds the `Screen` contract, GameFlow, which plays the game's steps, a controller for each kind of screen built so far, and the screen factory, which builds the right screen for each step. `main.ts` creates GameFlow with that factory and starts it.
 
 <img src="../../docs/images/cc-view.png" width="900" />\
 *The runtime (C&C) view, showing what talks to what while the game runs. Connector names match the code, and components marked "Not built yet" show the design. View the live version in [Figma](https://www.figma.com/design/LLtfHewfTMLycUXFUVuyEH).*
@@ -47,7 +48,7 @@ Runs the whole game by playing the steps in `content/levels` in order, one scree
 **What it's given**
    - `steps`: The game's script from `content/levels`.
    - `progress`: The player's `PlayerProgress`, new or loaded from a save.
-   - `makeScreen`: A function that turns a `ScreenRequest` into a `Screen`. A request is a step with everything its screen needs filled in, such as the chasm built from the game's seed, or the points earned on a level for its Level done message.
+   - `makeScreen`: A function that turns a `ScreenRequest` into a `Screen`. In the game, that's the [screen factory](#the-screen-factory). A request is a step with everything its screen needs filled in, such as the chasm built from the game's seed, or the points earned on a level for its Level done message.
    - **Options** (each optional, so tests pass only what they check): the Hud to keep up to date, a `save` function such as SaveStore's, and a `playCue` function for the sound after a pick.
 
 **After each screen**
@@ -71,6 +72,26 @@ Each one pairs a view from `view/` with the `Screen` contract:
    - **MedalController**: Works out the medal from the player's points with `model/medals`, has `MedalScreen` draw it, and reports `done` once when the player presses See Results. It reads the points when it starts, so it can be created before the last chasm is scored.
 
 **Still to come**: TitleController (#70), the controller for the "How to find the right log" screen (#48), and DuelShopController and ZiplineShopController for the two shop mini-games, planned for Sprint 2.
+
+---
+
+## The screen factory
+
+**Purpose**\
+Builds the screen for each step GameFlow plays, so GameFlow never needs to know which controller or view a step uses.
+
+**How it's used**\
+`main.ts` calls **`createScreenFactory`** once, with the stage's layers and the player's progress, and it returns the `makeScreen` function GameFlow is given. Each request then becomes its screen:
+   - **A chasm**: A `ChasmController` around a new `ChasmScreen` for that chasm.
+   - **A dialogue step**: A `DialogueController` playing the scene it names from `content/dialogueScripts`.
+   - **A Level done step**: A `DialogueController` playing `levelDoneLines(...)`, filled in with the level's points.
+   - **The medal**: A `MedalController`.
+
+**The title step**\
+Until the title screen (#70) exists, the title step plays `titlePlaceholder`, a one-box scene with the game's title and a Start button. Accordingly, #70 only has to replace this one case.
+
+**When something's wrong**\
+A dialogue step naming a scene that doesn't exist (e.g., a typo in `content/levels`) throws an error naming that scene, instead of handing `undefined` to the screen. A `never` check after the `switch` also means a new kind of step added to GameFlow without a case here stops the build, so the forgotten case is caught before it merges.
 
 ---
 

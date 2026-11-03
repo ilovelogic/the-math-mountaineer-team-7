@@ -20,11 +20,11 @@ We present a fun and educational game for all those 8th graders out there! Stude
 
 *Up-to-date as of November 2, 2026*
 
-We built and tested every piece of the core game, including the chasm problems and screen, the points and medals, the player's progress and its saving, the Hud, the dialogue, and GameFlow, which plays the game's steps in order with a controller for each screen. What we are currently working on is joining them in `main.ts`, which still draws only the game title. Until that lands, `npm run dev` shows the title and nothing more, and the quickest way to see the whole game's flow is `tests/controller/GameFlow.test.ts`.
+We built and tested every piece of the core game, including the chasm problems and screen, the points and medals, the player's progress and its saving, the Hud, the dialogue, and GameFlow, which plays the game's steps in order with a controller for each screen. The game now plays from start to finish: `npm run dev` opens on a placeholder title and runs through the intro, every chasm and Level done message, to the medal. What we are working on next is publishing it online (#9) and, in Sprint 2, the screens that teach the player after a wrong pick.
 
 What this means for our team:
    - **Model, view, and content code can be built and tested on its own.** (Nothing in those folders needs the game to be running.)
-   - **To see a screen you're working on**, draw it in `main.ts` on your own branch, and leave that change out of your PR.
+   - **To see a screen you're working on**, play the game with `npm run dev`. To jump straight to it, change the step `flow.run()` starts from in `main.ts` on your own branch, and leave that change out of your PR.
    - **To find something to pick up**, the [task dependencies](https://www.figma.com/design/gtavIfNmnKuW2m81SbVA6L) show what's merged, what's in review and what can start now, and the [project board](https://github.com/users/ilovelogic/projects/4) has every task.
 
 ---
@@ -92,9 +92,9 @@ These are grouped by what they're for. Each links to its section in the folder d
 5. **Running the game**:
    - [GameFlow](src/controller/README.md#gameflow): Plays every step in order, one screen at a time, and decides what happens after each one, including scoring a pick, restarting a level, and saving a checkpoint.
    - [The screen controllers](src/controller/README.md#the-screen-controllers): ChasmController, DialogueController and MedalController each run one kind of screen for GameFlow.
+   - [The screen factory](src/controller/README.md#the-screen-factory): Builds the right screen for each step GameFlow plays, including a placeholder title until the real title screen lands.
 
-**In progress**: joining everything in `main.ts`, so the game plays from the intro to the medal (#150).\
-**Next up**: publishing the game to GitHub Pages (#9), and, in Sprint 2, the title screen (#70), the sounds (#25), the "How to find the right log" screen (#48), and the shops.
+**Next up**: publishing the game to GitHub Pages (#9), and, in Sprint 2, the title screen with New game and Continue (#70), the sounds (#25), the screens after a wrong pick (#47, #48 and #49), and the shops.
 
 ---
 
@@ -110,7 +110,7 @@ We follow MVC, with a fourth folder for data. Each of these is a folder in `src/
 3. **[controller/](src/controller/README.md)**: Decides what happens next. GameFlow plays the game's steps one screen at a time, and every screen follows the same `Screen` contract. For each one, GameFlow starts it, and it reports back once, via `onDone`, with what the player chose.
 4. **[content/](src/content/README.md)**: Has the game's text and numbers as data, so changing the story or a point value never requires editing the game code itself.
 
-`main.ts` brings it all together. Today, it waits for the images and fonts and creates the stage. Next, it will create GameFlow, along with a screen for each kind of step, and start the game.
+`main.ts` brings it all together. It waits for the images and fonts, creates the stage, the Hud, and the player's progress, and then starts GameFlow, which gets each step's screen from the screen factory.
 
 **What may use what**\
 The arrows in the diagram are rules we follow: `controller/` may use the other three; `view/` may read `model/` and `content/`; `model/` may read `content/`; and `content/` uses nothing. Only `main.ts` uses `controller/`. Our reviews treat breaking one of these as a must-fix.
@@ -124,7 +124,7 @@ Screens report what the player chose, and only GameFlow can decide what that cho
 
 ```
 src/
-  main.ts          Starts it up: loads images and fonts, creates the stage
+  main.ts          Starts it up: loads images and fonts, then starts GameFlow
   model/           Game state and math (no Konva!)
   view/            Everything drawn with Konva
     components/    The shared button, log button, top bar and dialog box
