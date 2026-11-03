@@ -2,6 +2,8 @@
 
 Here comes a fun and educational game presented by JAPASTA! Students climb a mountain to find a missing friend, crossing each chasm by picking the log that fits, which is the hypotenuse of a right triangle. Built in TypeScript, with [Konva](https://konvajs.org/) drawing on a canvas, [Vite](https://vite.dev/) running and building the game, and [Vitest](https://vitest.dev/) for tests.
 
+**Play it at [ilovelogic.github.io/the-math-mountaineer-team-7](https://ilovelogic.github.io/the-math-mountaineer-team-7/)**, which updates every time a pull request is merged into `main`.
+
 ---
 
 ## Table of Contents
