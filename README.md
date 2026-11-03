@@ -1,6 +1,6 @@
 # The Math Mountaineer
 
-Here comes a fun and educational game presented by JAPASTA! Students climb a mountain to find a missing friend, crossing each chasm by picking the log that fits, which is the hypotenuse of a right triangle. Built in TypeScript, with [Konva](https://konvajs.org/) drawing on a canvas, [Vite](https://vite.dev/) running and building the game, and [Vitest](https://vitest.dev/) for tests.
+We present a fun and educational game for all those 8th graders out there! Students climb a mountain to find a missing friend, crossing each chasm by picking the log that fits, which is the hypotenuse of a right triangle. Built in TypeScript, with [Konva](https://konvajs.org/) drawing on a canvas, [Vite](https://vite.dev/) running and building the game, and [Vitest](https://vitest.dev/) for tests.
 
 ---
 
@@ -18,13 +18,13 @@ Here comes a fun and educational game presented by JAPASTA! Students climb a mou
 
 ## Where the Project Stands
 
-*Written November 1, 2026*
+*Up-to-date as of November 2, 2026*
 
-We built and tested the pieces of the chasm, including the problems, the chasm screen, the points, the player's progress and the Hud. What we are currently working on is the part that joins them into a game. Next up are GameFlow, which plays the game's steps in order, and the controllers that run each screen. Until they land, `npm run dev` shows the game title and nothing more.
+We built and tested every piece of the core game, including the chasm problems and screen, the points and medals, the player's progress and its saving, the Hud, the dialogue, and GameFlow, which plays the game's steps in order with a controller for each screen. The game now plays from start to finish: `npm run dev` opens on a placeholder title and runs through the intro, every chasm and Level done message, to the medal. What we are working on next is publishing it online (#9) and, in Sprint 2, the screens that teach the player after a wrong pick.
 
 What this means for our team:
    - **Model, view, and content code can be built and tested on its own.** (Nothing in those folders needs the game to be running.)
-   - **To see a screen you're working on**, draw it in `main.ts` on your own branch, and leave that change out of your PR.
+   - **To see a screen you're working on**, play the game with `npm run dev`. To jump straight to it, change the step `flow.run()` starts from in `main.ts` on your own branch, and leave that change out of your PR.
    - **To find something to pick up**, the [task dependencies](https://www.figma.com/design/gtavIfNmnKuW2m81SbVA6L) show what's merged, what's in review and what can start now, and the [project board](https://github.com/users/ilovelogic/projects/4) has every task.
 
 ---
@@ -65,7 +65,7 @@ These are the same two checks CI runs on every pull request, so if both pass on 
 These are grouped by what they're for. Each links to its section in the folder docs, which share greater detail.
 
 1. **The canvas and the look of the game**:
-   - [stage](src/view/README.md#stage): The game draws in a fixed 960 × 540 space, and the stage scales it to the largest 16:9 box that fits the browser window.
+   - [stage](src/view/README.md#stage): The game draws in a fixed 960 × 540 space, and the stage scales it to the largest 16:9 box that fits the browser window, with tests across many window sizes.
    - [theme](src/view/README.md#theme): Every color from the Figma mockups, and the text styles we use so far, kept in one place in the code.
    - [fonts and assets](src/view/README.md#fonts-and-assets): The Inter font and the game's images ship with the game and load once, before anything is drawn. Sounds will load the same way once they're added. A file that fails is swapped for a placeholder instead of stopping the game.
    - [Shared components](src/view/README.md#shared-components): The button, log button, top bar and dialog box from the mockups, for every screen to reuse.
@@ -76,14 +76,25 @@ These are grouped by what they're for. Each links to its section in the folder d
    - [rules](src/model/README.md#rules): Ensures only the log that fits earns the corresponding 10 points.
 
 3. **Story and progress**:
-   - [dialogueScripts](src/content/README.md#dialoguescripts): The intro and "how crossing works" scenes.
+   - [dialogueScripts](src/content/README.md#dialoguescripts): The intro, the "how crossing works" scene, and the two Level done messages.
    - [Dialogue](src/model/README.md#dialogue): Tracks which dialogue box is showing, one box per click, and ignores fast double clicks.
+   - [DialogueBox](src/view/README.md#dialoguebox): Shows each dialogue line in the shared dialog box, with a Continue button or the line's own choices.
    - [levels](src/content/README.md#levels): The game's steps in order: the title, the intro, 15 chasms over 3 levels, a Level done step after Levels 1 and 2, and the medal.
    - [PlayerProgress](src/model/README.md#playerprogress): The player's level, step, points, topic and every answer, in a form that can be saved.
+   - [SaveStore](src/model/README.md#savestore): Saves one checkpoint in the browser's storage and loads it back, refusing anything that isn't a valid save.
    - [Hud](src/view/README.md#hud): The top bar with topic, level and points, a "Level 1 of 3 · Chasm 2 of 5" line, and a "+10 points" tag after a correct pick.
 
-**In review**: the medal rules (PR #121), the medal screen (PR #136) and the tests for fitting the stage to the window (PR #141).\
-**Next up**: GameFlow (#6), ChasmController (#24), DialogueController (#18), SaveStore (#67) and publishing the game to GitHub Pages (#9).
+4. **The end of a level, and of the game**:
+   - [levelDone](src/model/README.md#leveldone): Picks the Level done message from the points earned on that level, either congratulations or an offer to restart it, and fills in the level number.
+   - [medals](src/model/README.md#medals): Turns the final points into a diamond, gold, silver or bronze medal (or none), using the limits in settings.
+   - [MedalScreen](src/view/README.md#medalscreen): Draws the medal the player earned, the medal requirements, and a See Results button.
+
+5. **Running the game**:
+   - [GameFlow](src/controller/README.md#gameflow): Plays every step in order, one screen at a time, and decides what happens after each one, including scoring a pick, restarting a level, and saving a checkpoint.
+   - [The screen controllers](src/controller/README.md#the-screen-controllers): ChasmController, DialogueController and MedalController each run one kind of screen for GameFlow.
+   - [The screen factory](src/controller/README.md#the-screen-factory): Builds the right screen for each step GameFlow plays, including a placeholder title until the real title screen lands.
+
+**Next up**: publishing the game to GitHub Pages (#9), and, in Sprint 2, the title screen with New game and Continue (#70), the sounds (#25), the screens after a wrong pick (#47, #48 and #49), and the shops.
 
 ---
 
@@ -94,12 +105,12 @@ These are grouped by what they're for. Each links to its section in the folder d
 
 We follow MVC, with a fourth folder for data. Each of these is a folder in `src/` and offers its own README:
 
-1. **[model/](src/model/README.md)**: Stores and offers game state and math in plain TypeScript, with no drawing, allowing it to be tested without a browser. Herein live problems, rules, the dialogue position, and the player's progress.
+1. **[model/](src/model/README.md)**: Stores and offers game state and math in plain TypeScript, with no drawing, allowing it to be tested without a browser. Herein live problems, rules, medals, the dialogue position, the player's progress, and saving.
 2. **[view/](src/view/README.md)**: Handles everything drawn with Konva. A view may read the model to know what to draw and reports clicks through callbacks it's given, but it never decides what a click means or changes game state.
-3. **[controller/](src/controller/README.md)**: Decides what happens next. GameFlow will play the game's steps one screen at a time, and every screen follows the same `Screen` contract. For each one, GameFlow starts it, and it reports back once, via `onDone`, with what the player chose.
+3. **[controller/](src/controller/README.md)**: Decides what happens next. GameFlow plays the game's steps one screen at a time, and every screen follows the same `Screen` contract. For each one, GameFlow starts it, and it reports back once, via `onDone`, with what the player chose.
 4. **[content/](src/content/README.md)**: Has the game's text and numbers as data, so changing the story or a point value never requires editing the game code itself.
 
-`main.ts` brings it all together. It waits for the images and fonts, creates the stage, and (once GameFlow lands) starts the game.
+`main.ts` brings it all together. It waits for the images and fonts, creates the stage, the Hud, and the player's progress, and then starts GameFlow, which gets each step's screen from the screen factory.
 
 **What may use what**\
 The arrows in the diagram are rules we follow: `controller/` may use the other three; `view/` may read `model/` and `content/`; `model/` may read `content/`; and `content/` uses nothing. Only `main.ts` uses `controller/`. Our reviews treat breaking one of these as a must-fix.
@@ -113,11 +124,11 @@ Screens report what the player chose, and only GameFlow can decide what that cho
 
 ```
 src/
-  main.ts          Starts it up: loads images and fonts, creates the stage
+  main.ts          Starts it up: loads images and fonts, then starts GameFlow
   model/           Game state and math (no Konva!)
   view/            Everything drawn with Konva
     components/    The shared button, log button, top bar and dialog box
-  controller/      The Screen contract; GameFlow and the controllers come next
+  controller/      GameFlow, the Screen contract, and one controller per kind of screen
   content/         Level steps, dialogue scripts and settings
 tests/             Mirrors src/, with one test file per module
 public/assets/     Images (and soon sounds), served as they are

@@ -1,6 +1,6 @@
 # model/
 
-Maintains the game state and math in plain TypeScript. From it, get problems, rules, medals, `Dialogue`, `PlayerProgress` and `SaveStore` (medals and `SaveStore` are still to come).
+Maintains the game state and math in plain TypeScript. From it, get problems, rules, medals, the Level done messages, `Dialogue`, `PlayerProgress` and `SaveStore`.
 
 Never imports Konva, `view/` or `controller/`, so every model runs in Vitest without a browser. Take seeds and times as parameters instead of calling `Math.random()` or `Date.now()`.
 
@@ -13,6 +13,9 @@ Never imports Konva, `view/` or `controller/`, so every model runs in Vitest wit
 - [Dialogue](#dialogue)
 - [problems](#problems)
 - [rules](#rules)
+- [levelDone](#leveldone)
+- [medals](#medals)
+- [SaveStore](#savestore)
 - [Still to come](#still-to-come)
 
 ---
@@ -42,6 +45,7 @@ Where the player is and how they're doing. Here, we have the game's seed, the cu
    - **`addPoints`** adds to the total. Zero is allowed, since a wrong pick earns nothing, but a negative number is refused.
    - **`moveTo`** goes to another step, and also changes the level and topic when a new level starts.
    - **`recordAnswer`** adds a pick to `answers`.
+   - **`removePoints`** takes points back when the player restarts a level, so its points can be earned again. The answers stay, since they're the record of every pick, and it never takes more than the player has.
 
 **Saving**\
 `toJSON` turns the progress into plain data that's safe to store, and `fromJSON` rebuilds it, refusing anything that isn't a valid save. The saved data carries a version number, so a later save format can tell old saves apart.
@@ -90,9 +94,44 @@ Small, pure rules that turn outcomes into points and, later, into decisions abou
 
 ---
 
+## levelDone
+
+**Purpose**\
+Gives GameFlow the dialogue for the end of Levels 1 and 2.
+
+**How it works**\
+**`levelDoneLines`** takes the level, the points earned on that level alone (not the game's total), and the most the player could have earned on it. A player with every point is congratulated with one button to continue, and anyone short of that is offered a restart. The words themselves live in `content/dialogueScripts`, with `{level}` marking where the level number goes.
+
+**The choices**\
+On the restart offer, choice 0 restarts the level and choice 1 moves on. GameFlow reads the choice by its position, so a test pins that order, and reordering the buttons in content fails it instead of quietly changing what they do.
+
+---
+
+## medals
+
+**Purpose**\
+Turns the final points into a medal, which is diamond, gold, silver, bronze, or none.
+
+**How it works**\
+**`medalFor`** takes the points and the medal limits from `content/settings` (150, 135, 105 and 75 today), and gives the best medal whose limit the points reach. It refuses negative points, and limits that don't strictly decrease from diamond down to bronze, since either one means a mistake somewhere else.
+
+---
+
+## SaveStore
+
+**Purpose**\
+Puts one checkpoint into the browser's storage and gets it back, so closing the tab doesn't lose the player's progress.
+
+**The storage is passed in**\
+In the game, `main.ts` passes in the browser's `localStorage`. In the tests, a pretend storage stands in, one that can be empty, hold garbage, or refuse to work, so every failure case is tested without a browser.
+
+**When something goes wrong**\
+**`save`** fails quietly if storage is blocked. **`load`** returns `null` when there's no save, when the save can't be read, or when it isn't a valid save, since it checks each one with `PlayerProgress.fromJSON`. As a result, anything `load` does return is safe to continue from.
+
+---
+
 ## Still to come
 
-   - **medals**: Turns the final points into a medal. In review in PR #121.
-   - **SaveStore**: Saves one checkpoint in the browser's storage and loads it back (#67). Saving after every step (#68) and the Continue button (#70) come later and will use it.
+   - **solutionSteps** (#48): The worked steps for finding the right log, using the chasm's own numbers, for the "How to find the right log" screen.
    - **More problem types**: The duel question (#56), which goes in `problems`, and the 3D zipline problem (#62), which gets its own file next to it.
    - **More rules**: Skipping a level after winning the duel (#58), the zipline's points (#63), and the easier round after struggling (#88).
