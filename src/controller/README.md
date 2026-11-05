@@ -70,6 +70,7 @@ Each one pairs a view from `view/` with the `Screen` contract:
    - **ChasmController**: Shows one chasm, takes only the first pick, locks the logs, and reports the pick. It works with any `ChasmView` (anything with `draw`, `onLogClicked`, `lock` and `destroy`), so its tests use a fake view instead of `ChasmScreen`.
    - **DialogueController**: Plays one dialogue scene, from `content/dialogueScripts` or `model/levelDone`, one box per click, and reports when it ends, including which button was picked on a box with choices. The click time comes from a clock it's given, so tests can use a fake one, and the transition length comes from `settings`.
    - **MedalController**: Works out the medal from the player's points with `model/medals`, has `MedalScreen` draw it, and reports `done` once when the player presses See Results. It reads the points when it starts, so it can be created before the last chasm is scored.
+   - **ShopOfferController**: Shows a shop's offer and reports the first button picked, `ACCEPT` or `DECLINE` from `content/shopText`. Later clicks, and clicks after `stop()`, report nothing. It works with any `ShopOfferView` (anything with `draw`, `onChoice` and `destroy`), so its tests use a fake view instead of `ShopOfferScreen`.
 
 **Still to come**: TitleController (#70), the controller for the "How to find the right log" screen (#48), and DuelShopController and ZiplineShopController for the two shop mini-games, planned for Sprint 2.
 
