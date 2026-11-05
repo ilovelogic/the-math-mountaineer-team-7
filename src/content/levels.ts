@@ -1,3 +1,6 @@
+/** The two shops on the trail: the supply shop with the math duel, and the clothing shop with the zipline. */
+export type Shop = 'supplies' | 'clothing';
+
 /**
  * One step of the game, which GameFlow plays in order and saves a checkpoint after.
  * `script` names a scene in content/dialogue scripts.
