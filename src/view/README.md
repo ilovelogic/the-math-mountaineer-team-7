@@ -18,6 +18,7 @@ May import Konva, other `view/` files, and `model/` or `content/` to read what t
   - [ChasmScreen](#chasmscreen)
   - [DialogueBox](#dialoguebox)
   - [MedalScreen](#medalscreen)
+  - [ShopOfferScreen](#shopofferscreen)
   - [Hud](#hud)
 - [Still to come](#still-to-come)
 
@@ -110,6 +111,14 @@ Draws the end screen like the "End: medal" mockup, which is made up of the medal
 **How it's used**\
 **`drawMedalScreen`** is given the stage's layers, the medal and points (which MedalController works out), and a callback for See Results. It returns a function that removes everything it drew, to call when the screen ends. For now, it draws its own mountain background; the mockup uses the glacier background instead, which #138's plan to load backgrounds as images would fix.
 
+### ShopOfferScreen
+
+**Purpose**\
+Draws the outside of a shop with the player walking up to it, and the shop's offer in the shared Dialog box, like the "Supply shop offer" and "Clothing shop offer" mockups. Each shop's scene is one image exported from Figma (`shopSuppliesOutside` and `shopClothingOutside` in `assets`), following #138's plan.
+
+**How it's used**\
+`new ShopOfferScreen(layers, shop, offer)` takes the shop's name and its offer from `content/shopText`. **`draw`** draws the scene and the offer once, **`onChoice`** registers the callback for a button click, and **`destroy`** removes everything. A click reports the button's position, accept first and decline second, and ShopOfferController decides what it means.
+
 ### Hud
 
 **Purpose**\
@@ -124,5 +133,5 @@ GameFlow calls **`update`** with the latest progress whenever it changes, and **
 
    - **The solution view** (#48): The "How to find the right log" screen, with the triangle and the worked steps.
    - **audio**: Plays one sound per outcome (#25), once the sound library (#102) lands.
-   - **TitleScreen, ShopScreen, ZiplineDiagram**: The views for the title and shop screens (#70, #52, #61).
+   - **TitleScreen, ZiplineDiagram**: The views for the title screen and the zipline problem (#70, #61).
    - **Background images**: The plan in #138 is to load backgrounds as images exported from Figma, instead of drawing mountains in code, so every screen shares one copy of the art.
