@@ -1,5 +1,6 @@
-import type { Step } from '../content/levels';
+import type { Shop, Step } from '../content/levels';
 import { settings } from '../content/settings';
+import { DECLINE } from '../content/shopText';
 import type { Place, PlayerProgress, SavedProgress } from '../model/PlayerProgress';
 import { checkPick, makeChasm, type Chasm } from '../model/problems';
 import { pointsFor, type PickResult } from '../model/rules';
@@ -16,7 +17,9 @@ export type ScreenRequest =
   | { kind: 'chasm'; chasm: Chasm }
   /** `points` is what the player earned on this level alone, out of `possiblePoints`. */
   | { kind: 'levelDone'; level: number; points: number; possiblePoints: number }
-  | { kind: 'medal'; points: number };
+  | { kind: 'medal'; points: number }
+  | { kind: 'shopOffer'; shop: Shop }
+  | { kind: 'shopGame'; shop: Shop };
 
 /** The parts of the game GameFlow keeps up to date. Each is optional, so tests pass only what they check. */
 export interface GameFlowOptions {
@@ -50,7 +53,11 @@ export class GameFlow {
     private readonly progress: PlayerProgress,
     private readonly makeScreen: (request: ScreenRequest) => Screen,
     private readonly options: GameFlowOptions = {},
-  ) {}
+  ) {
+    steps.forEach((step, index) => {
+      if (step.kind === 'shopOffer') requireShopGameAfter(steps, index, step.shop);
+    });
+  }
 
   /** Starts playing at `fromStep`: the start of a new game, or the step a loaded save points at. */
   run(fromStep: number = this.progress.step): void {
@@ -105,6 +112,10 @@ export class GameFlow {
         };
       case 'medal':
         return { kind: 'medal', points: this.progress.points };
+      case 'shopOffer':
+        return { kind: 'shopOffer', shop: step.shop };
+      case 'shopGame':
+        return { kind: 'shopGame', shop: step.shop };
     }
   }
 
@@ -119,6 +130,11 @@ export class GameFlow {
       // Restarting earns the level's points again, so take back what this attempt earned.
       this.progress.removePoints(request.points);
       return this.chasmStepsOf(request.level)[0];
+    }
+    // The constructor checked that the shop's mini-game is the next step, so declining
+    // skips exactly that step, and the player earns nothing from the shop.
+    if (request.kind === 'shopOffer' && outcome.kind === 'choice' && outcome.index === DECLINE) {
+      return index + 2;
     }
     return index + 1;
   }
@@ -169,3 +185,17 @@ export class GameFlow {
 // - switch (step.kind) with a return in every case: TypeScript checks every kind of step is handled.
 // - this.options.save?.(...): calls save only if it was passed in; `?.` skips the call when it's undefined.
 // - .at(-1): the last item of an array, or undefined when it's empty.
+
+/**
+ * Declining a shop's offer skips the step after it, so that step must be the same shop's
+ * mini-game. Checking when GameFlow is made means a reordered script fails before anything
+ * is played, instead of a decline quietly skipping the wrong step.
+ */
+function requireShopGameAfter(steps: readonly Step[], index: number, shop: Shop): void {
+  const next = steps[index + 1];
+  if (next?.kind !== 'shopGame' || next.shop !== shop) {
+    throw new Error(`The ${shop} shop offer at step ${index} must come right before the ${shop} shop's mini-game.`);
+  }
+}
+// Optional documentation
+// - next?.kind: reads kind only if there is a next step; past the end of the list it gives undefined, which fails the check.

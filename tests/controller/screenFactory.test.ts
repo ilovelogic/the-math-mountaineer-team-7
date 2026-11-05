@@ -1,12 +1,15 @@
+import { Image } from 'canvas';
 import Konva from 'konva';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { dialogueScripts } from '../../src/content/dialogueScripts';
+import { shopOffers } from '../../src/content/shopText';
 import { ChasmController } from '../../src/controller/ChasmController';
 import { DialogueController } from '../../src/controller/DialogueController';
 import type { ScreenRequest } from '../../src/controller/GameFlow';
 import { MedalController } from '../../src/controller/MedalController';
 import { createScreenFactory } from '../../src/controller/screenFactory';
 import type { Screen } from '../../src/controller/Screen';
+import { ShopOfferController } from '../../src/controller/ShopOfferController';
 import { PlayerProgress } from '../../src/model/PlayerProgress';
 import { makeChasm } from '../../src/model/problems';
 import type { Layers } from '../../src/view/stage';
@@ -88,6 +91,18 @@ describe('createScreenFactory', () => {
     expect(startAndRead(screen)).toContain('See Results');
   });
 
+  it('shows the shop’s offer, from content, for a shop offer step', () => {
+    vi.stubGlobal('Image', Image);
+    const screen = makeScreen({ kind: 'shopOffer', shop: 'clothing' });
+    expect(screen).toBeInstanceOf(ShopOfferController);
+    const { text, accept, decline } = shopOffers.clothing;
+    expect(startAndRead(screen)).toEqual(expect.arrayContaining([text, accept, decline]));
+  });
+
+  it('throws a clear error for a shop mini-game step, since none is built yet', () => {
+    expect(() => makeScreen({ kind: 'shopGame', shop: 'supplies' })).toThrow("The supplies shop's mini-game isn't built yet.");
+  });
+
   it('builds a new screen for every request, so no two steps share one', () => {
     expect(makeScreen({ kind: 'title' })).not.toBe(makeScreen({ kind: 'title' }));
   });
@@ -108,3 +123,5 @@ describe('createScreenFactory', () => {
 // - expect(value, message): the message is shown if the check fails, here naming the log that wasn't drawn.
 // - `${log} m`: a template string; the value inside ${ } is inserted into the text, matching the button's label such as "13 m".
 // - expect(a).not.toBe(b): passes if a and b are not the very same object.
+// - import { Image } from 'canvas' / vi.stubGlobal('Image', Image): Node has no browser Image, so node-canvas's stands in for it while the shop offer draws its pictures.
+// - const { text, accept, decline } = shopOffers.clothing: destructuring, which unpacks the offer's three fields into variables with the same names.
