@@ -1,6 +1,5 @@
-import { Image } from 'canvas';
 import Konva from 'konva';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { dialogueScripts } from '../../src/content/dialogueScripts';
 import { shopOffers } from '../../src/content/shopText';
 import { ChasmController } from '../../src/controller/ChasmController';
@@ -13,6 +12,7 @@ import { ShopOfferController } from '../../src/controller/ShopOfferController';
 import { PlayerProgress } from '../../src/model/PlayerProgress';
 import { makeChasm } from '../../src/model/problems';
 import type { Layers } from '../../src/view/stage';
+import { standInLoadedImages } from '../standInImage';
 
 /**
  * Checks issue #150: the factory turns each kind of step GameFlow asks for into the
@@ -92,7 +92,7 @@ describe('createScreenFactory', () => {
   });
 
   it('shows the shop’s offer, from content, for a shop offer step', () => {
-    vi.stubGlobal('Image', Image);
+    standInLoadedImages();
     const screen = makeScreen({ kind: 'shopOffer', shop: 'clothing' });
     expect(screen).toBeInstanceOf(ShopOfferController);
     const { text, accept, decline } = shopOffers.clothing;
@@ -123,5 +123,5 @@ describe('createScreenFactory', () => {
 // - expect(value, message): the message is shown if the check fails, here naming the log that wasn't drawn.
 // - `${log} m`: a template string; the value inside ${ } is inserted into the text, matching the button's label such as "13 m".
 // - expect(a).not.toBe(b): passes if a and b are not the very same object.
-// - import { Image } from 'canvas' / vi.stubGlobal('Image', Image): Node has no browser Image, so node-canvas's stands in for it while the shop offer draws its pictures.
+// - standInLoadedImages(): Node has no browser Image, so this gives the shop offer an already-loaded 1 × 1 picture to draw (see tests/standInImage.ts).
 // - const { text, accept, decline } = shopOffers.clothing: destructuring, which unpacks the offer's three fields into variables with the same names.

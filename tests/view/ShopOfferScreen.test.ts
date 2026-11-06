@@ -1,23 +1,24 @@
-import { Image } from 'canvas';
 import Konva from 'konva';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { ACCEPT, DECLINE, shopOffers } from '../../src/content/shopText';
 import { ShopOfferScreen } from '../../src/view/ShopOfferScreen';
 import type { Layers } from '../../src/view/stage';
+import { standInLoadedImages } from '../standInImage';
 
 /**
  * Checks what ShopOfferController relies on from the shop offer screen: it shows the
  * shop's offer text from content, its buttons come in ACCEPT then DECLINE order, a click
  * reports that button's position, and destroy() removes everything it drew. It draws real
  * Konva nodes into three bare layers and clicks by firing the event on a button. Node has
- * no browser Image, so node-canvas's stands in for the background and player pictures.
+ * no browser Image, so an already-loaded 1 × 1 picture stands in for the background and
+ * the player (see tests/standInImage.ts).
  * Limit: whether the scene looks like the mockup still needs a look with `npm run dev`.
  */
 
 let layers: Layers;
 
 beforeEach(() => {
-  vi.stubGlobal('Image', Image);
+  standInLoadedImages();
   layers = { background: new Konva.Layer(), sprites: new Konva.Layer(), ui: new Konva.Layer() };
 });
 
@@ -65,8 +66,6 @@ describe('ShopOfferScreen', () => {
 });
 
 // Optional documentation
-// - import { Image } from 'canvas': node-canvas's version of the browser's Image, so Konva.Image has a picture to hold in Node.
-// - vi.stubGlobal('Image', Image): makes `Image` exist for the code under test, as it would in a browser; view/assets uses it when no file has been loaded.
 // - beforeEach(fn): runs fn before every test in the file, so each starts with empty layers.
 // - layers.ui.find<Konva.Text>('Text'): every Text node inside the layer, at any depth; `<Konva.Text>` tells TypeScript what kind of node they are.
 // - .map((node) => node.text()): makes a new array holding each node's text, in the same order.
