@@ -1,3 +1,6 @@
+/** The two shops on the trail: the supply shop with the math duel, and the clothing shop with the zipline. */
+export type Shop = 'supplies' | 'clothing';
+
 /**
  * One step of the game, which GameFlow plays in order and saves a checkpoint after.
  * `script` names a scene in content/dialogue scripts.
@@ -8,7 +11,14 @@ export type Step =
   | { kind: 'chasm'; level: number; topic: string; index: number }
   /** GameFlow picks the "all points" or "under 100%" message from the level's points. */
   | { kind: 'levelDone'; level: number }
-  | { kind: 'medal' };
+  | { kind: 'medal' }
+  /**
+   * The shop asks whether the player wants to come in. It must come right before the
+   * same shop's `shopGame` step, which GameFlow plays on accept and skips on decline.
+   */
+  | { kind: 'shopOffer'; shop: Shop }
+  /** The shop's mini-game: the math duel for the supply shop, and the zipline for the clothing shop. */
+  | { kind: 'shopGame'; shop: Shop };
 
 const TOPIC_2D = 'Pythagorean theorem in 2D';
 

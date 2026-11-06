@@ -17,6 +17,8 @@ export const IMAGE_FILES: Record<string, string> = {
   shopOwnerSupplies: 'images/shopowner-supplies.png',
   shopOwnerClothing: 'images/shopowner-clothing.png',
   shopOwnerCelebrating: 'images/shopowner-celebrating.png',
+  shopSuppliesOutside: 'images/shop-supplies-outside.png',
+  shopClothingOutside: 'images/shop-clothing-outside.png',
 };
 
 /** Every sound the game uses, by name. Add files to `public/assets/sounds/` and list them here. */
