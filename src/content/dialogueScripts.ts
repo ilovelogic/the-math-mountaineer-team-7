@@ -51,5 +51,6 @@ export const dialogueScripts = {
           text: "The Math Mountaineer",
           choices: ["Start"]
         }
-    ]
-};
+    ],
+
+}; 
