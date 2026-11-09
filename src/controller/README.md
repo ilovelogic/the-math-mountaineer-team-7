@@ -54,6 +54,7 @@ Runs the whole game by playing the steps in `content/levels` in order, one scree
 **After each screen**
    - **After a chasm**, GameFlow checks the pick with `model/problems`, turns it into points with `model/rules`, records the answer and adds the points to `PlayerProgress`, and then has the Hud redraw and show its "+ points" tag.
    - **After a Level done message** where the player missed points and chose to restart, it takes back that attempt's points (so they can be earned again) and goes back to the level's first chasm. Choice 0 means restart, matching the order in `model/levelDone`.
+   - **After a shop offer**, it plays the shop's mini-game next if the player accepted, and skips it if they declined, so declining earns no points. When GameFlow is created, it checks that every offer comes right before its own shop's mini-game, so a reordered script fails before anything plays instead of skipping the wrong step.
    - **After any step**, it saves a checkpoint that points at the step to play next, so a closed tab loses at most that step.
 
 **Reports that arrive late**\
@@ -70,6 +71,7 @@ Each one pairs a view from `view/` with the `Screen` contract:
    - **ChasmController**: Shows one chasm, takes only the first pick, locks the logs, and reports the pick. It works with any `ChasmView` (anything with `draw`, `onLogClicked`, `lock` and `destroy`), so its tests use a fake view instead of `ChasmScreen`.
    - **DialogueController**: Plays one dialogue scene, from `content/dialogueScripts` or `model/levelDone`, one box per click, and reports when it ends, including which button was picked on a box with choices. The click time comes from a clock it's given, so tests can use a fake one, and the transition length comes from `settings`.
    - **MedalController**: Works out the medal from the player's points with `model/medals`, has `MedalScreen` draw it, and reports `done` once when the player presses See Results. It reads the points when it starts, so it can be created before the last chasm is scored.
+   - **ShopOfferController**: Shows a shop's offer and reports the first button picked, `ACCEPT` or `DECLINE` from `content/shopText`. Later clicks, and clicks after `stop()`, report nothing. It works with any `ShopOfferView` (anything with `draw`, `onChoice` and `destroy`), so its tests use a fake view instead of `ShopOfferScreen`.
 
 **Still to come**: TitleController (#70), the controller for the "How to find the right log" screen (#48), and DuelShopController and ZiplineShopController for the two shop mini-games, planned for Sprint 2.
 
@@ -86,6 +88,8 @@ Builds the screen for each step GameFlow plays, so GameFlow never needs to know 
    - **A dialogue step**: A `DialogueController` playing the scene it names from `content/dialogueScripts`.
    - **A Level done step**: A `DialogueController` playing `levelDoneLines(...)`, filled in with the level's points.
    - **The medal**: A `MedalController`.
+   - **A shop offer**: A `ShopOfferController` around a new `ShopOfferScreen`, showing that shop's offer from `content/shopText`.
+   - **A shop mini-game**: Throws an error saying it isn't built yet, until #55 and #61 fill in this case.
 
 **The title step**\
 Until the title screen (#70) exists, the title step plays `titlePlaceholder`, a one-box scene with the game's title and a Start button. Accordingly, #70 only has to replace this one case.

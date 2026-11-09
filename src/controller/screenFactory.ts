@@ -1,14 +1,17 @@
 import { dialogueScripts } from '../content/dialogueScripts';
+import { shopOffers } from '../content/shopText';
 import type { DialogueLine } from '../model/Dialogue';
 import { levelDoneLines } from '../model/levelDone';
 import type { ProgressView } from '../model/PlayerProgress';
 import { ChasmScreen } from '../view/ChasmScreen';
+import { ShopOfferScreen } from '../view/ShopOfferScreen';
 import type { Layers } from '../view/stage';
 import { ChasmController } from './ChasmController';
 import { DialogueController } from './DialogueController';
 import type { ScreenRequest } from './GameFlow';
 import { MedalController } from './MedalController';
 import type { Screen } from './Screen';
+import { ShopOfferController } from './ShopOfferController';
 
 /**
  * Builds the screen for each step GameFlow plays, so GameFlow never needs to know
@@ -30,6 +33,12 @@ export function createScreenFactory(layers: Layers, progress: ProgressView): (re
         return new DialogueController(layers, levelDoneLines(request.level, request.points, request.possiblePoints));
       case 'medal':
         return new MedalController(layers, progress);
+      case 'shopOffer':
+        return new ShopOfferController(new ShopOfferScreen(layers, request.shop, shopOffers[request.shop]));
+      case 'shopGame':
+        // The math duel (#55) and the zipline (#61) aren't built yet, so the game's
+        // script has no shop steps until one of them fills in this case.
+        throw new Error(`The ${request.shop} shop's mini-game isn't built yet.`);
       default: {
         const unhandled: never = request;
         throw new Error(`There is no screen for ${JSON.stringify(unhandled)}.`);
