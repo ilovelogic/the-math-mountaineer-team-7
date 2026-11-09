@@ -68,8 +68,10 @@ export class ChasmController implements Screen {
 
             return;
         }
+        // original selection
         this.pendingIndex = index;
 
+        // answer was wrong, so get the right and wrong answer values
         const selectedLength = this.chasm.logs[index];
         const correctLength = this.chasm.logs[this.chasm.correct];
 

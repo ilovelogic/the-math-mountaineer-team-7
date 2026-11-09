@@ -3,7 +3,7 @@ import { createDialogBox } from './components/dialogBox';
 import { createLogButton, type LogButton } from './components/logButton';
 import type { Layers } from './stage';
 import { colors, text } from './theme';
-import { dialogueScripts } from '../content/dialogueScripts';
+
 
 export interface DrawnChasm {
   /** The rise, drawn up the far cliff. */
