@@ -68,6 +68,15 @@ describe('view/assets', () => {
     expect(console.warn).not.toHaveBeenCalled();
   });
 
+  it('has a loaded sound for every cue the game plays', async () => {
+    const { loadAssets, sound } = await freshAssets();
+    await loadAssets();
+    for (const cue of ['fits', 'tooShort', 'tooLong', 'levelDone', 'medal']) {
+      expect(sound(cue).src).toMatch(/assets\/sounds\/[a-z-]+\.mp3$/);
+    }
+    expect(console.warn).not.toHaveBeenCalled();
+  });
+
   it('shows a placeholder when a file fails to load, and still loads the rest', async () => {
     failing = ['images/friend.png'];
     const { loadAssets, image } = await freshAssets();
