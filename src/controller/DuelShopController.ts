@@ -20,13 +20,15 @@ export interface DuelQuestionChoices {
 /** The store owner's race to solve the question (#57). `start` calls `onFinish` once the store owner is done. */
 export interface OpponentTimer {
   start(onFinish: () => void): void;
+  /** Must be safe to call without throwing an error when the timer isn't running, and from inside `onFinish`. */
   stop(): void;
 }
 
 /**
  * How the duel ended, reported as `{ kind: 'choice', index }` for GameFlow to apply (#134):
  * the player won and took the shortcut, won but took the normal path, or didn't win
- * (left before the duel, or lost it).
+ * (left before the duel, or lost it). These are results, not button positions, since
+ * different buttons on different pages can end the duel the same way.
  */
 export const DUEL_RESULT = { skipLevel: 0, normalPath: 1, notWon: 2 } as const;
 
