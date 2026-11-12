@@ -12,6 +12,7 @@ Imports nothing. Change a number here instead of in code.
 - [levels](#levels)
 - [dialogueScripts](#dialoguescripts)
 - [shopText](#shoptext)
+- [duelText](#dueltext)
 - [settings](#settings)
 
 ---
@@ -55,6 +56,13 @@ Add a new key with its boxes, and then add a `dialogue` step naming that key in 
 
 **Purpose**\
 Stores each shop's offer: what the shop says when the player walks up to it, and the words on its accept and decline buttons, worded as in the shop offer mockups. The fields are named, so nobody has to remember which button comes first. `ACCEPT` (0) and `DECLINE` (1) are the positions the two buttons report, accept first as the teal button, and GameFlow reads the choice with them.
+
+---
+
+## duelText
+
+**Purpose**\
+Stores the math duel's text, one entry per page of the "Mini-game 1: Math duel" mockups (`challenge`, `tutorialOffer`, `tutorial`, `duel`, `won`, `climb`, `lost` and `solution`), each with its words and its buttons in the order they're shown. DuelShopController decides where each button leads. The duel page's buttons are the question's options, so it lists none, and the tutorial and solution text stand in until #158 draws those pages.
 
 ---
 
