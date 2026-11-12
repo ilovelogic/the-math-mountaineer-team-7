@@ -80,7 +80,10 @@ Every chasm offers three logs: the one that fits (the hypotenuse, `c`) and two w
 **`checkPick`** compares the picked log to `c` and reports `'fits'`, `'tooShort'` or `'tooLong'`.
 
 **The duel question**\
-**`makeDuelQuestion`** takes the game's seed and gives the supply shop's duel: one of Level 1's triangles (since winning skips Level 1, and small numbers suit a timed race) with three answers, `c`, one 1 to 3 shorter and one 1 to 3 longer, shuffled. `correct` is where `c` sits. It mixes a constant into the seed so its triangle doesn't always match the last chasm of Level 1, which reads the same first random number.
+**`makeDuelQuestion`** takes the game's seed and gives the supply shop's duel: one of Level 1's triangles (since winning skips Level 1, and small numbers suit a timed race) with three answers, `c` and two wrong ones made by **`answerChoices`**. `correct` is where `c` sits.
+
+**Answer choices**\
+**`answerChoices`** makes the three answers for the duel and the zipline: the right one and two wrong ones, each 1 to 3 away from it and different from each other, shuffled. The right answer is equally likely to be the smallest, middle or largest of the three, so always picking the middle number doesn't win. The chasm logs don't use it, since their wrong logs are meant to range much further from `c`.
 
 **Seeded random numbers**\
 **`makeRng`** turns a seed into a generator of random numbers that repeat exactly for the same seed. That's what makes a saved game and a test both reproducible.

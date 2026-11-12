@@ -99,6 +99,44 @@ export function makeChasm(seed: number, level: number, index: number): Chasm {
 }
 
 /**
+ * Makes the three answers for a question whose right answer is `correct`, in a
+ * shuffled order. Each wrong answer is 1 to `maxMiss` away from `correct`, and
+ * the two are different. The right answer is equally likely to be the smallest,
+ * the middle or the largest of the three, so a player can't win by always
+ * picking the middle one. The wrong answers stay positive as long as `correct`
+ * is bigger than `maxMiss`, and `maxMiss` has to be at least 2 so that two
+ * different misses exist.
+ */
+export function answerChoices(rng: () => number, correct: number, maxMiss: number): number[] {
+    const miss = () => 1 + Math.floor(rng() * maxMiss);
+    const firstMiss = miss();
+    let secondMiss = miss();
+    while (secondMiss === firstMiss) {
+        secondMiss = miss();
+    }
+
+    // How many wrong answers are smaller than the right one: 0, 1 or 2, each a third of the time.
+    const smallerCount = Math.floor(rng() * 3);
+    let options: number[];
+    if (smallerCount === 0) {
+        options = [correct, correct + firstMiss, correct + secondMiss];
+    } else if (smallerCount === 1) {
+        options = [correct, correct - firstMiss, correct + secondMiss];
+    } else {
+        options = [correct, correct - firstMiss, correct - secondMiss];
+    }
+
+    for (let i = options.length - 1; i > 0; i--) {
+        const j = Math.floor(rng() * (i + 1));
+        [options[i], options[j]] = [options[j], options[i]];
+    }
+    return options;
+}
+// Optional documentation
+// - rng: () => number: a function that returns a random number from 0 up to (but not including) 1, like the ones makeRng makes.
+// - [options[i], options[j]] = [options[j], options[i]]: swaps two answers in one step.
+
+/**
  * The supply shop's duel: a right triangle with legs `a` and `b`, where the
  * player races the store owner to pick the hypotenuse `c` from three answers.
  */
@@ -117,34 +155,21 @@ export interface DuelQuestion {
 const DUEL_MAX_MISS = 3;
 
 /**
- * Mixed into the seed so the duel gets its own random numbers. Without it, the
- * duel's triangle would always match the last chasm of Level 1, since both
- * would read the same first random number.
- */
-const DUEL_SEED_MIX = 0x9E3779B9;
-
-/**
  * Makes the duel question for a game. The same seed always gives the same
  * question. Winning the duel skips Level 1, so the triangle is one of Level 1's,
- * small enough to solve in your head during a race. One wrong answer is 1 to 3
- * shorter than `c` and one is 1 to 3 longer, so the player has to work it out
- * rather than rule out answers that are far off.
+ * small enough to solve in your head during a race. Both wrong answers are
+ * within 3 of `c`, so the player has to work it out rather than rule out
+ * answers that are far off.
  */
 export function makeDuelQuestion(seed: number): DuelQuestion {
     if (!Number.isInteger(seed) || seed < 0) {
         throw new Error("Seed must be 0 or a positive integer");
     }
-    const rng = makeRng((seed ^ DUEL_SEED_MIX) >>> 0);
-    const miss = () => 1 + Math.floor(rng() * DUEL_MAX_MISS);
+    const rng = makeRng(seed);
 
     const levelTriples = triplesByLevel[0];
     const [a, b, c] = levelTriples[Math.floor(rng() * levelTriples.length)];
-
-    const options = [c - miss(), c, c + miss()];
-    for (let i = options.length - 1; i > 0; i--) {
-        const j = Math.floor(rng() * (i + 1));
-        [options[i], options[j]] = [options[j], options[i]];
-    }
+    const options = answerChoices(rng, c, DUEL_MAX_MISS);
 
     return { a, b, c, options, correct: options.indexOf(c) };
 }
