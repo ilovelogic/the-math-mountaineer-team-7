@@ -6,8 +6,10 @@ import { checkPick, type Chasm } from '../model/problems'
 export interface ChasmView {
     draw(): void;
     onLogClicked(cb: (index: number) => void): void;
-    onChoiceSelected(cb: () => void): void;
+    onChoiceSelected(cb: (index: number) => void): void;
+    showCorrectFeedback(correctLength: number): void;
     showFeedback(result: 'tooShort' | 'tooLong', selectedLength: number, correctLength: number): void;
+    showCrossing(correctLength: number): void;
     lock(): void;
     destroy(): void;
 }
@@ -18,6 +20,8 @@ export class ChasmController implements Screen {
     private hasPicked = false;
     private stopped = false;
     private pendingIndex: number | null = null;
+    private showingCrossing = false;
+    private wasCorrect = false;
 
 
     constructor(private readonly screen: ChasmView,
@@ -32,8 +36,26 @@ export class ChasmController implements Screen {
             this.handlePick(index);
         });
 
-        this.screen.onChoiceSelected(() => {
-            if (this.pendingIndex === null) return;
+        this.screen.onChoiceSelected((index) => {
+            if (this.pendingIndex === null || index !== 0) return;
+
+            if (this.wasCorrect) {
+                this.screen.lock();
+
+                this.onDone?.({
+                    kind: 'choice',
+                    index: this.pendingIndex
+                });
+                return;
+            }
+
+            if(!this.showingCrossing) {
+                const correctLength = this.chasm.logs[this.chasm.correct];
+
+                this.showingCrossing = true;
+                this.screen.showCrossing(correctLength);
+                return;
+            }
 
             this.screen.lock();
 
@@ -41,6 +63,7 @@ export class ChasmController implements Screen {
                 kind: 'choice',
                 index: this.pendingIndex
             });
+
         });
 
     }
@@ -59,16 +82,16 @@ export class ChasmController implements Screen {
         this.hasPicked = true;
 
         const result = checkPick(this.chasm, index);
-        if (result === 'fits') {
-            this.screen.lock();
-            this.onDone?.({
-                kind: 'choice',
-                index
-            });
 
+        if (result === 'fits') {
+            this.wasCorrect = true;
+            this.pendingIndex = index;
+            this.screen.showCorrectFeedback(this.chasm.logs[index]);
             return;
-        }
+        };
+
         // original selection
+        this.wasCorrect = false;
         this.pendingIndex = index;
 
         // answer was wrong, so get the right and wrong answer values

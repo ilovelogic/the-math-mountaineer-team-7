@@ -70,7 +70,7 @@ export class ChasmScreen {
     this.onClick = cb;
   }
 
-  onChoiceSelected(cb: () => void): void {
+  onChoiceSelected(cb: (index: number) => void): void {
     this.choiceCallback = cb;
   }
 
@@ -91,13 +91,30 @@ export class ChasmScreen {
     this.props.destroy();
     this.controls.destroy();
   }
-
+  showCorrectFeedback(correctLength: number): void {
+    this.prompt.show(
+      `The ${correctLength} m log fits. You cross the gap and find one of your friend's items.`,
+      ['Continue']
+    );
+  }
   showFeedback(result: 'tooShort' | 'tooLong', selectedLength: number, correctLength: number): void {
+    this.locked = true;
+    if (this.picked !== null) {
+        this.buttons[this.picked].setState('used');
+    }
+  
     const message = result === 'tooShort'
         ? `The ${selectedLength} m log is too short. It falls into the chasm. The right log was the ${correctLength} m log.`
         : `The ${selectedLength} m log is too long. It smashes your friend's item on the other side, and you lose the points it was worth. The right log was the ${correctLength} m log.`;
 
-    this.prompt.show(message, ['Continue']);
+    this.prompt.show(message, ['Cross the chasm using the correct log']);
+  }
+
+  showCrossing(correctLength: number): void {
+    this.prompt.show(
+      `You law down the ${correctLength} m log and cross the chasm.`,
+      ['Continue']
+    );
   }
 
   private drawScenery(): void {
