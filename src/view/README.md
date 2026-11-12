@@ -19,6 +19,7 @@ May import Konva, other `view/` files, and `model/` or `content/` to read what t
   - [DialogueBox](#dialoguebox)
   - [MedalScreen](#medalscreen)
   - [ShopOfferScreen](#shopofferscreen)
+  - [TitleScreen](#titlescreen)
   - [Hud](#hud)
 - [Still to come](#still-to-come)
 
@@ -119,6 +120,14 @@ Draws the outside of a shop with the player walking up to it, and the shop's off
 **How it's used**\
 `new ShopOfferScreen(layers, shop, offer)` takes the shop's name and its offer from `content/shopText`. **`draw`** draws the scene and the offer once, **`onChoice`** registers the callback for a button click, and **`destroy`** removes everything. A click reports the button's position, accept first and decline second, and ShopOfferController decides what it means.
 
+### TitleScreen
+
+**Purpose**\
+Draws the title screen like its mockup: the mountains, the mountaineer and the friend, and a card with the game's name, a one-line pitch, New game, and Continue when there's a game to continue. The mountains are one image exported from Figma (`mountainsDay` in `assets`), so #138 can reuse it for the chasm screen. The mockup's small note under the buttons is for us, not players, so it isn't drawn.
+
+**How it's used**\
+`new TitleScreen(layers)` and then **`draw(canContinue)`** draws it once, **`onChoice`** registers the callback for a button click, and **`destroy`** removes everything. A click reports the button's position, New game first and Continue second, and TitleController decides what it means.
+
 ### Hud
 
 **Purpose**\
@@ -133,5 +142,5 @@ GameFlow calls **`update`** with the latest progress whenever it changes, and **
 
    - **The solution view** (#48): The "How to find the right log" screen, with the triangle and the worked steps.
    - **audio**: Plays one sound per outcome (#25), once the sound library (#102) lands.
-   - **TitleScreen, ZiplineDiagram**: The views for the title screen and the zipline problem (#70, #61).
+   - **ZiplineDiagram**: The view for the zipline problem (#61).
    - **Background images**: The plan in #138 is to load backgrounds as images exported from Figma, instead of drawing mountains in code, so every screen shares one copy of the art.
