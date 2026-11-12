@@ -92,6 +92,11 @@ export class ChasmScreen {
     this.controls.destroy();
   }
   showCorrectFeedback(correctLength: number): void {
+    this.locked = true;
+    if (this.picked !== null) {
+        this.buttons[this.picked].setState('used');
+    }
+    
     this.prompt.show(
       `The ${correctLength} m log fits. You cross the gap and find one of your friend's items.`,
       ['Continue']
@@ -112,7 +117,7 @@ export class ChasmScreen {
 
   showCrossing(correctLength: number): void {
     this.prompt.show(
-      `You law down the ${correctLength} m log and cross the chasm.`,
+      `You lay down the ${correctLength} m log and cross the chasm.`,
       ['Continue']
     );
   }
