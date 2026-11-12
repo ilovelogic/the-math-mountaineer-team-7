@@ -302,3 +302,53 @@ describe('controller/GameFlow shop offers (#52, #53)', () => {
 // - it.each([...] as [string, Step[]][])(name, fn): runs the same test once per row, passing the row's items to fn; %s in the name is filled in from the row, and the `as` tells TypeScript each row is a label and a script.
 // - (_, script) =>: `_` names a parameter the test doesn't use, here the row's label.
 // - expect(() => ...).toThrow(text): passes only if calling the function throws an error whose message contains `text`.
+describe('level attempt history (#87)', () => {
+  it('keeps both scores after restarting a level and loading a save', () => {
+    play(steps, 3);
+
+    // First attempt: one correct answer, four wrong.
+    pickRight();
+    for (let i = 0; i < 4; i++) pickWrong();
+
+    expect(progress.levelAttempts).toEqual([
+      { level: 1, points: 10 },
+    ]);
+
+    // Restart, then answer all five correctly.
+    last().report({ kind: 'choice', index: 0 });
+    for (let i = 0; i < 5; i++) pickRight();
+
+    const expected = [
+      { level: 1, points: 10 },
+      { level: 1, points: 50 },
+    ];
+
+    expect(progress.levelAttempts).toEqual(expected);
+
+    // Reload at Level done: neither lose nor duplicate an attempt.
+    progress = PlayerProgress.fromJSON(saves.at(-1)!);
+    screens = [];
+    play();
+
+    expect(last().request.kind).toBe('levelDone');
+    expect(progress.levelAttempts).toEqual(expected);
+  });
+
+  it('records all three levels, including the final level before the medal', () => {
+    play();
+
+    while (last().request.kind !== 'medal') {
+      if (last().request.kind === 'chasm') pickRight();
+      else done();
+    }
+
+    const expected = [
+      { level: 1, points: 50 },
+      { level: 2, points: 50 },
+      { level: 3, points: 50 },
+    ];
+
+    expect(progress.levelAttempts).toEqual(expected);
+    expect(saves.at(-1)?.levelAttempts).toEqual(expected);
+  });
+});
