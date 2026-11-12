@@ -28,7 +28,7 @@ export function createScreenFactory(layers: Layers, progress: ProgressView): (re
       case 'dialogue':
         return new DialogueController(layers, sceneNamed(request.script));
       case 'chasm':
-        return new ChasmController(new ChasmScreen(layers, request.chasm));
+        return new ChasmController(new ChasmScreen(layers, request.chasm), request.chasm);
       case 'levelDone':
         return new DialogueController(layers, levelDoneLines(request.level, request.points, request.possiblePoints));
       case 'medal':

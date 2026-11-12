@@ -13,7 +13,7 @@ const QUESTION = 'Which log fits across this gap?';
  * the "Pick a log" mockup.
  */
 
-const chasm = { a: 5, b: 12, logs: [5, 13, 17] };
+const chasm = { a: 5, b: 12, logs: [5, 13, 17], correct: 1 };
 
 let layers: Layers;
 let screen: ChasmScreen;
@@ -39,7 +39,7 @@ describe('view/ChasmScreen', () => {
 
   it('shows a button for each log in the chasm’s order, and piles them shortest on top', () => {
     screen.destroy();
-    screen = new ChasmScreen(layers, { a: 7, b: 24, logs: [31, 20, 25] });
+    screen = new ChasmScreen(layers, { a: 7, b: 24, logs: [31, 20, 25], correct: 0 });
     screen.draw();
     expect(buttons().map((button) => button.findOne<Konva.Text>('Text')?.text())).toEqual(['31 m', '20 m', '25 m']);
     expect(texts(layers.sprites).filter((t) => ['20 m', '25 m', '31 m'].includes(t))).toEqual(['20 m', '25 m', '31 m']);

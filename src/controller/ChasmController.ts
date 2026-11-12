@@ -1,10 +1,13 @@
 import type { Screen, Outcome } from './Screen';
+import { checkPick, type Chasm } from '../model/problems'
 
 
 
 export interface ChasmView {
     draw(): void;
     onLogClicked(cb: (index: number) => void): void;
+    onChoiceSelected(cb: () => void): void;
+    showFeedback(result: 'tooShort' | 'tooLong', selectedLength: number, correctLength: number): void;
     lock(): void;
     destroy(): void;
 }
@@ -14,11 +17,12 @@ export class ChasmController implements Screen {
     private onDone?: (outcome: Outcome) => void;
     private hasPicked = false;
     private stopped = false;
+    private pendingIndex: number | null = null;
 
 
-    constructor(private readonly screen: ChasmView) {
-
-    }
+    constructor(private readonly screen: ChasmView,
+        private readonly chasm: Chasm
+    ) {}
 
     start(onDone: (outcome: Outcome) => void): void {
         this.onDone = onDone;
@@ -26,6 +30,17 @@ export class ChasmController implements Screen {
         this.screen.draw();
         this.screen.onLogClicked((index) => {
             this.handlePick(index);
+        });
+
+        this.screen.onChoiceSelected(() => {
+            if (this.pendingIndex === null) return;
+
+            this.screen.lock();
+
+            this.onDone?.({
+                kind: 'choice',
+                index: this.pendingIndex
+            });
         });
 
     }
@@ -43,12 +58,24 @@ export class ChasmController implements Screen {
 
         this.hasPicked = true;
 
-        this.screen.lock();
+        const result = checkPick(this.chasm, index);
+        if (result === 'fits') {
+            this.screen.lock();
+            this.onDone?.({
+                kind: 'choice',
+                index
+            });
 
-        this.onDone?.({
-            kind: 'choice',
-            index
-        });
+            return;
+        }
+        // original selection
+        this.pendingIndex = index;
+
+        // answer was wrong, so get the right and wrong answer values
+        const selectedLength = this.chasm.logs[index];
+        const correctLength = this.chasm.logs[this.chasm.correct];
+
+        this.screen.showFeedback(result, selectedLength, correctLength);
     }
 
 }
