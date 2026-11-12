@@ -117,6 +117,14 @@ export class ChasmScreen {
     );
   }
 
+  showFeedback(result: 'tooShort' | 'tooLong', selectedLength: number, correctLength: number): void {
+    const message = result === 'tooShort'
+        ? `The ${selectedLength} m log is too short. It falls into the chasm. The right log was the ${correctLength} m log.`
+        : `The ${selectedLength} m log is too long. It smashes your friend's item on the other side, and you lose the points it was worth. The right log was the ${correctLength} m log.`;
+
+    this.prompt.show(message, ['Continue']);
+  }
+
   private drawScenery(): void {
     this.scenery.add(new Konva.Rect({ width: 960, height: 540, fill: colors.skyDay }));
     FAR_PEAKS.forEach((top, i) => {

@@ -63,7 +63,6 @@ export class ChasmController implements Screen {
                 kind: 'choice',
                 index: this.pendingIndex
             });
-
         });
 
     }
