@@ -4,8 +4,8 @@ import { checkZiplineAnswer, makeZiplineProblem, ziplineBoxes } from '../../src/
 /**
  * Checks issue #62: the zipline problem is a box with a whole-number space
  * diagonal, the same seed always gives the same problem, and an answer is right
- * only when it's the diagonal. Most checks run over seeds 0 to 199, enough to
- * meet every box in `ziplineBoxes`.
+ * only when it's the diagonal, which isn't always the middle guess (#168).
+ * Most checks run over seeds 0 to 199, enough to meet every box in `ziplineBoxes`.
  */
 
 const seeds = Array.from({ length: 200 }, (_, seed) => seed);
@@ -37,20 +37,24 @@ describe('makeZiplineProblem', () => {
     }
   });
 
-  it('offers the diagonal, one shorter guess and one longer guess, each within 3', () => {
+  it('offers the diagonal and two different positive wrong guesses, each within 3', () => {
     for (const p of problems) {
       expect(p.options[p.correct]).toBe(p.diagonal);
-      const wrong = p.options.filter((option) => option !== p.diagonal).sort((x, y) => x - y);
-      expect(wrong).toHaveLength(2);
-      expect(p.diagonal - wrong[0]).toBeGreaterThanOrEqual(1);
-      expect(p.diagonal - wrong[0]).toBeLessThanOrEqual(3);
-      expect(wrong[1] - p.diagonal).toBeGreaterThanOrEqual(1);
-      expect(wrong[1] - p.diagonal).toBeLessThanOrEqual(3);
+      expect(new Set(p.options).size).toBe(3);
+      for (const option of p.options) {
+        expect(option).toBeGreaterThan(0);
+        expect(Math.abs(option - p.diagonal)).toBeLessThanOrEqual(3);
+      }
     }
   });
 
   it('puts the right guess in each of the three places', () => {
     expect(new Set(problems.map((p) => p.correct))).toEqual(new Set([0, 1, 2]));
+  });
+
+  it('sometimes makes the diagonal the smallest or the largest guess, not always the middle', () => {
+    const places = problems.map((p) => p.options.filter((option) => option < p.diagonal).length);
+    expect(new Set(places)).toEqual(new Set([0, 1, 2]));
   });
 
   it.each([-1, 1.5, NaN])('rejects the seed %s', (seed) => {
@@ -76,4 +80,6 @@ describe('checkZiplineAnswer', () => {
 // - seeds.map(makeZiplineProblem): one problem per seed, made once and shared by the tests.
 // - x ** 2: x squared.
 // - new Set(...): keeps one copy of each value, so its size counts the different ones.
+// - Math.abs(x): x without its sign, so it measures distance either way.
+// - p.options.filter((option) => option < p.diagonal).length: how many guesses are smaller than the diagonal, which is the diagonal's place from smallest (0) to largest (2).
 // - it.each([...])('... %s', fn): runs the test once per value, putting the value into the test's name.
