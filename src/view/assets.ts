@@ -19,6 +19,8 @@ export const IMAGE_FILES: Record<string, string> = {
   shopOwnerCelebrating: 'images/shopowner-celebrating.png',
   shopSuppliesOutside: 'images/shop-supplies-outside.png',
   shopClothingOutside: 'images/shop-clothing-outside.png',
+  /** The sky, peaks and snow field from Figma's `Background/Mountains - day`, for any screen set on the mountains (#138). */
+  mountainsDay: 'images/mountains-day.png',
 };
 
 /**

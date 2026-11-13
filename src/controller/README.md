@@ -13,13 +13,14 @@ May import `model/`, `view/`, and `content/`. Nothing else imports from here exc
 - [GameFlow](#gameflow)
 - [The screen controllers](#the-screen-controllers)
 - [The screen factory](#the-screen-factory)
+- [Starting the game](#starting-the-game)
 - [Crossing one chasm, start to finish](#crossing-one-chasm-start-to-finish)
 
 ---
 
 ## Overview
 
-This is the folder that turns our separate screens into a game. It holds the `Screen` contract, GameFlow, which plays the game's steps, a controller for each kind of screen built so far, and the screen factory, which builds the right screen for each step. `main.ts` creates GameFlow with that factory and starts it.
+This is the folder that turns our separate screens into a game. It holds the `Screen` contract, GameFlow, which plays the game's steps, a controller for each kind of screen built so far, and the screen factory, which builds the right screen for each step. `main.ts` shows the title screen first, then creates GameFlow with that factory for the game the player picked.
 
 <img src="../../docs/images/cc-view.png" width="900" />\
 *The runtime (C&C) view, showing what talks to what while the game runs. Connector names match the code, and components marked "Not built yet" show the design. View the live version in [Figma](https://www.figma.com/design/LLtfHewfTMLycUXFUVuyEH).*
@@ -74,7 +75,9 @@ Each one pairs a view from `view/` with the `Screen` contract:
    - **ShopOfferController**: Shows a shop's offer and reports the first button picked, `ACCEPT` or `DECLINE` from `content/shopText`. Later clicks, and clicks after `stop()`, report nothing. It works with any `ShopOfferView` (anything with `draw`, `onChoice` and `destroy`), so its tests use a fake view instead of `ShopOfferScreen`.
    - **DuelShopController**: Plays the math duel page by page, as in the Math duel mockups: the challenge, the tutorial offer and tutorial, the duel, and the won (then climb) or lost (then solution) pages, with each page's text from `content/duelText`. On the duel page, the right option wins, while a wrong one or the store owner's timer finishing first loses. It reports how the duel ended once, as a choice from `DUEL_RESULT`: `skipLevel` (won and took the shortcut), `normalPath` (won but turned down the gear) or `notWon` (left before the duel, or lost), and GameFlow decides what that means (#134). Clicks just after a page appears are ignored, using the same `dialogueTransitionMs` as dialogue, so a fast double click never presses a button on the next page. It works with any `DuelView`, `DuelQuestionChoices` and `OpponentTimer`, so its tests use stand-ins; the real view, the question (#56) and the timer (#57) come with #158 and #55.
 
-**Still to come**: TitleController (#70), the controller for the "How to find the right log" screen (#48), and ZiplineShopController for the zipline shop (#61), planned for Sprint 2.
+   - **TitleController**: Shows the title screen with New game, plus Continue when it's told there's a game to continue, and reports the first button picked, `NEW_GAME` or `CONTINUE`. It never reads the save itself (see [Starting the game](#starting-the-game)). It works with any `TitleView`, so its tests use a fake view instead of `TitleScreen`.
+
+**Still to come**: the controller for the "How to find the right log" screen (#48), and ZiplineShopController for the zipline shop (#61), planned for Sprint 2.
 
 ---
 
@@ -92,11 +95,21 @@ Builds the screen for each step GameFlow plays, so GameFlow never needs to know 
    - **A shop offer**: A `ShopOfferController` around a new `ShopOfferScreen`, showing that shop's offer from `content/shopText`.
    - **A shop mini-game**: Throws an error saying it isn't built yet, until #55 and #61 fill in this case.
 
-**The title step**\
-Until the title screen (#70) exists, the title step plays `titlePlaceholder`, a one-box scene with the game's title and a Start button. Accordingly, #70 only has to replace this one case.
-
 **When something's wrong**\
 A dialogue step naming a scene that doesn't exist (e.g., a typo in `content/levels`) throws an error naming that scene, instead of handing `undefined` to the screen. A `never` check after the `switch` also means a new kind of step added to GameFlow without a case here stops the build, so the forgotten case is caught before it merges.
+
+---
+
+## Starting the game
+
+**Purpose**\
+Shows the title screen and starts the game the player picked: the saved one on Continue, or a new one on New game (#70, #71).
+
+**How it's used**\
+`main.ts` calls **`startGame`** with what `SaveStore.load()` returned, the position of the last step, a function that builds the title screen, and a function that starts GameFlow with a `PlayerProgress`. Continue shows only for a save that hasn't reached the last step, since continuing a finished game would only show the medal again. A missing or unreadable save is already `null` from `SaveStore`, so it gets only New game too.
+
+**Why the title isn't a step**\
+GameFlow, the screen factory and the Hud all share one `PlayerProgress`. Choosing it before GameFlow starts means it's never swapped out partway through, and GameFlow never has to load saves. The Hud is also made only after the title, so the title screen has no top bar, like its mockup. The cost is that the title can't be replayed through GameFlow, for example after the medal; reloading the page shows it again.
 
 ---
 
