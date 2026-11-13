@@ -11,6 +11,9 @@ import { loadFonts } from './view/fonts';
 import { Hud } from './view/Hud';
 import { createStage } from './view/stage';
 
+import { makeZiplineProblem } from './model/zipline';
+
+
 // Every image, sound and font is loaded before anything is drawn, so no screen waits
 // on a file and Konva never draws text in the fallback font and then has to redraw it.
 await Promise.all([loadAssets(), loadFonts()]);
@@ -23,11 +26,33 @@ const hud = new Hud(layers);
 const progress = new PlayerProgress(newSeed());
 const store = new SaveStore(window.localStorage);
 
-const flow = new GameFlow(steps, progress, createScreenFactory(layers, progress), {
-  hud,
-  // Wrapped in an arrow function so `save` still knows which SaveStore it belongs to.
-  save: (saved) => store.save(saved),
-});
+// const flow = new GameFlow(steps, progress, createScreenFactory(layers, progress), {
+//   hud,
+//   // Wrapped in an arrow function so `save` still knows which SaveStore it belongs to.
+//   save: (saved) => store.save(saved),
+// });
+
+const makeScreen = createScreenFactory(layers, progress);
+console.log('Zipline answer:', makeZiplineProblem(progress.seed).diagonal);
+const flow = new GameFlow(
+  [{ kind: 'shopOffer', shop: 'clothing' }, { kind: 'shopGame', shop: 'clothing' }, ...steps],
+  progress,
+  (request) => {
+    const screen = makeScreen(request);
+    return {
+      start: (onDone) => screen.start((outcome) => {
+        console.log(request.kind, 'reported', outcome);
+        onDone(outcome);
+      }),
+      stop: () => screen.stop(),
+    };
+  },
+  {
+    hud,
+    save: (saved) => store.save(saved),
+  }
+);
+
 flow.run();
 // Optional documentation
 // - await at the top level of a module: the rest of this file waits for the promise; it's allowed in ES modules, which Vite builds.
