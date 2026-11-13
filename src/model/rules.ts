@@ -11,3 +11,8 @@ export function pointsFor(result: PickResult, settings: Settings): number {
   if (result === 'fits') return settings.pointsPerChasm;
   return 0;
 }
+
+/** The zipline shop pays only for the right answer; a wrong one, or leaving, earns nothing. */
+export function ziplinePoints(right: boolean, settings: Settings): number {
+  return right ? settings.pointsPerZipline : 0;
+}

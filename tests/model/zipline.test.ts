@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { checkZiplineAnswer, makeZiplineProblem, ziplineBoxes } from '../../src/model/zipline';
+import { checkZiplineAnswer, fillZiplineText, makeZiplineProblem, ziplineBoxes } from '../../src/model/zipline';
 
 /**
  * Checks issue #62: the zipline problem is a box with a whole-number space
@@ -68,6 +68,18 @@ describe('checkZiplineAnswer', () => {
 
   it.each([-1, 3, 0.5])('rejects the answer index %s', (index) => {
     expect(() => checkZiplineAnswer(problem, index)).toThrow('Invalid answer index');
+  });
+});
+
+describe('fillZiplineText', () => {
+  const problem = { length: 12, width: 3, height: 4, diagonal: 13, options: [11, 13, 15], correct: 1 };
+
+  it('puts in the sides, the floor’s diagonal squared, and the zip line squared and its length', () => {
+    expect(fillZiplineText('{length} {width} {height} {floor} {squared} {diagonal}', problem)).toBe('12 3 4 153 169 13');
+  });
+
+  it('leaves text without a known name in braces as it is', () => {
+    expect(fillZiplineText('x = {toString} or {nothing}, not {}', problem)).toBe('x = {toString} or {nothing}, not {}');
   });
 });
 

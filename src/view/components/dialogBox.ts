@@ -6,7 +6,15 @@ import { createButton } from './button';
 /** What createDialogBox gives back: the group to add to a layer, and a way to show each new line. */
 export interface DialogBox {
   group: Konva.Group;
-  show(line: string, choices: string[]): void;
+  show(line: string, choices: string[], options?: ShowOptions): void;
+}
+
+export interface ShowOptions {
+  /**
+   * Draws every choice as a plain white button, with no teal first one. Use it for
+   * answer choices, where a highlighted first button would look like a hint.
+   */
+  plain?: boolean;
 }
 
 // Sizes from the UI/Dialog box component in the mockups (padding includes its 2 px border).
@@ -31,7 +39,7 @@ export function createDialogBox(onChoice: (index: number) => void): DialogBox {
   const group = new Konva.Group();
   group.add(background, message, buttons);
 
-  function show(line: string, choices: string[]): void {
+  function show(line: string, choices: string[], { plain = false }: ShowOptions = {}): void {
     if (choices.length > MAX_CHOICES) {
       throw new RangeError(`The dialog box shows at most ${MAX_CHOICES} choices, but was given ${choices.length}.`);
     }
@@ -40,7 +48,7 @@ export function createDialogBox(onChoice: (index: number) => void): DialogBox {
     buttons.destroyChildren();
     let x = 0;
     choices.forEach((choice, index) => {
-      const button = createButton(choice, () => onChoice(index), index === 0 ? 'primary' : 'secondary');
+      const button = createButton(choice, () => onChoice(index), index === 0 && !plain ? 'primary' : 'secondary');
       button.x(x);
       buttons.add(button);
       x += button.getClientRect({ relativeTo: buttons }).width + GAP;
@@ -65,5 +73,6 @@ export function createDialogBox(onChoice: (index: number) => void): DialogBox {
 // - buttons.destroyChildren(): removes and deletes every node inside the group, so the old line's buttons don't pile up.
 // - choices.forEach((choice, index) => ...): runs the function once per choice, also passing its position, starting at 0.
 // - condition ? a : b: gives a when the condition is true and b otherwise.
+// - { plain = false }: ShowOptions = {}: unpacks `plain` from the options, defaulting to false, and lets callers leave the options out entirely.
 // - getClientRect({ relativeTo: buttons }): the node's size and position measured in the group's own coordinates, so it stays right when the stage is scaled to fit the window.
 // - { group, show }: shorthand for { group: group, show: show }.
