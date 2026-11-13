@@ -25,9 +25,6 @@ import { ZiplineShopController } from './ZiplineShopController';
 export function createScreenFactory(layers: Layers, progress: ProgressView): (request: ScreenRequest) => Screen {
   return (request) => {
     switch (request.kind) {
-      case 'title':
-        // Until the title screen (#70) exists, a one-box scene with a Start button stands in for it.
-        return new DialogueController(layers, dialogueScripts.titlePlaceholder);
       case 'dialogue':
         return new DialogueController(layers, sceneNamed(request.script));
       case 'chasm':

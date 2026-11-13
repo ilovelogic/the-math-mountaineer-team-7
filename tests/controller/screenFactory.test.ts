@@ -42,12 +42,6 @@ function startAndRead(screen: Screen): string[] {
 }
 
 describe('createScreenFactory', () => {
-  it('plays the title placeholder for the title step, with a Start button', () => {
-    const screen = makeScreen({ kind: 'title' });
-    expect(screen).toBeInstanceOf(DialogueController);
-    expect(startAndRead(screen)).toEqual(expect.arrayContaining(['The Math Mountaineer', 'Start']));
-  });
-
   it('plays the named scene for a dialogue step, starting at its first box', () => {
     const screen = makeScreen({ kind: 'dialogue', script: 'intro' });
     expect(screen).toBeInstanceOf(DialogueController);
@@ -113,7 +107,8 @@ describe('createScreenFactory', () => {
   });
 
   it('builds a new screen for every request, so no two steps share one', () => {
-    expect(makeScreen({ kind: 'title' })).not.toBe(makeScreen({ kind: 'title' }));
+    const intro = { kind: 'dialogue', script: 'intro' } as const;
+    expect(makeScreen(intro)).not.toBe(makeScreen(intro));
   });
 });
 

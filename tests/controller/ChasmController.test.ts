@@ -21,6 +21,8 @@ class FakeChasmScreen implements ChasmView {
         selectedLength: number;
         correctLength: number;
     } | null = null;
+    correctFeedback: number | null = null;
+    crossingFeedback: number | null = null;
 
 
 
@@ -36,7 +38,7 @@ class FakeChasmScreen implements ChasmView {
         this.feedback = { result, selectedLength, correctLength };
     }
 
-    onChoiceSelected(cb: () => void): void {
+    onChoiceSelected(cb: (index : number) => void): void {
         this.choiceCallback = cb;
     }
     lock() {
@@ -53,6 +55,13 @@ class FakeChasmScreen implements ChasmView {
     clickChoice(index: number) {
         this.choiceCallback?.(index);
     }
+
+    showCorrectFeedback(correctLength: number): void {
+        this.correctFeedback = correctLength;
+    }
+    showCrossing(correctLength: number): void {
+        this.crossingFeedback = correctLength;
+    }
 }
 
 describe('ChasmController', () => {
@@ -68,23 +77,19 @@ describe('ChasmController', () => {
     it('reports the selected log index', () => {
         const screen = new FakeChasmScreen();
         const controller = new ChasmController(screen, chasm);
-
-        let result: Outcome | undefined;
-
-        controller.start((outcome) => {
-            result = outcome;
-        });
-
+        const onDone = vi.fn();
+    
+        controller.start(onDone);
         screen.clickLog(1);
-
-        // The reported result should have the right index
-        expect(result).toEqual({
+    
+        expect(onDone).not.toHaveBeenCalled();
+    
+        screen.clickChoice(0);
+    
+        expect(onDone).toHaveBeenCalledWith({
             kind: 'choice',
-            index: 1,
+            index: 1
         });
-        // The screen should be locked once start and handlePick are called
-        expect(screen.lockCalled).toBe(true);
-
     });
     it('only accepts the first log picked', () => {
         const screen = new FakeChasmScreen();
@@ -176,11 +181,13 @@ describe('ChasmController', () => {
         controller.start(onDone);
     
         screen.clickLog(0);
-    
-        expect(onDone).not.toHaveBeenCalled();
-    
+
         screen.clickChoice(0);
-    
+
+        expect(onDone).not.toHaveBeenCalled();
+
+        screen.clickChoice(0);
+
         expect(onDone).toHaveBeenCalledWith({
             kind: 'choice',
             index: 0
@@ -196,5 +203,43 @@ describe('ChasmController', () => {
         screen.clickChoice(0);
     
         expect(onDone).not.toHaveBeenCalled();
+    });
+
+    it('displays feedback when a log is correct', () => {
+        const screen = new FakeChasmScreen();
+        const controller = new ChasmController(screen, chasm);
+        const onDone = vi.fn();
+    
+        controller.start(onDone);
+        screen.clickLog(1);
+    
+        expect(screen.correctFeedback).toBe(5);
+        expect(onDone).not.toHaveBeenCalled();
+    });
+    it('reports the correct selection after Continue is clicked', () => {
+        const screen = new FakeChasmScreen();
+        const controller = new ChasmController(screen, chasm);
+        const onDone = vi.fn();
+    
+        controller.start(onDone);
+        screen.clickLog(1);
+    
+        screen.clickChoice(0);
+    
+        expect(onDone).toHaveBeenCalledWith({
+            kind: 'choice',
+            index: 1
+        });
+    });
+    it('displays crossing confirmation with the correct log length', () => {
+        const screen = new FakeChasmScreen();
+        const controller = new ChasmController(screen, chasm);
+    
+        controller.start(vi.fn());
+        screen.clickLog(0); // Incorrect log
+    
+        screen.clickChoice(0); // Choose to cross using correct log
+    
+        expect(screen.crossingFeedback).toBe(5);
     });
 });
