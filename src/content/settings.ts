@@ -12,10 +12,13 @@ export interface Settings {
   medalLimits: MedalLimits;
   /** How long clicks are ignored after a dialogue box changes, so a fast double click never skips a box. */
   dialogueTransitionMs: number;
+  /** How long loading can take before the loading screen appears, so a fast load never flashes it. */
+  loadingScreenDelayMs: number;
 }
 
 export const settings: Settings = {
   pointsPerChasm: 10,
   medalLimits: { diamond: 150, gold: 135, silver: 105, bronze: 75 },
   dialogueTransitionMs: 250,
+  loadingScreenDelayMs: 300,
 };
