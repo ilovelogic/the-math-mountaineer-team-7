@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import {ChasmController, type ChasmView } from '../../src/controller/ChasmController';
+import {ChasmController, type ChasmView, type ChasmSolutionView } from '../../src/controller/ChasmController';
 import type { Outcome } from '../../src/controller/Screen';
 
 const chasm = {
@@ -63,11 +63,43 @@ class FakeChasmScreen implements ChasmView {
         this.crossingFeedback = correctLength;
     }
 }
+class FakeChasmSolutionScreen implements ChasmSolutionView {
+    drawCalled = false;
+    showCalled = false;
+    hideCalled = false;
+    destroyCalled = false;
+    private continueCallback?: () => void;
+
+    draw(): void {
+        this.drawCalled = true;
+    }
+
+    onContinueClicked(cb: () => void): void {
+        this.continueCallback = cb;
+    }
+
+    show(): void {
+        this.showCalled = true;
+    }
+
+    hide(): void {
+        this.hideCalled = true;
+    }
+
+    destroy(): void {
+        this.destroyCalled = true;
+    }
+
+    clickContinue(): void {
+        this.continueCallback?.();
+    }
+}
 
 describe('ChasmController', () => {
     it('draws the screen when started', () => {
         const screen = new FakeChasmScreen();
-        const controller = new ChasmController(screen, chasm);
+        const solutionScreen = new FakeChasmSolutionScreen();
+        const controller = new ChasmController(screen, solutionScreen, chasm);
 
         controller.start(vi.fn());
 
@@ -76,7 +108,8 @@ describe('ChasmController', () => {
 
     it('reports the selected log index', () => {
         const screen = new FakeChasmScreen();
-        const controller = new ChasmController(screen, chasm);
+        const solutionScreen = new FakeChasmSolutionScreen();
+        const controller = new ChasmController(screen, solutionScreen, chasm);
         const onDone = vi.fn();
     
         controller.start(onDone);
@@ -93,7 +126,8 @@ describe('ChasmController', () => {
     });
     it('only accepts the first log picked', () => {
         const screen = new FakeChasmScreen();
-        const controller = new ChasmController(screen, chasm);
+        const solutionScreen = new FakeChasmSolutionScreen();
+const   controller = new ChasmController(screen, solutionScreen, chasm);
         const onDone = vi.fn();
     
         controller.start(onDone);
@@ -114,16 +148,19 @@ describe('ChasmController', () => {
     });
     it('destroys the screen when stopped', () => {
         const screen = new FakeChasmScreen();
-        const controller = new ChasmController(screen, chasm);
+        const solutionScreen = new FakeChasmSolutionScreen();
+        const controller = new ChasmController(screen, solutionScreen, chasm);
 
         controller.start(() => {});
         controller.stop();
         // The screen should be destroyed once stop is called
         expect(screen.destroyCalled).toBe(true);
+        expect(solutionScreen.destroyCalled).toBe(true);
     });
     it('does not report selections after stopping', () => {
         const screen = new FakeChasmScreen();
-        const controller = new ChasmController(screen, chasm);
+        const solutionScreen = new FakeChasmSolutionScreen();
+        const controller = new ChasmController(screen, solutionScreen, chasm);
 
         let result: Outcome | undefined;
 
@@ -138,7 +175,8 @@ describe('ChasmController', () => {
     });
     it('displays feedback when a log is too short', () => {
         const screen = new FakeChasmScreen();
-        const controller = new ChasmController(screen, chasm);
+        const solutionScreen = new FakeChasmSolutionScreen();
+        const controller = new ChasmController(screen, solutionScreen, chasm);
         const onDone = vi.fn();
 
         controller.start(onDone);
@@ -159,7 +197,8 @@ describe('ChasmController', () => {
     });
     it('displays feedback when a log is too long', () => {
         const screen = new FakeChasmScreen();
-        const controller = new ChasmController(screen, chasm);
+        const solutionScreen = new FakeChasmSolutionScreen();
+        const controller = new ChasmController(screen, solutionScreen, chasm);
         const onDone = vi.fn();
     
         controller.start(onDone);
@@ -175,7 +214,8 @@ describe('ChasmController', () => {
     });
     it('reports the original selection after Continue is clicked', () => {
         const screen = new FakeChasmScreen();
-        const controller = new ChasmController(screen, chasm);
+        const solutionScreen = new FakeChasmSolutionScreen();
+        const controller = new ChasmController(screen, solutionScreen, chasm);
         const onDone = vi.fn();
     
         controller.start(onDone);
@@ -195,7 +235,8 @@ describe('ChasmController', () => {
     });
     it('does not advance when Continue is clicked without a selection', () => {
         const screen = new FakeChasmScreen();
-        const controller = new ChasmController(screen, chasm);
+        const solutionScreen = new FakeChasmSolutionScreen();
+        const controller = new ChasmController(screen, solutionScreen, chasm);
         const onDone = vi.fn();
     
         controller.start(onDone);
@@ -207,7 +248,8 @@ describe('ChasmController', () => {
 
     it('displays feedback when a log is correct', () => {
         const screen = new FakeChasmScreen();
-        const controller = new ChasmController(screen, chasm);
+        const solutionScreen = new FakeChasmSolutionScreen();
+        const controller = new ChasmController(screen, solutionScreen, chasm);
         const onDone = vi.fn();
     
         controller.start(onDone);
@@ -218,7 +260,8 @@ describe('ChasmController', () => {
     });
     it('reports the correct selection after Continue is clicked', () => {
         const screen = new FakeChasmScreen();
-        const controller = new ChasmController(screen, chasm);
+        const solutionScreen = new FakeChasmSolutionScreen();
+        const controller = new ChasmController(screen, solutionScreen, chasm);
         const onDone = vi.fn();
     
         controller.start(onDone);
@@ -233,7 +276,8 @@ describe('ChasmController', () => {
     });
     it('displays crossing confirmation with the correct log length', () => {
         const screen = new FakeChasmScreen();
-        const controller = new ChasmController(screen, chasm);
+        const solutionScreen = new FakeChasmSolutionScreen();
+        const controller = new ChasmController(screen, solutionScreen, chasm);
     
         controller.start(vi.fn());
         screen.clickLog(0); // Incorrect log
@@ -241,5 +285,37 @@ describe('ChasmController', () => {
         screen.clickChoice(0); // Choose to cross using correct log
     
         expect(screen.crossingFeedback).toBe(5);
+    });
+    it('opens the solution screen and returns to crossing after Continue', () => {
+        const screen = new FakeChasmScreen();
+        const solutionScreen = new FakeChasmSolutionScreen();
+        const controller = new ChasmController(screen, solutionScreen, chasm);
+        const onDone = vi.fn();
+    
+        controller.start(onDone);
+    
+        // Player initially picks an incorrect log
+        screen.clickLog(0);
+    
+        // Player chooses to see the solution
+        screen.clickChoice(1);
+    
+        expect(solutionScreen.showCalled).toBe(true);
+        expect(onDone).not.toHaveBeenCalled();
+    
+        // Player presses Continue on the solution screen
+        solutionScreen.clickContinue();
+    
+        expect(solutionScreen.hideCalled).toBe(true);
+        expect(screen.crossingFeedback).toBe(5);
+        expect(onDone).not.toHaveBeenCalled();
+    
+        // Player continues after seeing the crossing screen
+        screen.clickChoice(0);
+    
+        expect(onDone).toHaveBeenCalledWith({
+            kind: 'choice',
+            index: 0
+        });
     });
 });
