@@ -13,6 +13,7 @@ May import `model/`, `view/`, and `content/`. Nothing else imports from here exc
 - [GameFlow](#gameflow)
 - [The screen controllers](#the-screen-controllers)
 - [The screen factory](#the-screen-factory)
+- [Loading](#loading)
 - [Starting the game](#starting-the-game)
 - [Crossing one chasm, start to finish](#crossing-one-chasm-start-to-finish)
 
@@ -97,6 +98,19 @@ Builds the screen for each step GameFlow plays, so GameFlow never needs to know 
 
 **When something's wrong**\
 A dialogue step naming a scene that doesn't exist (e.g., a typo in `content/levels`) throws an error naming that scene, instead of handing `undefined` to the screen. A `never` check after the `switch` also means a new kind of step added to GameFlow without a case here stops the build, so the forgotten case is caught before it merges.
+
+---
+
+## Loading
+
+**Purpose**\
+Shows the loading screen only when loading is slow (#129). A load that finishes before `settings.loadingScreenDelayMs` (1000 ms) never shows it, so fast loads don't flash it for a split second.
+
+**How it's used**\
+`main.ts` creates the stage, starts `loadFonts()` without waiting, and then awaits **`showWhileSlow`** with `loadAssets`, a function that draws the loading screen, the delay, and the font's promise. `showWhileSlow` starts loading right away. If loading is still going after the delay, it draws the screen once the font is ready, so its text never starts in the fallback font, and fills the bar to the files already finished. The bar then follows each file, and the screen is removed as soon as loading ends.
+
+**Why it's a controller**\
+The view only draws, and this decides when, so it lives here, as in the rest of MVC. It takes the loading and the drawing as functions, so its tests use stand-ins and fake timers instead of real files, Konva, or waiting.
 
 ---
 
