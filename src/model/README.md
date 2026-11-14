@@ -40,15 +40,17 @@ Where the player is and how they're doing. Here, we have the game's seed, the cu
    - `level`, `step`, `topic`: Where the player is. `step` is a position in the game's list of steps in `content/levels`.
    - `points`: The running total.
    - `answers`: Every pick so far, oldest first, each recording the step it was made on and whether the log fit, was too short or was too long.
+   - `levelAttempts`: The score of every finished attempt at each level, oldest first, so a retry adds to the list instead of replacing the earlier score.
 
 **How it changes**
    - **`addPoints`** adds to the total. Zero is allowed, since a wrong pick earns nothing, but a negative number is refused.
    - **`moveTo`** goes to another step, and also changes the level and topic when a new level starts.
    - **`recordAnswer`** adds a pick to `answers`.
    - **`removePoints`** takes points back when the player restarts a level, so its points can be earned again. The answers stay, since they're the record of every pick, and it never takes more than the player has.
+   - **`recordLevelAttempt`** adds a finished attempt's level and points to `levelAttempts`. GameFlow calls it after the last chasm of each level.
 
 **Saving**\
-`toJSON` turns the progress into plain data that's safe to store, and `fromJSON` rebuilds it, refusing anything that isn't a valid save. The saved data carries a version number, so a later save format can tell old saves apart.
+`toJSON` turns the progress into plain data that's safe to store, and `fromJSON` rebuilds it, refusing anything that isn't a valid save. The saved data carries a version number, so a later save format can tell old saves apart. A save from before `levelAttempts` existed loads with an empty list.
 
 **ProgressView**\
 A read-only version of the type, with the values and none of the methods. The Hud and screens receive this, so they can show progress but can't change it.
