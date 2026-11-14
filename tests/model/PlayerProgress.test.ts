@@ -182,3 +182,42 @@ describe('PlayerProgress saving', () => {
     }
   });
 });
+describe('level attempt saving (#87)', () => {
+  it('loads an older save without levelAttempts', () => {
+    const oldSave: SavedProgress = {
+      version: 1,
+      seed: 42,
+      level: 1,
+      step: 3,
+      points: 10,
+      topic: 'Pythagorean theorem in 2D',
+      answers: [{ step: 2, result: 'fits' }],
+    };
+
+    const loaded = PlayerProgress.fromJSON(oldSave);
+
+    expect(loaded.levelAttempts).toEqual([]);
+    expect(loaded.points).toBe(10);
+    expect(loaded.answers).toEqual(oldSave.answers);
+
+    loaded.recordLevelAttempt(1, 20);
+    expect(loaded.levelAttempts).toEqual([
+      { level: 1, points: 20 },
+    ]);
+  });
+
+  it('keeps zero-score attempts through saving and loading', () => {
+    const progress = new PlayerProgress(42);
+    progress.recordLevelAttempt(1, 0);
+    progress.recordLevelAttempt(1, 30);
+
+    const loaded = PlayerProgress.fromJSON(
+      JSON.parse(JSON.stringify(progress)),
+    );
+
+    expect(loaded.levelAttempts).toEqual([
+      { level: 1, points: 0 },
+      { level: 1, points: 30 },
+    ]);
+  });
+});
