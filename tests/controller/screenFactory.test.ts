@@ -2,6 +2,7 @@ import Konva from 'konva';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { dialogueScripts } from '../../src/content/dialogueScripts';
 import { shopOffers } from '../../src/content/shopText';
+import { ziplineText } from '../../src/content/ziplineText';
 import { ChasmController } from '../../src/controller/ChasmController';
 import { DialogueController } from '../../src/controller/DialogueController';
 import type { ScreenRequest } from '../../src/controller/GameFlow';
@@ -9,6 +10,7 @@ import { MedalController } from '../../src/controller/MedalController';
 import { createScreenFactory } from '../../src/controller/screenFactory';
 import type { Screen } from '../../src/controller/Screen';
 import { ShopOfferController } from '../../src/controller/ShopOfferController';
+import { ZiplineShopController } from '../../src/controller/ZiplineShopController';
 import { PlayerProgress } from '../../src/model/PlayerProgress';
 import { makeChasm } from '../../src/model/problems';
 import type { Layers } from '../../src/view/stage';
@@ -93,7 +95,14 @@ describe('createScreenFactory', () => {
     expect(startAndRead(screen)).toEqual(expect.arrayContaining([text, accept, decline]));
   });
 
-  it('throws a clear error for a shop mini-game step, since none is built yet', () => {
+  it('builds the zipline shop for the clothing shop’s mini-game, opening on the store owner’s deal', () => {
+    standInLoadedImages();
+    const screen = makeScreen({ kind: 'shopGame', shop: 'clothing' });
+    expect(screen).toBeInstanceOf(ZiplineShopController);
+    expect(startAndRead(screen)).toContain(ziplineText.deal.text);
+  });
+
+  it('throws a clear error for the supply shop’s mini-game, since the duel’s screen isn’t built yet', () => {
     expect(() => makeScreen({ kind: 'shopGame', shop: 'supplies' })).toThrow("The supplies shop's mini-game isn't built yet.");
   });
 

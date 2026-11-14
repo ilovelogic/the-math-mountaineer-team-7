@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { settings } from '../../src/content/settings';
-import { pointsFor } from '../../src/model/rules';
+import { pointsFor, ziplinePoints } from '../../src/model/rules';
 
 /**
  * Checks how many points each chasm pick earns (issue #37). `pointsFor` takes
@@ -21,6 +21,18 @@ describe('pointsFor', () => {
 
   it('gives no points for a log that is too long', () => {
     expect(pointsFor('tooLong', settings)).toBe(0);
+  });
+});
+
+// Issue #63: as with pointsFor, made-up settings catch a hard-coded 50.
+describe('ziplinePoints', () => {
+  it('awards the points in settings for the right answer', () => {
+    expect(ziplinePoints(true, { ...settings, pointsPerZipline: 7 })).toBe(7);
+    expect(ziplinePoints(true, settings)).toBe(50);
+  });
+
+  it('gives no points for a wrong answer', () => {
+    expect(ziplinePoints(false, settings)).toBe(0);
   });
 });
 

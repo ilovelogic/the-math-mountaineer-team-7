@@ -34,6 +34,12 @@ describe('createDialogBox', () => {
     expect(buttonsOf(box.group).map(fillOf)).toEqual([colors.teal, colors.white, colors.white]);
   });
 
+  it('makes every button plain when asked, so no answer choice stands out', () => {
+    const box = createDialogBox(() => {});
+    box.show(SHORT, ['11 m', '13 m', '15 m'], { plain: true });
+    expect(buttonsOf(box.group).map(fillOf)).toEqual([colors.white, colors.white, colors.white]);
+  });
+
   it('reports a click by the choice position', () => {
     const picked: number[] = [];
     const box = createDialogBox((index) => picked.push(index));
