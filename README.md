@@ -27,7 +27,7 @@ We built and tested every piece of the core game, including the chasm problems a
 What this means for our team:
    - **Model, view, and content code can be built and tested on its own.** (Nothing in those folders needs the game to be running.)
    - **To see a screen you're working on**, play the game with `npm run dev`. To jump straight to it, change the step `flow.run()` starts from in `main.ts` on your own branch, and leave that change out of your PR.
-   - **To find something to pick up**, the [task dependencies](https://www.figma.com/design/gtavIfNmnKuW2m81SbVA6L) show what's merged, what's in review and what can start now, and the [project board](https://github.com/users/ilovelogic/projects/4) has every task.
+   - **To find something to pick up**, the [task dependencies](https://www.figma.com/design/gtavIfNmnKuW2m81SbVA6L?node-id=179-425) show what's finished, what's due before the next standup and what's due by the end of the sprint, with one page per sprint, and the [project board](https://github.com/users/ilovelogic/projects/4) has every task.
 
 ---
 
@@ -150,7 +150,7 @@ Each link here answers one question. The images in our docs are exported from th
    - [Mockups](https://www.figma.com/design/fsqgQpE8683nCpVlTI6OZd): What should each screen look like? The Resources page has the shared components, colors and text styles.
    - [Module view](https://www.figma.com/board/UqaCm5s3LuddFWG7xfzhlS) and its [supplementary board](https://www.figma.com/board/aRndxZrbIowLRfEmkPv8Fk): Which modules exist, what may each one use, and who owns it?
    - [Runtime (C&C) view](https://www.figma.com/design/LLtfHewfTMLycUXFUVuyEH): What happens, step by step, while the game runs?
-   - [Task dependencies](https://www.figma.com/design/gtavIfNmnKuW2m81SbVA6L): What's merged, what's in review, and what can I start now?
+   - [Task dependencies](https://www.figma.com/design/gtavIfNmnKuW2m81SbVA6L?node-id=179-425): What's finished, what's due next, and what can I start now? There's one page per sprint, and this link opens Sprint 2.
    - [Project board](https://github.com/users/ilovelogic/projects/4): Every task, with its owner, sprint and status.
 
 In the diagrams, faded boxes and anything marked "Not built yet" are planned and not missing.

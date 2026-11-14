@@ -37,7 +37,7 @@ Defines the one contract every screen controller follows, so that GameFlow can r
    - **`stop`**: Removes everything the screen drew and stops listening. A stopped screen never calls `onDone`.
 
 **What a screen reports**\
-Each screen reports an `Outcome`, which is either `done` or a `choice` holding the position of the option the player picked (in the order the screen shows them). A screen only reports what the player chose, and GameFlow decides what that choice means. For instance, a chasm screen reports "the second log", and GameFlow then works out that the log was too long.
+Each screen reports an `Outcome`, which is either `done` or a `choice` holding the position of the option the player picked (in the order the screen shows them). A screen reports what the player chose, and GameFlow decides what that choice means for the game. For instance, a chasm screen reports "the second log", and GameFlow then works out that the log was too long and scores it. A screen can still check a choice to decide what to show before it reports: ChasmController checks the pick so that ChasmScreen can name the right log first.
 
 ---
 
@@ -69,7 +69,7 @@ GameFlow gets its screens through `makeScreen`. Accordingly, its tests pass in s
 ## The screen controllers
 
 Each one pairs a view from `view/` with the `Screen` contract:
-   - **ChasmController**: Shows one chasm, takes only the first pick, locks the logs, and reports the pick. It works with any `ChasmView` (anything with `draw`, `onLogClicked`, `lock` and `destroy`), so its tests use a fake view instead of `ChasmScreen`.
+   - **ChasmController**: Shows one chasm and takes only the first pick. A log that fits is reported right away. For a wrong log, ChasmScreen first says what happened and names the log that fits, and the pick is reported once the player clicks Continue. It works with any `ChasmView` (anything with `draw`, `onLogClicked`, `onChoiceSelected`, `showFeedback`, `lock` and `destroy`), so its tests use a fake view instead of `ChasmScreen`.
    - **DialogueController**: Plays one dialogue scene, from `content/dialogueScripts` or `model/levelDone`, one box per click, and reports when it ends, including which button was picked on a box with choices. The click time comes from a clock it's given, so tests can use a fake one, and the transition length comes from `settings`.
    - **MedalController**: Works out the medal from the player's points with `model/medals`, has `MedalScreen` draw it, and reports `done` once when the player presses See Results. It reads the points when it starts, so it can be created before the last chasm is scored.
    - **ShopOfferController**: Shows a shop's offer and reports the first button picked, `ACCEPT` or `DECLINE` from `content/shopText`. Later clicks, and clicks after `stop()`, report nothing. It works with any `ShopOfferView` (anything with `draw`, `onChoice` and `destroy`), so its tests use a fake view instead of `ShopOfferScreen`.
@@ -118,7 +118,7 @@ GameFlow, the screen factory and the Hud all share one `PlayerProgress`. Choosin
 A single answer moves through the game as follows:
    1. GameFlow asks `problems` for this step's chasm, using the game's seed, the level, and the chasm's position.
    2. GameFlow starts ChasmController with that chasm, and ChasmController has ChasmScreen draw it.
-   3. The player clicks a log. ChasmController takes that first pick, locks the logs on ChasmScreen (since each chasm allows only one pick), and reports the log's position to GameFlow via `onDone`.
+   3. The player clicks a log. ChasmController takes that first pick (since each chasm allows only one) and checks it with `problems`. If the log fits, it locks the logs on ChasmScreen and reports the log's position to GameFlow via `onDone`. If not, ChasmScreen says why and names the log that fits, and ChasmController reports the picked log's position once the player clicks Continue.
    4. GameFlow asks `problems` whether that log fits, is too short, or is too long.
    5. GameFlow gets the points from `rules`, adds them to `PlayerProgress`, and records the answer.
    6. GameFlow has the Hud redraw and plays the matching sound (once the sounds are added).
