@@ -64,11 +64,35 @@ class FakeChasmScreen implements ChasmView {
     }
 }
 class FakeChasmSolutionScreen implements ChasmSolutionView {
-    draw(): void {}
-    onContinueClicked(_cb: () => void): void {}
-    show(): void {}
-    hide(): void {}
-    destroy(): void {}
+    drawCalled = false;
+    showCalled = false;
+    hideCalled = false;
+    destroyCalled = false;
+    private continueCallback?: () => void;
+
+    draw(): void {
+        this.drawCalled = true;
+    }
+
+    onContinueClicked(cb: () => void): void {
+        this.continueCallback = cb;
+    }
+
+    show(): void {
+        this.showCalled = true;
+    }
+
+    hide(): void {
+        this.hideCalled = true;
+    }
+
+    destroy(): void {
+        this.destroyCalled = true;
+    }
+
+    clickContinue(): void {
+        this.continueCallback?.();
+    }
 }
 
 describe('ChasmController', () => {
@@ -131,6 +155,7 @@ const   controller = new ChasmController(screen, solutionScreen, chasm);
         controller.stop();
         // The screen should be destroyed once stop is called
         expect(screen.destroyCalled).toBe(true);
+        expect(solutionScreen.destroyCalled).toBe(true);
     });
     it('does not report selections after stopping', () => {
         const screen = new FakeChasmScreen();
@@ -260,5 +285,37 @@ const   controller = new ChasmController(screen, solutionScreen, chasm);
         screen.clickChoice(0); // Choose to cross using correct log
     
         expect(screen.crossingFeedback).toBe(5);
+    });
+    it('opens the solution screen and returns to crossing after Continue', () => {
+        const screen = new FakeChasmScreen();
+        const solutionScreen = new FakeChasmSolutionScreen();
+        const controller = new ChasmController(screen, solutionScreen, chasm);
+        const onDone = vi.fn();
+    
+        controller.start(onDone);
+    
+        // Player initially picks an incorrect log
+        screen.clickLog(0);
+    
+        // Player chooses to see the solution
+        screen.clickChoice(1);
+    
+        expect(solutionScreen.showCalled).toBe(true);
+        expect(onDone).not.toHaveBeenCalled();
+    
+        // Player presses Continue on the solution screen
+        solutionScreen.clickContinue();
+    
+        expect(solutionScreen.hideCalled).toBe(true);
+        expect(screen.crossingFeedback).toBe(5);
+        expect(onDone).not.toHaveBeenCalled();
+    
+        // Player continues after seeing the crossing screen
+        screen.clickChoice(0);
+    
+        expect(onDone).toHaveBeenCalledWith({
+            kind: 'choice',
+            index: 0
+        });
     });
 });

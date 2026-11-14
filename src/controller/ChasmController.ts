@@ -47,7 +47,6 @@ export class ChasmController implements Screen {
 
         // Draw solution screen
         this.solutionScreen.draw();
-
         this.solutionScreen.onContinueClicked(() => {
             this.solutionScreen.hide();
             const correctLength = this.chasm.logs[this.chasm.correct];
