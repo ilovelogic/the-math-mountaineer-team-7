@@ -3,7 +3,9 @@ import { shopOffers } from '../content/shopText';
 import type { DialogueLine } from '../model/Dialogue';
 import { levelDoneLines } from '../model/levelDone';
 import type { ProgressView } from '../model/PlayerProgress';
+import { solutionSteps } from '../model/problems';
 import { ChasmScreen } from '../view/ChasmScreen';
+import { ChasmSolutionScreen } from '../view/ChasmSolutionScreen';
 import { ShopOfferScreen } from '../view/ShopOfferScreen';
 import type { Layers } from '../view/stage';
 import { ChasmController } from './ChasmController';
@@ -12,6 +14,7 @@ import type { ScreenRequest } from './GameFlow';
 import { MedalController } from './MedalController';
 import type { Screen } from './Screen';
 import { ShopOfferController } from './ShopOfferController';
+
 
 /**
  * Builds the screen for each step GameFlow plays, so GameFlow never needs to know
@@ -28,7 +31,15 @@ export function createScreenFactory(layers: Layers, progress: ProgressView): (re
       case 'dialogue':
         return new DialogueController(layers, sceneNamed(request.script));
       case 'chasm':
-        return new ChasmController(new ChasmScreen(layers, request.chasm), request.chasm);
+        return new ChasmController(
+          new ChasmScreen(layers, request.chasm),
+          new ChasmSolutionScreen(
+            layers,
+            request.chasm,
+            solutionSteps(request.chasm)
+          ), 
+          request.chasm
+        );
       case 'levelDone':
         return new DialogueController(layers, levelDoneLines(request.level, request.points, request.possiblePoints));
       case 'medal':

@@ -92,6 +92,11 @@ export class ChasmScreen {
     this.controls.destroy();
   }
   showCorrectFeedback(correctLength: number): void {
+    this.locked = true;
+    if (this.picked !== null) {
+        this.buttons[this.picked].setState('used');
+    }
+
     this.prompt.show(
       `The ${correctLength} m log fits. You cross the gap and find one of your friend's items.`,
       ['Continue']
@@ -107,12 +112,14 @@ export class ChasmScreen {
         ? `The ${selectedLength} m log is too short. It falls into the chasm. The right log was the ${correctLength} m log.`
         : `The ${selectedLength} m log is too long. It smashes your friend's item on the other side, and you lose the points it was worth. The right log was the ${correctLength} m log.`;
 
-    this.prompt.show(message, ['Cross the chasm using the correct log']);
+    this.prompt.show(message, ['Cross the chasm using the correct log',
+      'First, see how to derive the correct answer'
+    ]);
   }
 
   showCrossing(correctLength: number): void {
     this.prompt.show(
-      `You law down the ${correctLength} m log and cross the chasm.`,
+      `You lay down the ${correctLength} m log and cross the chasm.`,
       ['Continue']
     );
   }

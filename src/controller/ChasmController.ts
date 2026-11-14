@@ -13,6 +13,13 @@ export interface ChasmView {
     lock(): void;
     destroy(): void;
 }
+export interface ChasmSolutionView {
+    draw(): void;
+    onContinueClicked(cb: () => void): void;
+    show(): void;
+    hide(): void;
+    destroy(): void;
+}
 
 
 export class ChasmController implements Screen {
@@ -24,7 +31,9 @@ export class ChasmController implements Screen {
     private wasCorrect = false;
 
 
-    constructor(private readonly screen: ChasmView,
+    constructor(
+        private readonly screen: ChasmView,
+        private readonly solutionScreen: ChasmSolutionView,
         private readonly chasm: Chasm
     ) {}
 
@@ -36,8 +45,23 @@ export class ChasmController implements Screen {
             this.handlePick(index);
         });
 
+        // Draw solution screen
+        this.solutionScreen.draw();
+
+        this.solutionScreen.onContinueClicked(() => {
+            this.solutionScreen.hide();
+            const correctLength = this.chasm.logs[this.chasm.correct];
+            this.showingCrossing = true;
+            this.screen.showCrossing(correctLength);
+        });
+
         this.screen.onChoiceSelected((index) => {
-            if (this.pendingIndex === null || index !== 0) return;
+            if (this.pendingIndex === null || (index !== 0 && index !== 1)) return;
+
+            if (index === 1) {
+                this.solutionScreen.show();
+                return;
+            }
 
             if (this.wasCorrect) {
                 this.screen.lock();
@@ -63,7 +87,6 @@ export class ChasmController implements Screen {
                 kind: 'choice',
                 index: this.pendingIndex
             });
-
         });
 
     }
@@ -72,6 +95,7 @@ export class ChasmController implements Screen {
         this.stopped = true;
         this.screen.destroy();
         this.onDone = undefined;
+        this.solutionScreen.destroy();
     }
 
     private handlePick(index: number): void {

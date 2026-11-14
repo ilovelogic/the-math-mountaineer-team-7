@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { makeChasm } from '../../src/model/problems';
+import { makeChasm, solutionSteps } from '../../src/model/problems';
 import { checkPick } from '../../src/model/problems';
 import { triplesByLevel } from '../../src/model/problems';
 
@@ -84,4 +84,35 @@ describe('checkPick', () =>  {
     });
 
 
+});
+
+describe('solutionSteps', () => {
+    it('generates the correct solution steps for a chasm', () => {
+        const chasm = {
+            a: 5,
+            b: 12,
+            c: 13,
+            logs: [14, 13, 11],
+            correct: 1
+        };
+        const chasm2 = {
+            a: 8,
+            b: 15,
+            c: 17,
+            logs: [17, 12, 18],
+            correct: 0
+        };
+
+        expect(solutionSteps(chasm)).toEqual([
+            'c² = a² + b²',
+            'c² = 5² + 12² = 25 + 144 = 169',
+            'c = √169 = 13 m. The 13 m log fits.'
+        ]);
+
+        expect(solutionSteps(chasm2)).toEqual([
+            'c² = a² + b²',
+            'c² = 8² + 15² = 64 + 225 = 289',
+            'c = √289 = 17 m. The 17 m log fits.'
+        ]);
+    });
 });
