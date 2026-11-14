@@ -6,7 +6,6 @@ export type Shop = 'supplies' | 'clothing';
  * `script` names a scene in content/dialogue scripts.
  */
 export type Step =
-  | { kind: 'title' }
   | { kind: 'dialogue'; script: string }
   | { kind: 'chasm'; level: number; topic: string; index: number }
   /** GameFlow picks the "all points" or "under 100%" message from the level's points. */
@@ -28,7 +27,6 @@ const TOPIC_2D = 'Pythagorean theorem in 2D';
  * `level` and `index`, so every game gets different problems.
  */
 export const steps: Step[] = [
-  { kind: 'title' },
   { kind: 'dialogue', script: 'intro' },
   { kind: 'dialogue', script: 'howCrossingWorks' },
 

@@ -96,7 +96,7 @@ export class ChasmScreen {
     if (this.picked !== null) {
         this.buttons[this.picked].setState('used');
     }
-
+    
     this.prompt.show(
       `The ${correctLength} m log fits. You cross the gap and find one of your friend's items.`,
       ['Continue']
@@ -124,6 +124,13 @@ export class ChasmScreen {
     );
   }
 
+  showCrossing(correctLength: number): void {
+    this.prompt.show(
+      `You lay down the ${correctLength} m log and cross the chasm.`,
+      ['Continue']
+    );
+  }
+  
   private drawScenery(): void {
     this.scenery.add(new Konva.Rect({ width: 960, height: 540, fill: colors.skyDay }));
     FAR_PEAKS.forEach((top, i) => {

@@ -19,10 +19,23 @@ export const IMAGE_FILES: Record<string, string> = {
   shopOwnerCelebrating: 'images/shopowner-celebrating.png',
   shopSuppliesOutside: 'images/shop-supplies-outside.png',
   shopClothingOutside: 'images/shop-clothing-outside.png',
+  /** The sky, peaks and snow field from Figma's `Background/Mountains - day`, for any screen set on the mountains (#138). */
+  mountainsDay: 'images/mountains-day.png',
 };
 
-/** Every sound the game uses, by name. Add files to `public/assets/sounds/` and list them here. */
-export const SOUND_FILES: Record<string, string> = {};
+/**
+ * Every sound the game uses, by name, with its file under `public/assets/`.
+ * The first three names match `PickResult` in model/rules, so a pick's result
+ * can be played directly. To add one, put the file in `public/assets/sounds/`,
+ * credit it in `CREDITS.md` there, and add a line here.
+ */
+export const SOUND_FILES: Record<string, string> = {
+  fits: 'sounds/fits.mp3',
+  tooShort: 'sounds/too-short.mp3',
+  tooLong: 'sounds/too-long.mp3',
+  levelDone: 'sounds/level-done.mp3',
+  medal: 'sounds/medal.mp3',
+};
 
 /** How long one file may take before it is given up on, so a slow file never holds up the game. */
 const LOAD_TIMEOUT_MS = 10_000;
