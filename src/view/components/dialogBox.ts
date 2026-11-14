@@ -27,6 +27,7 @@ export function createDialogBox(onChoice: (index: number) => void): DialogBox {
   const background = new Konva.Rect({ width: STAGE_WIDTH, fill: colors.white, stroke: colors.ink, strokeWidth: BORDER_WIDTH });
   const message = new Konva.Text({ ...text.dialog, x: PADDING_X, y: PADDING_Y, width: STAGE_WIDTH - 2 * PADDING_X });
   const buttons = new Konva.Group({ x: PADDING_X });
+  buttons.name('dialog-buttons');
 
   const group = new Konva.Group();
   group.add(background, message, buttons);

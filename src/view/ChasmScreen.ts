@@ -96,7 +96,7 @@ export class ChasmScreen {
     if (this.picked !== null) {
         this.buttons[this.picked].setState('used');
     }
-    
+
     this.prompt.show(
       `The ${correctLength} m log fits. You cross the gap and find one of your friend's items.`,
       ['Continue']
@@ -112,7 +112,9 @@ export class ChasmScreen {
         ? `The ${selectedLength} m log is too short. It falls into the chasm. The right log was the ${correctLength} m log.`
         : `The ${selectedLength} m log is too long. It smashes your friend's item on the other side, and you lose the points it was worth. The right log was the ${correctLength} m log.`;
 
-    this.prompt.show(message, ['Cross the chasm using the correct log']);
+    this.prompt.show(message, ['Cross the chasm using the correct log',
+      'First, see how to derive the correct answer'
+    ]);
   }
 
   showCrossing(correctLength: number): void {
@@ -121,7 +123,7 @@ export class ChasmScreen {
       ['Continue']
     );
   }
-  
+
   private drawScenery(): void {
     this.scenery.add(new Konva.Rect({ width: 960, height: 540, fill: colors.skyDay }));
     FAR_PEAKS.forEach((top, i) => {
