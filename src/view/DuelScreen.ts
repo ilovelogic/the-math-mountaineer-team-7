@@ -8,8 +8,13 @@ import { colors, text as textStyles } from './theme';
 
 /** The bottom of the Hud's top bar, so nothing important is drawn under it. */
 const TOP = 48;
-/** The tutorial's example triangle, with legs close in length so its labels look believable (see rightTriangle). */
-const EXAMPLE = { a: 5, b: 12, c: 13 };
+/**
+ * The tutorial's example triangle. It's none of the triangles the game asks about, so the
+ * tutorial can't give away the duel's answer, and its legs are close in length so its
+ * labels look believable (see rightTriangle).
+ */
+export const TUTORIAL_EXAMPLE = { a: 12, b: 16, c: 20 } as const;
+const EXAMPLE = TUTORIAL_EXAMPLE;
 /** Where the triangle and the worked steps go on the tutorial and solution pages. */
 const TRIANGLE = { x: 90, y: TOP + 50, width: 260 };
 const CARD = { x: 470, y: TOP + 34, width: 420 };

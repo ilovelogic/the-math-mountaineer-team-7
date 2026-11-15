@@ -1,8 +1,8 @@
 import Konva from 'konva';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { duelText, type DuelPage } from '../../src/content/duelText';
-import type { DuelQuestion } from '../../src/model/problems';
-import { DuelScreen } from '../../src/view/DuelScreen';
+import { triplesByLevel, type DuelQuestion } from '../../src/model/problems';
+import { DuelScreen, TUTORIAL_EXAMPLE } from '../../src/view/DuelScreen';
 import type { Layers } from '../../src/view/stage';
 import { colors } from '../../src/view/theme';
 import { standInLoadedImages } from '../standInImage';
@@ -60,7 +60,14 @@ describe('DuelScreen', () => {
   it('explains the theorem on the tutorial with a general example', () => {
     showPage('tutorial');
     expect(tags()).toEqual(expect.arrayContaining(['a', 'b', 'c']));
-    expect(steps()).toEqual(['1', 'c² = a² + b²', '2', 'c² = 5² + 12² = 25 + 144 = 169', '3', 'c = √169 = 13']);
+    expect(steps()).toEqual(['1', 'c² = a² + b²', '2', 'c² = 12² + 16² = 144 + 256 = 400', '3', 'c = √400 = 20']);
+  });
+
+  it('uses a tutorial example the game never asks about, so it can’t give away an answer', () => {
+    const { a, b, c } = TUTORIAL_EXAMPLE;
+    expect(a ** 2 + b ** 2).toBe(c ** 2);
+    const asked = triplesByLevel.flat().map((triple) => [...triple].sort((x, y) => x - y).join(','));
+    expect(asked).not.toContain([a, b, c].join(','));
   });
 
   it('works through the duel question’s own numbers on the solution', () => {

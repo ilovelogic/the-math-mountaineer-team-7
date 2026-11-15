@@ -51,7 +51,7 @@ export const duelText: Record<DuelPage, DuelPageText> = {
     choices: ['Understand the solution', 'Leave now'],
   },
   solution: {
-    text: 'Here’s how to solve it: square the two shorter sides, add them, and take the square root to find x.',
+    text: 'Here’s how to solve it: square the two shorter sides, add them, and take the square root.',
     choices: ['Back to the trail'],
   },
 };
