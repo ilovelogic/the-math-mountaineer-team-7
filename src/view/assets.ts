@@ -17,10 +17,25 @@ export const IMAGE_FILES: Record<string, string> = {
   shopOwnerSupplies: 'images/shopowner-supplies.png',
   shopOwnerClothing: 'images/shopowner-clothing.png',
   shopOwnerCelebrating: 'images/shopowner-celebrating.png',
+  shopSuppliesOutside: 'images/shop-supplies-outside.png',
+  shopClothingOutside: 'images/shop-clothing-outside.png',
+  /** The sky, peaks and snow field from Figma's `Background/Mountains - day`, for any screen set on the mountains (#138). */
+  mountainsDay: 'images/mountains-day.png',
 };
 
-/** Every sound the game uses, by name. Add files to `public/assets/sounds/` and list them here. */
-export const SOUND_FILES: Record<string, string> = {};
+/**
+ * Every sound the game uses, by name, with its file under `public/assets/`.
+ * The first three names match `PickResult` in model/rules, so a pick's result
+ * can be played directly. To add one, put the file in `public/assets/sounds/`,
+ * credit it in `CREDITS.md` there, and add a line here.
+ */
+export const SOUND_FILES: Record<string, string> = {
+  fits: 'sounds/fits.mp3',
+  tooShort: 'sounds/too-short.mp3',
+  tooLong: 'sounds/too-long.mp3',
+  levelDone: 'sounds/level-done.mp3',
+  medal: 'sounds/medal.mp3',
+};
 
 /** How long one file may take before it is given up on, so a slow file never holds up the game. */
 const LOAD_TIMEOUT_MS = 10_000;
@@ -47,20 +62,32 @@ let placeholderSound: HTMLAudioElement | undefined;
  * Loads every image and sound listed above. `main.ts` waits for it once before
  * drawing anything. It always resolves: a file that fails or takes too long is
  * reported in the console and replaced by a placeholder.
+ *
+ * `onProgress`, if given, is called each time a file finishes, with how many have
+ * finished so far out of the total, so the loading screen can fill its bar. A file
+ * that fails or times out counts as finished too, since the game stops waiting for it.
  */
-export async function loadAssets(): Promise<void> {
+export async function loadAssets(onProgress?: (loaded: number, total: number) => void): Promise<void> {
   placeholderImage = await loadImage(PLACEHOLDER_IMAGE_SRC);
   placeholderSound = await loadSound(PLACEHOLDER_SOUND_SRC);
+  const total = Object.keys(IMAGE_FILES).length + Object.keys(SOUND_FILES).length;
+  let finished = 0;
+  const fileFinished = () => {
+    finished++;
+    onProgress?.(finished, total);
+  };
   await Promise.all([
     ...Object.entries(IMAGE_FILES).map(async ([name, file]) => {
       const loaded = await loadImage(assetUrl(file));
       if (loaded) images.set(name, loaded);
       else console.warn(`Image "${name}" (${file}) failed to load, so a placeholder is shown instead.`);
+      fileFinished();
     }),
     ...Object.entries(SOUND_FILES).map(async ([name, file]) => {
       const loaded = await loadSound(assetUrl(file));
       if (loaded) sounds.set(name, loaded);
       else console.warn(`Sound "${name}" (${file}) failed to load, so it will be silent.`);
+      fileFinished();
     }),
   ]);
 }
@@ -68,6 +95,8 @@ export async function loadAssets(): Promise<void> {
 // - Object.entries(obj): the object's [name, value] pairs as an array, here [name, file].
 // - Promise.all([...]): waits until every promise in the array has finished. None of ours reject, so one bad file can't stop the rest.
 // - [...a, ...b]: the spread `...` joins the image and sound arrays into one.
+// - onProgress?: an optional parameter, so callers that don't need progress can still call loadAssets() with nothing.
+// - onProgress?.(finished, total): calls onProgress only if one was passed in.
 
 /** The image with this name, ready for `new Konva.Image({ image: image('player') })`. Never throws. */
 export function image(name: string): HTMLImageElement {

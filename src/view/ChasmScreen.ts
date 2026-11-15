@@ -4,6 +4,7 @@ import { createLogButton, type LogButton } from './components/logButton';
 import type { Layers } from './stage';
 import { colors, text } from './theme';
 
+
 export interface DrawnChasm {
   /** The rise, drawn up the far cliff. */
   a: number;
@@ -11,6 +12,7 @@ export interface DrawnChasm {
   b: number;
   /** Log lengths, in the order the screen shows them; a click reports a position in this list. */
   logs: readonly number[];
+  correct: number;
 }
 
 const QUESTION = 'Which log fits across this gap?';
@@ -34,6 +36,10 @@ export class ChasmScreen {
   private readonly props = new Konva.Group();
   private readonly controls = new Konva.Group();
   private readonly buttons: LogButton[] = [];
+  private choiceCallback: ((index: number) => void) | null = null;
+  private readonly prompt = createDialogBox((index) => {
+    this.choiceCallback?.(index);
+  });
   // Until ChasmController (#24) registers its own handler, clicks are only logged.
   private onClick: ((index: number) => void) | null = (index) => console.log(`Log ${index} (${this.chasm.logs[index]} m) was clicked`);
   private picked: number | null = null;
@@ -64,6 +70,10 @@ export class ChasmScreen {
     this.onClick = cb;
   }
 
+  onChoiceSelected(cb: (index: number) => void): void {
+    this.choiceCallback = cb;
+  }
+
   /** Stops reporting clicks and greys out the log that was picked, if any. */
   lock(): void {
     this.locked = true;
@@ -80,6 +90,38 @@ export class ChasmScreen {
     this.scenery.destroy();
     this.props.destroy();
     this.controls.destroy();
+  }
+  showCorrectFeedback(correctLength: number): void {
+    this.locked = true;
+    if (this.picked !== null) {
+        this.buttons[this.picked].setState('used');
+    }
+
+    this.prompt.show(
+      `The ${correctLength} m log fits. You cross the gap and find one of your friend's items.`,
+      ['Continue']
+    );
+  }
+  showFeedback(result: 'tooShort' | 'tooLong', selectedLength: number, correctLength: number): void {
+    this.locked = true;
+    if (this.picked !== null) {
+        this.buttons[this.picked].setState('used');
+    }
+  
+    const message = result === 'tooShort'
+        ? `The ${selectedLength} m log is too short. It falls into the chasm. The right log was the ${correctLength} m log.`
+        : `The ${selectedLength} m log is too long. It smashes your friend's item on the other side, and you lose the points it was worth. The right log was the ${correctLength} m log.`;
+
+    this.prompt.show(message, ['Cross the chasm using the correct log',
+      'First, see how to derive the correct answer'
+    ]);
+  }
+
+  showCrossing(correctLength: number): void {
+    this.prompt.show(
+      `You lay down the ${correctLength} m log and cross the chasm.`,
+      ['Continue']
+    );
   }
 
   private drawScenery(): void {
@@ -156,9 +198,8 @@ export class ChasmScreen {
   }
 
   private drawPrompt(): void {
-    const prompt = createDialogBox(() => {});
-    prompt.show(QUESTION, []);
-    this.controls.add(prompt.group);
+    this.prompt.show(QUESTION, []);
+    this.controls.add(this.prompt.group);
   }
 }
 

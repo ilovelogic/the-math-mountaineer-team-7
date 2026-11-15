@@ -6,9 +6,8 @@ type ChasmStep = Extract<Step, { kind: 'chasm' }>;
 const chasmSteps = steps.filter((step): step is ChasmStep => step.kind === 'chasm');
 
 describe('content/levels', () => {
-  it('opens with the title, the intro and the crossing tutorial', () => {
-    expect(steps.slice(0, 3)).toEqual([
-      { kind: 'title' },
+  it('opens with the intro and the crossing tutorial', () => {
+    expect(steps.slice(0, 2)).toEqual([
       { kind: 'dialogue', script: 'intro' },
       { kind: 'dialogue', script: 'howCrossingWorks' },
     ]);

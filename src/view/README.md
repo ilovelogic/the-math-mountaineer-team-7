@@ -13,11 +13,14 @@ May import Konva, other `view/` files, and `model/` or `content/` to read what t
   - [stage](#stage)
   - [theme](#theme)
   - [fonts and assets](#fonts-and-assets)
+  - [loadingScreen](#loadingscreen)
 - [Shared components](#shared-components)
 - [Screens and the Hud](#screens-and-the-hud)
   - [ChasmScreen](#chasmscreen)
   - [DialogueBox](#dialoguebox)
   - [MedalScreen](#medalscreen)
+  - [ShopOfferScreen](#shopofferscreen)
+  - [TitleScreen](#titlescreen)
   - [Hud](#hud)
 - [Still to come](#still-to-come)
 
@@ -60,10 +63,18 @@ Keeps every color from the mockups, and the text styles we use so far, in one pl
 Inter is bundled with the game instead of loaded from Google, so it works offline and on school networks that block font sites. **`loadFonts`** waits for its regular (400) and semi bold (600) weights, so text is drawn in the right font from the first frame.
 
 **assets**\
-**`loadAssets`** loads every image and sound listed at the file's top just one time before anything is drawn. Views then get them by name with **`image`** and **`sound`**. To add one, put the file in `public/assets/images/` (or `sounds/`) and add a line to the list.
+**`loadAssets`** loads every image and sound listed at the file's top just one time, before the title screen is drawn. It can be given an `onProgress(loaded, total)` callback, which it calls as each file finishes (a file that fails or times out counts as finished), so the loading screen can fill its bar. Views then get them by name with **`image`** and **`sound`**. To add one, put the file in `public/assets/images/` (or `sounds/`) and add a line to the list.
 
 **Neither one can stop the game**\
-`main.ts` waits for both fonts and assets before drawing. If a file fails or takes too long, it's reported in the console and replaced, with a missing image showing as a purple box with a "?", a missing sound playing silence, and a missing font weight falling back to sans-serif.
+`main.ts` waits for both fonts and assets before drawing the title, with a loading screen in between if that takes a while. If a file fails or takes too long, it's reported in the console and replaced, with a missing image showing as a purple box with a "?", a missing sound playing silence, and a missing font weight falling back to sans-serif.
+
+### loadingScreen
+
+**Purpose**\
+Shows players that the game is working while images and sounds load, instead of a blank page (#129). The images aren't ready yet, so it's built only from theme colors, shapes and text: the title screen's day sky, the game's name, a bar that fills as files finish, and "Loading…".
+
+**How it's used**\
+**`showLoadingScreen(layer)`** draws it with an empty bar and returns a `LoadingScreen` with **`progress(loaded, total)`**, which fills the bar, and **`remove()`**. When to show and remove it is decided by `showWhileSlow` in [controller/](../controller/README.md#loading), so a fast load never shows it at all.
 
 ---
 
@@ -110,6 +121,22 @@ Draws the end screen like the "End: medal" mockup, which is made up of the medal
 **How it's used**\
 **`drawMedalScreen`** is given the stage's layers, the medal and points (which MedalController works out), and a callback for See Results. It returns a function that removes everything it drew, to call when the screen ends. For now, it draws its own mountain background; the mockup uses the glacier background instead, which #138's plan to load backgrounds as images would fix.
 
+### ShopOfferScreen
+
+**Purpose**\
+Draws the outside of a shop with the player walking up to it, and the shop's offer in the shared Dialog box, like the "Supply shop offer" and "Clothing shop offer" mockups. Each shop's scene is one image exported from Figma (`shopSuppliesOutside` and `shopClothingOutside` in `assets`), following #138's plan.
+
+**How it's used**\
+`new ShopOfferScreen(layers, shop, offer)` takes the shop's name and its offer from `content/shopText`. **`draw`** draws the scene and the offer once, **`onChoice`** registers the callback for a button click, and **`destroy`** removes everything. A click reports the button's position, accept first and decline second, and ShopOfferController decides what it means.
+
+### TitleScreen
+
+**Purpose**\
+Draws the title screen like its mockup: the mountains, the mountaineer and the friend, and a card with the game's name, a one-line pitch, New game, and Continue when there's a game to continue. The mountains are one image exported from Figma (`mountainsDay` in `assets`), so #138 can reuse it for the chasm screen. The mockup's small note under the buttons is for us, not players, so it isn't drawn.
+
+**How it's used**\
+`new TitleScreen(layers)` and then **`draw(canContinue)`** draws it once, **`onChoice`** registers the callback for a button click, and **`destroy`** removes everything. A click reports the button's position, New game first and Continue second, and TitleController decides what it means.
+
 ### Hud
 
 **Purpose**\
@@ -124,5 +151,5 @@ GameFlow calls **`update`** with the latest progress whenever it changes, and **
 
    - **The solution view** (#48): The "How to find the right log" screen, with the triangle and the worked steps.
    - **audio**: Plays one sound per outcome (#25), once the sound library (#102) lands.
-   - **TitleScreen, ShopScreen, ZiplineDiagram**: The views for the title and shop screens (#70, #52, #61).
+   - **ZiplineDiagram**: The view for the zipline problem (#61).
    - **Background images**: The plan in #138 is to load backgrounds as images exported from Figma, instead of drawing mountains in code, so every screen shares one copy of the art.

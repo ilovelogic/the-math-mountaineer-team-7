@@ -2,8 +2,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 /**
  * Checks what screens rely on from view/assets: every listed file exists, a
- * loaded image or sound comes back by name, and a file that fails, hangs or
- * was never listed gives a placeholder instead of crashing. Node has no
+ * loaded image or sound comes back by name, a file that fails, hangs or
+ * was never listed gives a placeholder instead of crashing, and the loading
+ * screen hears about every file as it finishes, including ones that fail or
+ * hang, so its bar always reaches the end. Node has no
  * browser Image or Audio, so fake ones stand in: they "load" any file except
  * those in `failing`, and never answer for those in `hanging`.
  */
@@ -68,6 +70,15 @@ describe('view/assets', () => {
     expect(console.warn).not.toHaveBeenCalled();
   });
 
+  it('has a loaded sound for every cue the game plays', async () => {
+    const { loadAssets, sound } = await freshAssets();
+    await loadAssets();
+    for (const cue of ['fits', 'tooShort', 'tooLong', 'levelDone', 'medal']) {
+      expect(sound(cue).src).toMatch(/assets\/sounds\/[a-z-]+\.mp3$/);
+    }
+    expect(console.warn).not.toHaveBeenCalled();
+  });
+
   it('shows a placeholder when a file fails to load, and still loads the rest', async () => {
     failing = ['images/friend.png'];
     const { loadAssets, image } = await freshAssets();
@@ -85,6 +96,31 @@ describe('view/assets', () => {
     await vi.runAllTimersAsync();
     await loading;
     expect(image('player').src).toMatch(/^data:image\/svg\+xml/);
+  });
+
+  it('reports each file as it finishes, ending with every file counted', async () => {
+    const { loadAssets, IMAGE_FILES, SOUND_FILES } = await freshAssets();
+    const total = Object.keys(IMAGE_FILES).length + Object.keys(SOUND_FILES).length;
+    const reports: [number, number][] = [];
+    await loadAssets((loaded, total) => reports.push([loaded, total]));
+    expect(reports.map(([loaded]) => loaded)).toEqual(Array.from({ length: total }, (_, i) => i + 1));
+    expect(reports.every(([, reportedTotal]) => reportedTotal === total)).toBe(true);
+  });
+
+  it('counts a file that fails or hangs as finished, so the bar still reaches the end', async () => {
+    vi.useFakeTimers();
+    failing = ['images/friend.png'];
+    hanging = ['images/player.png'];
+    const { loadAssets, IMAGE_FILES, SOUND_FILES } = await freshAssets();
+    const total = Object.keys(IMAGE_FILES).length + Object.keys(SOUND_FILES).length;
+    const reports: [number, number][] = [];
+    const loading = loadAssets((loaded, total) => reports.push([loaded, total]));
+    await vi.advanceTimersByTimeAsync(0);
+    // Everything but the hanging file has finished, the failed one included.
+    expect(reports.at(-1)).toEqual([total - 1, total]);
+    await vi.runAllTimersAsync();
+    await loading;
+    expect(reports.at(-1)).toEqual([total, total]);
   });
 
   it('gives a placeholder, not a crash, for a name that was never listed', async () => {
@@ -109,3 +145,7 @@ describe('view/assets', () => {
 // - vi.resetModules() + import(...): loads a new copy of the module, with empty caches, instead of reusing the one already loaded.
 // - import.meta.glob('...', { query: '?url' }): a Vite feature; its keys are the paths of every matching file, used here to check files exist.
 // - vi.useFakeTimers() / vi.runAllTimersAsync(): makes setTimeout controllable, then jumps past the 10 second timeout instantly.
+// - vi.advanceTimersByTimeAsync(0): lets every file that answers right away finish, without moving the fake clock, so the hanging one is still waiting.
+// - Array.from({ length: total }, (_, i) => i + 1): the list 1, 2, … total; `_` is the unused first argument.
+// - reports.every(...): true when the check holds for every item; `[, reportedTotal]` skips the first item of each pair.
+// - reports.at(-1): the last report.
