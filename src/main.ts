@@ -34,10 +34,10 @@ function play(progress: PlayerProgress): void {
   // The Hud is made only now, so the title screen has no top bar, like its mockup.
   const hud = new Hud(layers);
   const flow = new GameFlow(steps, progress, createScreenFactory(layers, progress), {
-    hud,
-    // Wrapped in an arrow function so `save` still knows which SaveStore it belongs to.
-    save: (saved) => store.save(saved),
-  });
+  hud,
+  save: (saved) => store.save(saved),
+  load: () => store.load(),
+});
   flow.run();
 }
 
