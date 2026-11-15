@@ -1,9 +1,11 @@
 // Entry point and the only place that wires the game together: it builds the stage,
-// shows the title screen, and then starts GameFlow with the game the player picked,
-// which plays every step from the intro to the medal. Each step's screen comes from
-// the screen factory.
+// loads the images, sounds and font (with a loading screen if that's slow), shows the
+// title screen, and then starts GameFlow with the game the player picked, which plays
+// every step from the intro to the medal. Each step's screen comes from the screen factory.
 import { steps } from './content/levels';
+import { settings } from './content/settings';
 import { GameFlow } from './controller/GameFlow';
+import { showWhileSlow } from './controller/loading';
 import { createScreenFactory } from './controller/screenFactory';
 import { startGame } from './controller/startGame';
 import { TitleController } from './controller/TitleController';
@@ -12,14 +14,19 @@ import { SaveStore } from './model/SaveStore';
 import { loadAssets } from './view/assets';
 import { loadFonts } from './view/fonts';
 import { Hud } from './view/Hud';
+import { showLoadingScreen } from './view/loadingScreen';
 import { createStage } from './view/stage';
 import { TitleScreen } from './view/TitleScreen';
 
-// Every image, sound and font is loaded before anything is drawn, so no screen waits
-// on a file and Konva never draws text in the fallback font and then has to redraw it.
-await Promise.all([loadAssets(), loadFonts()]);
-
 const layers = createStage('game').layers;
+
+// Every image, sound and font is loaded before the title is drawn, so no screen waits on a
+// file. The images and sounds start loading straight away, but the loading screen is drawn
+// only once the font is ready, so Konva never draws its text in the fallback font first.
+const fontsReady = loadFonts();
+await showWhileSlow(loadAssets, () => showLoadingScreen(layers.ui), settings.loadingScreenDelayMs, fontsReady);
+await fontsReady;
+
 const store = new SaveStore(window.localStorage);
 
 /** Plays the game the player picked on the title screen, from the step its progress is on. */
@@ -37,7 +44,9 @@ function play(progress: PlayerProgress): void {
 startGame(store.load(), steps.length - 1, (canContinue) => new TitleController(new TitleScreen(layers), canContinue), play);
 // Optional documentation
 // - await at the top level of a module: the rest of this file waits for the promise; it's allowed in ES modules, which Vite builds.
-// - Promise.all([...]): waits for every promise in the array, so the images and the fonts load at the same time instead of one after the other.
+// - const fontsReady = loadFonts(): starts loading the font without waiting for it, so the images and sounds load at the same time; `await fontsReady` waits for it later.
+// - showWhileSlow(loadAssets, ...): passes the loadAssets function itself, not its result, so showWhileSlow can start it with its own progress callback.
+// - () => showLoadingScreen(layers.ui): a function that draws the loading screen only when it's called, which is only if loading is slow.
 // - window.localStorage: the browser's storage for this site, which keeps its contents after the tab closes.
 // - { hud, save: ... }: `hud` alone is shorthand for `hud: hud`.
 // - (saved) => store.save(saved): passing `store.save` by itself would lose `this`, and SaveStore's try/catch would then hide the error, so nothing would ever be saved.

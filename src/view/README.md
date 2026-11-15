@@ -13,6 +13,7 @@ May import Konva, other `view/` files, and `model/` or `content/` to read what t
   - [stage](#stage)
   - [theme](#theme)
   - [fonts and assets](#fonts-and-assets)
+  - [loadingScreen](#loadingscreen)
 - [Shared components](#shared-components)
 - [Screens and the Hud](#screens-and-the-hud)
   - [ChasmScreen](#chasmscreen)
@@ -62,10 +63,18 @@ Keeps every color from the mockups, and the text styles we use so far, in one pl
 Inter is bundled with the game instead of loaded from Google, so it works offline and on school networks that block font sites. **`loadFonts`** waits for its regular (400) and semi bold (600) weights, so text is drawn in the right font from the first frame.
 
 **assets**\
-**`loadAssets`** loads every image and sound listed at the file's top just one time before anything is drawn. Views then get them by name with **`image`** and **`sound`**. To add one, put the file in `public/assets/images/` (or `sounds/`) and add a line to the list.
+**`loadAssets`** loads every image and sound listed at the file's top just one time, before the title screen is drawn. It can be given an `onProgress(loaded, total)` callback, which it calls as each file finishes (a file that fails or times out counts as finished), so the loading screen can fill its bar. Views then get them by name with **`image`** and **`sound`**. To add one, put the file in `public/assets/images/` (or `sounds/`) and add a line to the list.
 
 **Neither one can stop the game**\
-`main.ts` waits for both fonts and assets before drawing. If a file fails or takes too long, it's reported in the console and replaced, with a missing image showing as a purple box with a "?", a missing sound playing silence, and a missing font weight falling back to sans-serif.
+`main.ts` waits for both fonts and assets before drawing the title, with a loading screen in between if that takes a while. If a file fails or takes too long, it's reported in the console and replaced, with a missing image showing as a purple box with a "?", a missing sound playing silence, and a missing font weight falling back to sans-serif.
+
+### loadingScreen
+
+**Purpose**\
+Shows players that the game is working while images and sounds load, instead of a blank page (#129). The images aren't ready yet, so it's built only from theme colors, shapes and text: the title screen's day sky, the game's name, a bar that fills as files finish, and "Loading…".
+
+**How it's used**\
+**`showLoadingScreen(layer)`** draws it with an empty bar and returns a `LoadingScreen` with **`progress(loaded, total)`**, which fills the bar, and **`remove()`**. When to show and remove it is decided by `showWhileSlow` in [controller/](../controller/README.md#loading), so a fast load never shows it at all.
 
 ---
 

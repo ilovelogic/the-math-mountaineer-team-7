@@ -62,20 +62,32 @@ let placeholderSound: HTMLAudioElement | undefined;
  * Loads every image and sound listed above. `main.ts` waits for it once before
  * drawing anything. It always resolves: a file that fails or takes too long is
  * reported in the console and replaced by a placeholder.
+ *
+ * `onProgress`, if given, is called each time a file finishes, with how many have
+ * finished so far out of the total, so the loading screen can fill its bar. A file
+ * that fails or times out counts as finished too, since the game stops waiting for it.
  */
-export async function loadAssets(): Promise<void> {
+export async function loadAssets(onProgress?: (loaded: number, total: number) => void): Promise<void> {
   placeholderImage = await loadImage(PLACEHOLDER_IMAGE_SRC);
   placeholderSound = await loadSound(PLACEHOLDER_SOUND_SRC);
+  const total = Object.keys(IMAGE_FILES).length + Object.keys(SOUND_FILES).length;
+  let finished = 0;
+  const fileFinished = () => {
+    finished++;
+    onProgress?.(finished, total);
+  };
   await Promise.all([
     ...Object.entries(IMAGE_FILES).map(async ([name, file]) => {
       const loaded = await loadImage(assetUrl(file));
       if (loaded) images.set(name, loaded);
       else console.warn(`Image "${name}" (${file}) failed to load, so a placeholder is shown instead.`);
+      fileFinished();
     }),
     ...Object.entries(SOUND_FILES).map(async ([name, file]) => {
       const loaded = await loadSound(assetUrl(file));
       if (loaded) sounds.set(name, loaded);
       else console.warn(`Sound "${name}" (${file}) failed to load, so it will be silent.`);
+      fileFinished();
     }),
   ]);
 }
@@ -83,6 +95,8 @@ export async function loadAssets(): Promise<void> {
 // - Object.entries(obj): the object's [name, value] pairs as an array, here [name, file].
 // - Promise.all([...]): waits until every promise in the array has finished. None of ours reject, so one bad file can't stop the rest.
 // - [...a, ...b]: the spread `...` joins the image and sound arrays into one.
+// - onProgress?: an optional parameter, so callers that don't need progress can still call loadAssets() with nothing.
+// - onProgress?.(finished, total): calls onProgress only if one was passed in.
 
 /** The image with this name, ready for `new Konva.Image({ image: image('player') })`. Never throws. */
 export function image(name: string): HTMLImageElement {
