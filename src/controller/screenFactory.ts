@@ -2,7 +2,6 @@ import { dialogueScripts } from '../content/dialogueScripts';
 import { shopOffers } from '../content/shopText';
 import type { DialogueLine } from '../model/Dialogue';
 import { levelDoneLines } from '../model/levelDone';
-import { makeZiplineProblem } from '../model/zipline';
 import type { ProgressView } from '../model/PlayerProgress';
 import { ChasmScreen } from '../view/ChasmScreen';
 import { ShopOfferScreen } from '../view/ShopOfferScreen';
@@ -47,8 +46,7 @@ export function createScreenFactory(layers: Layers, progress: ProgressView): (re
         return new ShopOfferController(new ShopOfferScreen(layers, request.shop, shopOffers[request.shop]));
       case 'shopGame': {
         if (request.shop === 'clothing') {
-          const problem = makeZiplineProblem(progress.seed);
-          return new ZiplineShopController(new ZiplineScreen(layers, problem), problem);
+          return new ZiplineShopController(new ZiplineScreen(layers, request.problem), request.problem);
         }
         // The math duel's screen (#55) isn't built yet.
         throw new Error(`The ${request.shop} shop's mini-game isn't built yet.`);
