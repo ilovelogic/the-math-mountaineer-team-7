@@ -149,9 +149,18 @@ export class GameFlow {
 
   /** The level and topic to move to, when the step at `index` is a chasm. */
   private placeOf(index: number): Place | undefined {
-    const step = this.steps[index];
-    return step.kind === 'chasm' ? { level: step.level, topic: step.topic } : undefined;
+  const step = this.steps[index];
+
+  if (step.kind === 'chasm') {
+    return { level: step.level, topic: step.topic };
   }
+
+  if (step.kind === 'shopGame' && step.topic) {
+    return { level: this.progress.level, topic: step.topic };
+  }
+
+  return undefined;
+}
 
   /** Positions in `steps` of the level's chasm steps, in order. */
   private chasmStepsOf(level: number): number[] {

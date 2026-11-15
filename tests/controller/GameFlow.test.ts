@@ -74,6 +74,33 @@ const pickRight = () => last().report({ kind: 'choice', index: shownChasm().corr
 const pickWrong = () => last().report({ kind: 'choice', index: (shownChasm().correct + 1) % shownChasm().logs.length });
 
 describe('controller/GameFlow', () => {
+  it('updates the topic for Mini-game 2 and restores it for chasms', () => {
+  const list: Step[] = [
+    { kind: 'chasm', level: 1, topic: 'Pythagorean theorem in 2D', index: 0 },
+    { kind: 'shopOffer', shop: 'clothing' },
+    { kind: 'shopGame', shop: 'clothing', topic: 'Pythagorean theorem in 3D' },
+    { kind: 'chasm', level: 1, topic: 'Pythagorean theorem in 2D', index: 1 },
+  ];
+
+  play(list);
+
+  expect(progress.topic).toBe('Pythagorean theorem in 2D');
+
+  pickRight();
+  expect(progress.topic).toBe('Pythagorean theorem in 2D');
+
+  // Accept the shop offer to enter Mini-game 2.
+  last().report({ kind: 'choice', index: 0 });
+
+  expect(progress.topic).toBe('Pythagorean theorem in 3D');
+  expect(hud.update).toHaveBeenLastCalledWith(progress, undefined);
+
+  // Finish Mini-game 2 and return to the chasm.
+  done();
+
+  expect(progress.topic).toBe('Pythagorean theorem in 2D');
+  expect(hud.update).toHaveBeenLastCalledWith(progress, 2);
+});
   it('plays the steps in order, one screen at a time', () => {
     play();
     done();
