@@ -14,6 +14,13 @@ export interface Settings {
   pointsPerZipline: number;
   /** How long clicks are ignored after a dialogue box changes, so a fast double click never skips a box. */
   dialogueTransitionMs: number;
+  /**
+   * How long loading can take before the loading screen appears, so a fast load never
+   * flashes it. On a cold page load the browser's audio decoder alone takes 400 to 500 ms
+   * before the sounds can play, even from a local server, so a shorter delay flashed the
+   * screen on every load. A second is also about when people notice a wait at all.
+   */
+  loadingScreenDelayMs: number;
 }
 
 export const settings: Settings = {
@@ -21,4 +28,5 @@ export const settings: Settings = {
   medalLimits: { diamond: 150, gold: 135, silver: 105, bronze: 75 },
   dialogueTransitionMs: 250,
   pointsPerZipline: 50,
+  loadingScreenDelayMs: 1000,
 };
