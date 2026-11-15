@@ -81,7 +81,7 @@ These are grouped by what they're for. Each links to its section in the folder d
    - [dialogueScripts](src/content/README.md#dialoguescripts): The intro, the "how crossing works" scene, and the two Level done messages.
    - [Dialogue](src/model/README.md#dialogue): Tracks which dialogue box is showing, one box per click, and ignores fast double clicks.
    - [DialogueBox](src/view/README.md#dialoguebox): Shows each dialogue line in the shared dialog box, with a Continue button or the line's own choices.
-   - [levels](src/content/README.md#levels): The game's steps in order: the title, the intro, 15 chasms over 3 levels, a Level done step after Levels 1 and 2, and the medal.
+   - [levels](src/content/README.md#levels): The game's steps in order after the title screen: the intro, 15 chasms over 3 levels, a Level done step after Levels 1 and 2, and the medal.
    - [PlayerProgress](src/model/README.md#playerprogress): The player's level, step, points, topic and every answer, in a form that can be saved.
    - [SaveStore](src/model/README.md#savestore): Saves one checkpoint in the browser's storage and loads it back, refusing anything that isn't a valid save.
    - [Hud](src/view/README.md#hud): The top bar with topic, level and points, a "Level 1 of 3 · Chasm 2 of 5" line, and a "+10 points" tag after a correct pick.
@@ -94,7 +94,8 @@ These are grouped by what they're for. Each links to its section in the folder d
 5. **Running the game**:
    - [GameFlow](src/controller/README.md#gameflow): Plays every step in order, one screen at a time, and decides what happens after each one, including scoring a pick, restarting a level, and saving a checkpoint.
    - [The screen controllers](src/controller/README.md#the-screen-controllers): ChasmController, DialogueController and MedalController each run one kind of screen for GameFlow.
-   - [The screen factory](src/controller/README.md#the-screen-factory): Builds the right screen for each step GameFlow plays, including a placeholder title until the real title screen lands.
+   - [The screen factory](src/controller/README.md#the-screen-factory): Builds the right screen for each step GameFlow plays.
+   - [Starting the game](src/controller/README.md#starting-the-game): Shows the title screen and starts a new game or the saved one.
 
 **Next up**: publishing the game to GitHub Pages (#9), and, in Sprint 2, the title screen with New game and Continue (#70), the sounds (#25), the screens after a wrong pick (#47, #48 and #49), and the shops.
 

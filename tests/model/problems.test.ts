@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { makeChasm } from '../../src/model/problems';
+import { makeChasm, solutionSteps } from '../../src/model/problems';
 import { checkPick } from '../../src/model/problems';
 import { triplesByLevel } from '../../src/model/problems';
 import { answerChoices, makeDuelQuestion, makeRng } from '../../src/model/problems';
@@ -182,3 +182,22 @@ describe('makeDuelQuestion', () => {
 // - `${a},${b},${c}`: turns a triangle into text like "3,4,5", so a Set can compare triangles.
 // - x ** 2: x squared.
 // - it.each([...])('... %s', fn): runs the test once per value, putting the value into the test's name.
+describe('solutionSteps', () => {
+    it.each([1, 42, 123])('uses the chasm values for seed %i', (seed) => {
+        const chasm = makeChasm(seed, 1, 0);
+        const steps = solutionSteps(chasm);
+
+        const { a, b, c } = chasm;
+        const correctLog = chasm.logs[chasm.correct];
+
+        expect(steps[0]).toBe('c² = a² + b²');
+
+        expect(steps[1]).toBe(
+            `c² = ${a}² + ${b}² = ${a ** 2} + ${b ** 2} = ${c ** 2}`
+        );
+
+        expect(steps[2]).toBe(
+            `c = √${c ** 2} = ${correctLog} m. The ${correctLog} m log fits.`
+        );
+    });
+});

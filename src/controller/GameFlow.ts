@@ -12,7 +12,6 @@ import type { Outcome, Screen } from './Screen';
  * filled in, such as the chasm made from the game's seed or the points for Level done.
  */
 export type ScreenRequest =
-  | { kind: 'title' }
   | { kind: 'dialogue'; script: string }
   | { kind: 'chasm'; chasm: Chasm }
   /** `points` is what the player earned on this level alone, out of `possiblePoints`. */
@@ -97,8 +96,6 @@ export class GameFlow {
 
   private requestFor(step: Step): ScreenRequest {
     switch (step.kind) {
-      case 'title':
-        return { kind: 'title' };
       case 'dialogue':
         return { kind: 'dialogue', script: step.script };
       case 'chasm':

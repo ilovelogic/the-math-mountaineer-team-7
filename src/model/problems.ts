@@ -98,6 +98,16 @@ export function makeChasm(seed: number, level: number, index: number): Chasm {
     return {a, b, c, logs, correct: logs.indexOf(c),};
 }
 
+export function solutionSteps(chasm: Chasm): string[] {
+    const { a, b, c } = chasm;
+
+    return [
+        `c² = a² + b²`,
+        `c² = ${a}² + ${b}² = ${a ** 2} + ${b ** 2} = ${c ** 2}`,
+        `c = √${c ** 2} = ${c} m. The ${c} m log fits.`
+    ];
+}
+
 /**
  * Makes the three answers for a question whose right answer is `correct`, in a
  * shuffled order. Each wrong answer is 1 to `maxMiss` away from `correct`, and
