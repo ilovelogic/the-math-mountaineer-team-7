@@ -1,4 +1,4 @@
-import { makeRng } from './problems';
+import { answerChoices, makeRng } from './problems';
 
 /**
  * The zipline shop's problem: a box-shaped store whose zipline runs along its
@@ -44,21 +44,16 @@ const MAX_MISS = 3;
 /**
  * Makes the zipline problem for a game. The same seed always gives the same box
  * and the same guesses, so a loaded save shows the same problem. One guess is
- * the diagonal, one is 1 to 3 shorter and one is 1 to 3 longer, shuffled.
+ * the diagonal and the other two are each within 3 of it, shuffled.
  */
 export function makeZiplineProblem(seed: number): ZiplineProblem {
   if (!Number.isInteger(seed) || seed < 0) {
     throw new Error('Seed must be 0 or a positive integer');
   }
   const rng = makeRng(seed);
-  const miss = () => 1 + Math.floor(rng() * MAX_MISS);
 
   const [width, height, length, diagonal] = ziplineBoxes[Math.floor(rng() * ziplineBoxes.length)];
-  const options = [diagonal - miss(), diagonal, diagonal + miss()];
-  for (let i = options.length - 1; i > 0; i--) {
-    const j = Math.floor(rng() * (i + 1));
-    [options[i], options[j]] = [options[j], options[i]];
-  }
+  const options = answerChoices(rng, diagonal, MAX_MISS);
 
   return { length, width, height, diagonal, options, correct: options.indexOf(diagonal) };
 }
