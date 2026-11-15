@@ -20,6 +20,7 @@ May import Konva, other `view/` files, and `model/` or `content/` to read what t
   - [DialogueBox](#dialoguebox)
   - [MedalScreen](#medalscreen)
   - [ShopOfferScreen](#shopofferscreen)
+  - [DuelScreen](#duelscreen)
   - [TitleScreen](#titlescreen)
   - [Hud](#hud)
 - [Still to come](#still-to-come)
@@ -128,6 +129,14 @@ Draws the outside of a shop with the player walking up to it, and the shop's off
 
 **How it's used**\
 `new ShopOfferScreen(layers, shop, offer)` takes the shop's name and its offer from `content/shopText`. **`draw`** draws the scene and the offer once, **`onChoice`** registers the callback for a button click, and **`destroy`** removes everything. A click reports the button's position, accept first and decline second, and ShopOfferController decides what it means.
+
+### DuelScreen
+
+**Purpose**\
+Draws the math duel at the supply shop one page at a time, like the Math duel mockups. The tutorial and solution pages are on squared paper, as in "Tutorial (2D)" and "Solution (2D)": the shared right triangle beside a card of numbered, worked steps. The tutorial uses a general example (5, 12 and 13, with the sides called a, b and c), and the solution uses the duel question's own numbers, solving for x as the duel page asks. The other pages show the shop's plank wall until #55 draws them. The duel's answers are plain buttons, so the first can't look like a hint.
+
+**How it's used**\
+`new DuelScreen(layers, question)` takes the duel question from `model/problems`. **`show(page, text, choices)`** draws a page with its text from `content/duelText` and its buttons, replacing the page before; **`onChoice`** registers the callback for a button click, and **`destroy`** removes everything. A click reports the button's position, and DuelShopController decides what it means.
 
 ### TitleScreen
 
