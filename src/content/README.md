@@ -61,7 +61,7 @@ Stores each shop's offer: what the shop says when the player walks up to it, and
 ## duelText
 
 **Purpose**\
-Stores the math duel's text, one entry per page of the "Mini-game 1: Math duel" mockups (`challenge`, `tutorialOffer`, `tutorial`, `duel`, `won`, `climb`, `lost` and `solution`), each with its words and its buttons in the order they're shown. DuelShopController decides where each button leads. The duel page's buttons are the question's options, so it lists none, and the tutorial and solution text stand in until #158 draws those pages.
+Stores the math duel's text, one entry per page of the "Mini-game 1: Math duel" mockups (`challenge`, `tutorialOffer`, `tutorial`, `duel`, `won`, `climb`, `lost` and `solution`), each with its words and its buttons in the order they're shown. DuelShopController decides where each button leads. The duel page's buttons are the question's options, so it lists none. The tutorial and solution pages say how to use the theorem in words, while DuelScreen draws the triangle and the worked steps from the question's numbers.
 
 ---
 
