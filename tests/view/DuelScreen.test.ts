@@ -1,19 +1,22 @@
 import Konva from 'konva';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { duelText, type DuelPage } from '../../src/content/duelText';
+import { duelExplanation, duelText, type DuelPage } from '../../src/content/duelText';
 import { triplesByLevel, type DuelQuestion } from '../../src/model/problems';
-import { DuelScreen, TUTORIAL_EXAMPLE } from '../../src/view/DuelScreen';
+import { DuelScreen, PROGRESS_CORNER, TUTORIAL_EXAMPLE } from '../../src/view/DuelScreen';
 import type { Layers } from '../../src/view/stage';
 import { colors } from '../../src/view/theme';
 import { standInLoadedImages } from '../standInImage';
 
 /**
- * Checks issue #158 and what DuelShopController relies on from the duel screen: each page
- * shows its text and buttons, the tutorial explains the theorem with a general example,
- * the solution works through the duel question's own numbers, a click reports the
- * button's position, the drawings stay between the top bar and the dialog box, and
- * destroy() removes everything. It draws real Konva nodes into three bare layers.
- * Limit: whether each page looks like its mockup still needs a look with `npm run dev`.
+ * Checks issues #158 and #55 and what DuelShopController relies on from the duel screen:
+ * each page shows its text and buttons, the tutorial explains the theorem with a general
+ * example, the solution works through the duel question's own numbers, the duel page
+ * puts the question and its answers on a card and leaves the store owner's progress
+ * corner (#57) empty, the lost page shows the right answer, each page draws who the
+ * mockup shows, a click reports the button's position, the drawings stay between the top
+ * bar and the dialog box, and destroy() removes everything. It draws real Konva nodes
+ * into three bare layers. Limit: whether each page looks like its mockup still needs a
+ * look with `npm run dev`.
  */
 
 const question: DuelQuestion = { a: 5, b: 12, c: 13, options: [12, 13, 15], correct: 1 };
@@ -44,6 +47,13 @@ function showPage(page: DuelPage): void {
 
 const uiTexts = () => layers.ui.find<Konva.Text>('Text').map((node) => node.text());
 const button = (label: string) => layers.ui.find<Konva.Text>('Text').find((node) => node.text() === label)!.getParent()!;
+/** The duel page's answer buttons, in order. */
+const answers = () => layers.ui.findOne<Konva.Group>('.duel-answers')!.getChildren() as Konva.Group[];
+const answerLabels = () => answers().map((answer) => answer.findOne<Konva.Text>('Text')!.text());
+const card = () => layers.ui.findOne<Konva.Group>('.duel-card');
+const cardTexts = () => card()!.find<Konva.Text>('Text').map((node) => node.text());
+const dialogBox = () => layers.ui.findOne('.dialog-buttons')!.getParent()!;
+const drawn = (name: string) => layers.sprites.find(`.${name}`).length;
 const triangle = () => layers.sprites.findOne<Konva.Group>('.duel-triangle');
 const tags = () => triangle()!.find<Konva.Text>('Text').map((node) => node.text());
 const steps = () => layers.sprites.findOne<Konva.Group>('.duel-steps')!.find<Konva.Text>('Text').map((node) => node.text());
@@ -96,8 +106,89 @@ describe('DuelScreen', () => {
 
   it('draws every answer on the duel page as the same plain button, so none looks like the answer', () => {
     showPage('duel');
-    const fills = ['12', '13', '15'].map((label) => button(label).findOne<Konva.Rect>('Rect')!.fill());
+    const fills = answers().map((answer) => answer.findOne<Konva.Rect>('Rect')!.fill());
     expect(fills).toEqual([colors.white, colors.white, colors.white]);
+  });
+
+  it('puts the duel’s question and answers on a card, with the triangle’s legs and x, and hides the dialog box', () => {
+    showPage('duel');
+    expect(cardTexts()).toEqual(expect.arrayContaining(['Solve for x.', '5', '12', 'x']));
+    expect(answerLabels()).toEqual(['12', '13', '15']);
+    expect(dialogBox().visible()).toBe(false);
+  });
+
+  it('reports each answer’s position when it is clicked on the card', () => {
+    showPage('duel');
+    answers().forEach((answer) => answer.fire('click'));
+    expect(picks).toEqual([0, 1, 2]);
+  });
+
+  it('leaves the duel page’s top-left corner empty for the store owner’s progress (#57)', () => {
+    showPage('duel');
+    const corner = PROGRESS_CORNER;
+    const overlapping = [layers.sprites, layers.ui].flatMap((layer) =>
+      layer.getChildren().flatMap((group) => (group as Konva.Group).getChildren()).filter((node) => {
+        const box = node.getClientRect({ relativeTo: layer });
+        return box.x < corner.x + corner.width && box.y < corner.y + corner.height && box.x + box.width > corner.x && box.y + box.height > corner.y;
+      }),
+    );
+    expect(overlapping).toEqual([]);
+  });
+
+  it('keeps the duel page’s card and characters below the top bar and above the bottom of the stage', () => {
+    showPage('duel');
+    for (const node of [card()!, ...layers.sprites.find('Image')]) {
+      const box = node.getClientRect({ relativeTo: node.getLayer()! });
+      expect(box.y).toBeGreaterThanOrEqual(TOP_BAR_HEIGHT);
+      expect(box.y + box.height).toBeLessThanOrEqual(540);
+    }
+  });
+
+  it('brings the dialog box back on the page after the duel', () => {
+    showPage('duel');
+    showPage('won');
+    expect(dialogBox().visible()).toBe(true);
+    expect(card()).toBeUndefined();
+    expect(uiTexts()).toContain(duelText.won.text);
+  });
+
+  it('shows the right answer on the lost page’s Explanation card', () => {
+    showPage('lost');
+    const explanation = layers.sprites.findOne<Konva.Group>('.duel-explanation')!;
+    expect(explanation.find<Konva.Text>('Text').map((node) => node.text())).toEqual(['Correct answer: 13', duelExplanation.line]);
+  });
+
+  it('shows whichever question’s answer it is given on the Explanation card', () => {
+    setUp({ a: 8, b: 15, c: 17, options: [16, 17, 19], correct: 1 });
+    screen.show('lost', duelText.lost.text, duelText.lost.choices);
+    expect(layers.sprites.findOne<Konva.Group>('.duel-explanation')!.findOne<Konva.Text>('Text')!.text()).toBe('Correct answer: 17');
+  });
+
+  it.each([
+    ['challenge', ['player', 'shopOwnerSupplies']],
+    ['tutorialOffer', ['shopOwnerSupplies']],
+    ['duel', ['player', 'shopOwnerSupplies']],
+    ['lost', ['player', 'shopOwnerCelebrating']],
+    ['climb', ['playerClimbing']],
+  ] as const)('draws who the %s mockup shows', (page, who) => {
+    showPage(page);
+    const names = layers.sprites.find('Image').map((node) => node.name());
+    expect(names.sort()).toEqual([...who].sort());
+  });
+
+  it('shows the bag of climbing gear when the player wins', () => {
+    showPage('won');
+    expect(drawn('duel-prize')).toBe(1);
+  });
+
+  it.each(['challenge', 'tutorialOffer', 'won', 'climb', 'lost'] as const)('keeps the %s page’s drawing between the top bar and the dialog box', (page) => {
+    showPage(page);
+    for (const node of layers.sprites.getChildren().flatMap((group) => (group as Konva.Group).getChildren())) {
+      const box = node.getClientRect({ relativeTo: layers.sprites });
+      expect(box.y).toBeGreaterThanOrEqual(TOP_BAR_HEIGHT);
+      // Characters stand on the dialog box, whose 2 px border reaches 1 px above its top.
+      expect(box.y + box.height).toBeLessThanOrEqual(dialogTop() + 1);
+    }
   });
 
   it.each(['tutorial', 'solution'] as const)('keeps the %s page’s drawing between the top bar and the dialog box', (page) => {
@@ -109,7 +200,7 @@ describe('DuelScreen', () => {
     }
   });
 
-  it.each(['challenge', 'tutorialOffer', 'duel', 'won', 'climb', 'lost'] as const)('draws no triangle on the %s page', (page) => {
+  it.each(['challenge', 'tutorialOffer', 'duel', 'won', 'climb', 'lost'] as const)('draws no worked example on the %s page', (page) => {
     showPage(page);
     expect(triangle()).toBeUndefined();
   });
@@ -130,6 +221,7 @@ describe('DuelScreen', () => {
     screen.destroy();
     battle.fire('click');
     expect(drawnCount()).toBe(0);
+    expect(layers.ui.getChildren()).toEqual([]);
     expect(picks).toEqual([]);
   });
 });
@@ -140,3 +232,4 @@ describe('DuelScreen', () => {
 // - expect.arrayContaining([...]): passes when the array holds every listed item, in any order, among others.
 // - getClientRect({ relativeTo }): the node's box measured in the layer's own coordinates, tags included.
 // - it.each([...] as const)(name, fn): runs the same test once per row; %s in the name is filled in from the row.
+// - box.x < corner.x + corner.width && ...: two boxes overlap only when each starts before the other ends, across and down.

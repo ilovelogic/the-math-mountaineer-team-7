@@ -4,11 +4,13 @@ import type { DialogueLine } from '../model/Dialogue';
 import { levelDoneLines } from '../model/levelDone';
 import type { ProgressView } from '../model/PlayerProgress';
 import { ChasmScreen } from '../view/ChasmScreen';
+import { DuelScreen } from '../view/DuelScreen';
 import { ShopOfferScreen } from '../view/ShopOfferScreen';
 import { ZiplineScreen } from '../view/ZiplineScreen';
 import type { Layers } from '../view/stage';
 import { ChasmController } from './ChasmController';
 import { DialogueController } from './DialogueController';
+import { DuelShopController, type OpponentTimer } from './DuelShopController';
 import type { ScreenRequest } from './GameFlow';
 import { MedalController } from './MedalController';
 import type { Screen } from './Screen';
@@ -48,8 +50,7 @@ export function createScreenFactory(layers: Layers, progress: ProgressView): (re
         if (request.shop === 'clothing') {
           return new ZiplineShopController(new ZiplineScreen(layers, request.problem), request.problem);
         }
-        // The math duel's screen (#55) isn't built yet.
-        throw new Error(`The ${request.shop} shop's mini-game isn't built yet.`);
+        return new DuelShopController(new DuelScreen(layers, request.question), request.question, waitingTimer());
       }
       default: {
         const unhandled: never = request;
@@ -63,6 +64,16 @@ export function createScreenFactory(layers: Layers, progress: ProgressView): (re
 // - return (request) => { ... }: the function it returns still has access to `layers` and `progress` after createScreenFactory has finished, so each screen it builds draws into the same layers.
 // - const unhandled: never = request: `never` is the type with no possible values. If every kind has a case above, `request` can't reach here, so this compiles; add a kind without a case and the build fails on this line.
 // - JSON.stringify(unhandled): turns the request into text, so the error shows exactly what was asked for.
+
+/**
+ * Stands in for the store owner's race until #57 adds it: the store owner never finishes,
+ * so only the player's answer ends the duel. #57's timer replaces this one call above.
+ */
+function waitingTimer(): OpponentTimer {
+  return { start() {}, stop() {} };
+}
+// Optional documentation
+// - { start() {}, stop() {} }: an object with two methods that do nothing, which is all OpponentTimer asks for.
 
 // Scene names arrive from content/levels as plain strings, so a typo there would otherwise
 // reach DialogueController as `undefined` instead of failing where the mistake is.
