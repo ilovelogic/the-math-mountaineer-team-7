@@ -34,10 +34,10 @@ Lists the game's script, which is every step in the order the player meets it, s
    - `levelDone`: The end of a level. GameFlow picks the "all points" or "under 100%" message based on the level's points.
    - `medal`: The end screen.
    - `shopOffer`: A shop asks whether the player wants to come in, with its `shop` (`'supplies'` or `'clothing'`). It must come right before that shop's `shopGame` step, which GameFlow checks when it starts: accepting plays the mini-game, and declining skips it with no points.
-   - `shopGame`: The shop's mini-game, the math duel (#55) or the zipline (#61). Neither is built yet, so the current script has no shop steps.
+   - `shopGame`: The shop's mini-game, the math duel (#55) or the zipline (#61). Only the zipline is built so far, so the clothing shop is the only shop in the current script.
 
 **The current script**\
-Starts with the intro and the "how crossing works" scene, followed by three levels of five chasms each. Levels 1 and 2 end with a Level done step, while Level 3 goes straight to the medal. As a result of each chasm being its own step, a closed tab loses at most one chasm.
+Starts with the intro and the "how crossing works" scene, followed by three levels of five chasms each. Levels 1 and 2 end with a Level done step, while Level 3 goes straight to the medal. Level 2 opens at the clothing shop, whose zipline challenge pays 50 points for the right answer. As a result of each chasm being its own step, a closed tab loses at most one chasm.
 
 ---
 
@@ -61,7 +61,7 @@ Stores each shop's offer: what the shop says when the player walks up to it, and
 ## duelText
 
 **Purpose**\
-Stores the math duel's text, one entry per page of the "Mini-game 1: Math duel" mockups (`challenge`, `tutorialOffer`, `tutorial`, `duel`, `won`, `climb`, `lost` and `solution`), each with its words and its buttons in the order they're shown. DuelShopController decides where each button leads. The duel page's buttons are the question's options, so it lists none, and the tutorial and solution text stand in until #158 draws those pages.
+Stores the math duel's text, one entry per page of the "Mini-game 1: Math duel" mockups (`challenge`, `tutorialOffer`, `tutorial`, `duel`, `won`, `climb`, `lost` and `solution`), each with its words and its buttons in the order they're shown. DuelShopController decides where each button leads. The duel page's buttons are the question's options, so it lists none. The tutorial and solution pages say how to use the theorem in words, while DuelScreen draws the triangle and the worked steps from the question's numbers.
 
 ---
 
