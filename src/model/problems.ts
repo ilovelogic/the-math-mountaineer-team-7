@@ -65,6 +65,7 @@ export function makeChasm(seed: number, level: number, index: number): Chasm {
         throw new Error("Seed must be 0 or a positive integer")
     }
     const rng = makeRng(seed);
+    
 
     const levelTriples = triplesByLevel[level - 1];
     if (index < 0 || index >= levelTriples.length || !Number.isInteger(index)) {

@@ -3,7 +3,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { makeChasm } from '../../src/model/problems';
 import { ChasmScreen } from '../../src/view/ChasmScreen';
 import { STAGE_WIDTH, type Layers } from '../../src/view/stage';
+vi.mock('../../src/view/assets', async () => {
+  const { createCanvas } = await import('canvas');
 
+  return {
+      image: vi.fn(() => createCanvas(65, 90)),
+  };
+});
 const QUESTION = 'Which log fits across this gap?';
 
 /**
@@ -13,7 +19,7 @@ const QUESTION = 'Which log fits across this gap?';
  * the "Pick a log" mockup.
  */
 
-const chasm = { a: 5, b: 12, logs: [5, 13, 17], correct: 1 };
+const chasm = { a: 5, b: 12, c: 13, logs: [5, 13, 17], correct: 1 };
 
 let layers: Layers;
 let screen: ChasmScreen;
@@ -31,15 +37,22 @@ afterEach(() => vi.restoreAllMocks());
 
 const texts = (layer: Konva.Layer) => layer.find<Konva.Text>('Text').map((node) => node.text());
 const buttons = () => layers.ui.find<Konva.Group>('.log-button');
+const logButtonY = () => buttons()[0].y();
 
 describe('view/ChasmScreen', () => {
   it('labels the sides of the gap, leaving the log length as the question', () => {
     expect(texts(layers.sprites)).toEqual(expect.arrayContaining(['12 m', '5 m', 'c = ?']));
   });
-
+  it('shows the mountaineer on the left cliff', () => {
+    const player = layers.sprites.findOne<Konva.Image>('Image');
+  
+    expect(player).not.toBeNull();
+    expect(player!.width()).toBe(45);
+    expect(player!.height()).toBe(70);
+  });
   it('shows a button for each log in the chasm’s order, and piles them shortest on top', () => {
     screen.destroy();
-    screen = new ChasmScreen(layers, { a: 7, b: 24, logs: [31, 20, 25], correct: 0 });
+    screen = new ChasmScreen(layers, { a: 7, b: 24, c: 25, logs: [31, 20, 25], correct: 0 });
     screen.draw();
     expect(buttons().map((button) => button.findOne<Konva.Text>('Text')?.text())).toEqual(['31 m', '20 m', '25 m']);
     expect(texts(layers.sprites).filter((t) => ['20 m', '25 m', '31 m'].includes(t))).toEqual(['20 m', '25 m', '31 m']);
@@ -110,6 +123,65 @@ describe('view/ChasmScreen', () => {
     expect(picks).toEqual([]);
     for (const layer of Object.values(layers)) expect(layer.getChildren()).toHaveLength(0);
   });
+  it('draws the correct log across the gap', () => {
+    screen.showCorrectFeedback(13);
+
+    const logGroup = layers.sprites.findOne<Konva.Group>('.selected-log');
+    const log = logGroup?.findOne<Konva.Rect>('Rect');
+
+    expect(log).not.toBeNull();
+    expect(log!.width()).toBeCloseTo(370, 0);
+
+    //const label = layers.sprites.findOne<Konva.Text>('Text');
+    expect(texts(layers.sprites)).toContain('c = 13 m');
+  });
+  it('draws a short log falling into the chasm', () => {
+    screen.showFeedback('tooShort', 5, 13);
+
+    const logGroup = layers.sprites.findOne<Konva.Group>('.selected-log');
+    const log = logGroup?.findOne<Konva.Rect>('Rect');
+
+    expect(log).not.toBeNull();
+    expect(log!.width()).toBeCloseTo(370 * 0.7, 0);
+  });
+  it('draws a long log extending past the right cliff', () => {
+    screen.showFeedback('tooLong', 17, 13);
+
+    const logGroup = layers.sprites.findOne<Konva.Group>('.selected-log');
+    const log = logGroup?.findOne<Konva.Rect>('Rect');
+
+    expect(log).not.toBeNull();
+    expect(log!.width()).toBeCloseTo(370 * 1.3, 0);
+    expect(log!.x()).toBe(0);
+  });
+  it('locks the log buttons after showing incorrect feedback', () => {
+    screen.showFeedback('tooShort', 5, 13);
+
+    const onClick = vi.fn();
+    screen.onLogClicked(onClick);
+
+    buttons()[0].fire('click');
+
+    expect(onClick).not.toHaveBeenCalled();
+  });
+  it('moves log buttons upward when a longer dialogue appears', () => {
+    const initialY = logButtonY();
+
+    screen.showFeedback('tooLong', 17, 13);
+
+    const newY = logButtonY();
+
+    expect(newY).toBeLessThan(initialY);
+  });
+  it('moves log buttons back down when a shorter dialogue appears', () => {
+    screen.showFeedback('tooLong', 17, 13);
+    const longDialogueY = logButtonY();
+
+    screen.showCorrectFeedback(13);
+    const shortDialogueY = logButtonY();
+
+    expect(shortDialogueY).toBeGreaterThan(longDialogueY);
+});
 });
 
 // Optional documentation
