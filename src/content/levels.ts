@@ -39,8 +39,8 @@ export const steps: Step[] = [
 
   // Level 2 opens at the clothing shop, where the zipline challenge can earn extra points.
   { kind: 'shopOffer', shop: 'clothing' },
-  { kind: 'shopGame', shop: 'clothing' },
-  { kind: 'chasm', level: 2, topic: TOPIC_2D, index: 0 },
+{ kind: 'shopGame', shop: 'clothing', topic: TOPIC_3D },
+{ kind: 'chasm', level: 2, topic: TOPIC_2D, index: 0 },
   { kind: 'chasm', level: 2, topic: TOPIC_2D, index: 1 },
   { kind: 'chasm', level: 2, topic: TOPIC_2D, index: 2 },
   { kind: 'chasm', level: 2, topic: TOPIC_2D, index: 3 },
