@@ -2,10 +2,11 @@ import { SaveStore } from '../../src/model/SaveStore';
 import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 import { steps, type Step } from '../../src/content/levels';
 import { ACCEPT, DECLINE } from '../../src/content/shopText';
+import { DUEL_RESULT } from '../../src/controller/DuelShopController';
 import { GameFlow, newSeed, type ScreenRequest } from '../../src/controller/GameFlow';
 import type { Outcome, Screen } from '../../src/controller/Screen';
 import { PlayerProgress, type SavedProgress } from '../../src/model/PlayerProgress';
-import { makeChasm, type Chasm } from '../../src/model/problems';
+import { makeChasm, makeDuelQuestion, type Chasm } from '../../src/model/problems';
 import { makeZiplineProblem, type ZiplineProblem } from '../../src/model/zipline';
 import type { PickResult } from '../../src/model/rules';
 import type { Hud } from '../../src/view/Hud';
@@ -307,7 +308,7 @@ it('saves checkpoints to actual storage after every step', () => {
   });
 });
 
-// The supply shop isn't in the real script until its mini-game exists (#55), so these tests use
+// The supply shop isn't in the real script until #134 adds it, so these tests use
 // their own, with the supply shop between the intro and the crossing tutorial as in the mockups.
 const SHOP_SCRIPT: Step[] = [
   { kind: 'dialogue', script: 'intro' },
@@ -324,7 +325,7 @@ describe('controller/GameFlow shop offers (#52, #53)', () => {
     pickOffer(ACCEPT);
     expect(screens.map((screen) => screen.request)).toEqual([
       { kind: 'shopOffer', shop: 'supplies' },
-      { kind: 'shopGame', shop: 'supplies' },
+      { kind: 'shopGame', shop: 'supplies', question: makeDuelQuestion(SEED) },
     ]);
   });
 
@@ -401,6 +402,32 @@ describe('controller/GameFlow zipline shop (#175)', () => {
     play(ZIPLINE_SCRIPT, ZIPLINE);
     guessZipline(true);
     expect(saves.at(-1)?.points).toBe(50);
+  });
+});
+
+// Issue #55: the duel is given the question made from the game's seed, and until #134
+// acts on how it ended, every ending goes on to the next step with no points.
+const DUEL = 2;
+
+describe('controller/GameFlow math duel (#55)', () => {
+  it('gives the duel the question made from the game’s seed', () => {
+    play(SHOP_SCRIPT, DUEL);
+    expect(last().request).toEqual({ kind: 'shopGame', shop: 'supplies', question: makeDuelQuestion(SEED) });
+  });
+
+  it('gives the same question after a reload, so the duel is the same one', () => {
+    play(SHOP_SCRIPT, DUEL);
+    const first = last().request;
+    progress = PlayerProgress.fromJSON(progress.toJSON());
+    play(SHOP_SCRIPT, DUEL);
+    expect(last().request).toEqual(first);
+  });
+
+  it.each(Object.entries(DUEL_RESULT))('goes on to the next step with no points when the duel reports %s, until #134', (_, result) => {
+    play(SHOP_SCRIPT, DUEL);
+    last().report({ kind: 'choice', index: result });
+    expect(last().request).toEqual({ kind: 'dialogue', script: 'howCrossingWorks' });
+    expect(progress.points).toBe(0);
   });
 });
 
