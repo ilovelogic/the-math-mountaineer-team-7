@@ -13,6 +13,7 @@ import { ShopOfferController } from '../../src/controller/ShopOfferController';
 import { ZiplineShopController } from '../../src/controller/ZiplineShopController';
 import { PlayerProgress } from '../../src/model/PlayerProgress';
 import { makeChasm } from '../../src/model/problems';
+import { makeZiplineProblem } from '../../src/model/zipline';
 import type { Layers } from '../../src/view/stage';
 import { standInLoadedImages } from '../standInImage';
 
@@ -97,7 +98,7 @@ describe('createScreenFactory', () => {
 
   it('builds the zipline shop for the clothing shop’s mini-game, opening on the store owner’s deal', () => {
     standInLoadedImages();
-    const screen = makeScreen({ kind: 'shopGame', shop: 'clothing' });
+    const screen = makeScreen({ kind: 'shopGame', shop: 'clothing', problem: makeZiplineProblem(1) });
     expect(screen).toBeInstanceOf(ZiplineShopController);
     expect(startAndRead(screen)).toContain(ziplineText.deal.text);
   });
