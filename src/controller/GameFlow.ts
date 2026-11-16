@@ -131,6 +131,14 @@ export class GameFlow {
     const step = this.steps[index];
     if (request.kind === 'chasm' && step.kind === 'chasm' && outcome.kind === 'choice') {
       this.score(request.chasm, outcome.index, step.index + 1);
+
+      // Keep each completed attempt, including the final level.
+      if (index === this.chasmStepsOf(step.level).at(-1)) {
+        this.progress.recordLevelAttempt(
+          step.level,
+          this.levelPoints(step.level),
+        );
+      }
     }
     if (request.kind === 'shopGame' && request.shop === 'clothing' && outcome.kind === 'choice') {
       this.scoreZipline(request.problem, outcome.index);
