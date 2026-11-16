@@ -13,6 +13,7 @@ Imports nothing. Change a number here instead of in code.
 - [dialogueScripts](#dialoguescripts)
 - [shopText](#shoptext)
 - [duelText](#dueltext)
+- [hintText](#hinttext)
 - [settings](#settings)
 
 ---
@@ -62,6 +63,13 @@ Stores each shop's offer: what the shop says when the player walks up to it, and
 
 **Purpose**\
 Stores the math duel's text, one entry per page of the "Mini-game 1: Math duel" mockups (`challenge`, `tutorialOffer`, `tutorial`, `duel`, `won`, `climb`, `lost` and `solution`), each with its words and its buttons in the order they're shown. DuelShopController decides where each button leads. The duel page's buttons are the question's options, so it lists none. The tutorial and solution pages say how to use the theorem in words, while DuelScreen draws the triangle and the worked steps from the question's numbers.
+
+---
+
+## hintText
+
+**Purpose**\
+Stores the chasm hint's words, as in the "Pick a log: hint open" mockup (#84): the Hint button's label, the formula and its caption for the formula card, and the line and Back button the dialog box shows while the card is open. Keeping them here means rewording the hint never touches the chasm screen.
 
 ---
 

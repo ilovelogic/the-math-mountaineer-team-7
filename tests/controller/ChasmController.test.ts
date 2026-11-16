@@ -23,6 +23,9 @@ class FakeChasmScreen implements ChasmView {
     } | null = null;
     correctFeedback: number | null = null;
     crossingFeedback: number | null = null;
+    hintShown = false;
+    showHintCalls = 0;
+    private hintCallback?: () => void;
 
 
 
@@ -61,6 +64,20 @@ class FakeChasmScreen implements ChasmView {
     }
     showCrossing(correctLength: number): void {
         this.crossingFeedback = correctLength;
+    }
+
+    onHintClicked(cb: () => void): void {
+        this.hintCallback = cb;
+    }
+    showHint(): void {
+        this.hintShown = true;
+        this.showHintCalls++;
+    }
+    hideHint(): void {
+        this.hintShown = false;
+    }
+    clickHint(): void {
+        this.hintCallback?.();
     }
 }
 class FakeChasmSolutionScreen implements ChasmSolutionView {
@@ -317,5 +334,67 @@ const   controller = new ChasmController(screen, solutionScreen, chasm);
             kind: 'choice',
             index: 0
         });
+    });
+    /** Starts a controller on fresh stand-ins, for the hint tests below. */
+    function startChasm() {
+        const screen = new FakeChasmScreen();
+        const onDone = vi.fn();
+        new ChasmController(screen, new FakeChasmSolutionScreen(), chasm).start(onDone);
+        return { screen, onDone };
+    }
+
+    it('opens the hint when Hint is clicked, without reporting anything', () => {
+        const { screen, onDone } = startChasm();
+        screen.clickHint();
+        expect(screen.hintShown).toBe(true);
+        expect(onDone).not.toHaveBeenCalled();
+    });
+
+    it('closes the hint on Back, and opening and closing it never reports an outcome', () => {
+        const { screen, onDone } = startChasm();
+        for (let i = 0; i < 3; i++) {
+            screen.clickHint();
+            screen.clickChoice(0);
+            expect(screen.hintShown).toBe(false);
+        }
+        // No outcome means GameFlow never scores anything, so the points can't change.
+        expect(onDone).not.toHaveBeenCalled();
+        expect(screen.feedback).toBeNull();
+        expect(screen.correctFeedback).toBeNull();
+    });
+
+    it('still takes a pick normally after the hint was opened and closed', () => {
+        const { screen, onDone } = startChasm();
+        screen.clickHint();
+        screen.clickChoice(0);
+        screen.clickLog(1);
+        expect(screen.correctFeedback).toBe(5);
+        screen.clickChoice(0);
+        expect(onDone).toHaveBeenCalledWith({ kind: 'choice', index: 1 });
+    });
+
+    it('closes the hint when a log is picked while it is open, then gives feedback as usual', () => {
+        const { screen } = startChasm();
+        screen.clickHint();
+        screen.clickLog(0);
+        expect(screen.hintShown).toBe(false);
+        expect(screen.feedback).toEqual({ result: 'tooShort', selectedLength: 4, correctLength: 5 });
+    });
+
+    it('lets the feedback buttons work normally once the hint has closed with a pick', () => {
+        const { screen, onDone } = startChasm();
+        screen.clickHint();
+        screen.clickLog(0);
+        screen.clickChoice(0);
+        expect(screen.crossingFeedback).toBe(5);
+        screen.clickChoice(0);
+        expect(onDone).toHaveBeenCalledWith({ kind: 'choice', index: 0 });
+    });
+
+    it('ignores Hint once a log has been picked', () => {
+        const { screen } = startChasm();
+        screen.clickLog(1);
+        screen.clickHint();
+        expect(screen.showHintCalls).toBe(0);
     });
 });

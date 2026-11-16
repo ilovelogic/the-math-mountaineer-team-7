@@ -1,5 +1,6 @@
 import Konva from 'konva';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { hintText } from '../../src/content/hintText';
 import { makeChasm } from '../../src/model/problems';
 import { ChasmScreen } from '../../src/view/ChasmScreen';
 import { STAGE_WIDTH, type Layers } from '../../src/view/stage';
@@ -10,7 +11,9 @@ const QUESTION = 'Which log fits across this gap?';
  * Checks what the chasm screen shows and what it reports. The screen is drawn
  * into three bare layers instead of a real stage, and clicks are faked with
  * `fire('click')`, so no browser is needed. The chasm is the 5-12-13 one from
- * the "Pick a log" mockup.
+ * the "Pick a log" mockup. The hint tests check only what the screen shows and
+ * reports; whether the hint opens, and that it never changes points, is
+ * ChasmController's job and is tested there.
  */
 
 const chasm = { a: 5, b: 12, logs: [5, 13, 17], correct: 1 };
@@ -31,6 +34,10 @@ afterEach(() => vi.restoreAllMocks());
 
 const texts = (layer: Konva.Layer) => layer.find<Konva.Text>('Text').map((node) => node.text());
 const buttons = () => layers.ui.find<Konva.Group>('.log-button');
+const hintButton = () => layers.ui.findOne<Konva.Group>('.hint-button')!;
+const formulaCard = () => layers.ui.findOne<Konva.Group>('.formula-card')!;
+/** The dialog button showing `label`, which is the group holding that text. */
+const buttonLabelled = (label: string) => layers.ui.find<Konva.Text>('Text').find((node) => node.text() === label)!.getParent()!;
 
 describe('view/ChasmScreen', () => {
   it('labels the sides of the gap, leaving the log length as the question', () => {
@@ -103,6 +110,42 @@ describe('view/ChasmScreen', () => {
     }
   });
 
+  it('shows a Hint button and keeps the formula card hidden until it is asked for', () => {
+    expect(hintButton().findOne<Konva.Text>('Text')?.text()).toBe(hintText.button);
+    expect(formulaCard().visible()).toBe(false);
+  });
+
+  it('reports each click on Hint', () => {
+    let clicks = 0;
+    screen.onHintClicked(() => clicks++);
+    hintButton().fire('click');
+    expect(clicks).toBe(1);
+  });
+
+  it('shows the card and the hint line with its Back button, and Back reports as choice 0', () => {
+    const choices: number[] = [];
+    screen.onChoiceSelected((index) => choices.push(index));
+    screen.showHint();
+    expect(formulaCard().visible()).toBe(true);
+    expect(texts(layers.ui)).toEqual(expect.arrayContaining([hintText.formula, hintText.line, hintText.back]));
+    buttonLabelled(hintText.back).fire('click');
+    expect(choices).toEqual([0]);
+  });
+
+  it('hides the card and puts the question back when the hint closes', () => {
+    screen.showHint();
+    screen.hideHint();
+    expect(formulaCard().visible()).toBe(false);
+    expect(texts(layers.ui)).toContain(QUESTION);
+    expect(texts(layers.ui)).not.toContain(hintText.line);
+  });
+
+  it('takes the Hint button and card away once a pick’s feedback shows', () => {
+    screen.showHint();
+    screen.showFeedback('tooShort', 5, 13);
+    expect([hintButton().visible(), formulaCard().visible()]).toEqual([false, false]);
+  });
+
   it('removes everything it drew, and reports nothing afterwards', () => {
     const button = buttons()[0];
     screen.destroy();
@@ -119,6 +162,10 @@ describe('view/ChasmScreen', () => {
 // - expect.arrayContaining([...]): passes when the array holds all of these values, in any order and among others.
 // - getClientRect({ relativeTo: layers.ui }): where a node is drawn and how big it is, measured from what's inside it, in the layer's coordinates.
 // - findOne((node) => ...): the first node inside the layer for which the function returns true.
+// - findOne<Konva.Group>('.hint-button')!: the first node with that name; the `!` tells TypeScript it's there, since the screen always draws it.
+// - .find((node) => ...) on an array, then getParent()!: the first text with that label, then the button group that holds it.
+// - node.visible(): with no argument, whether the node is shown.
+// - expect(list).toContain(item) / .not.toContain(item): passes when the array does, or doesn't, hold that item.
 // - vi.spyOn(obj, 'name').mockReturnValue(x): replaces obj.name with a stand-in that returns x; vi.restoreAllMocks() puts the real one back.
 // - mockImplementation(() => {}): the stand-in does nothing, so console.log prints nothing during the test but still records its calls.
 // - container as never: tells TypeScript to accept the stand-in where a <div> is expected; it only has the `style.cursor` the screen sets.
