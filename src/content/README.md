@@ -13,6 +13,7 @@ Imports nothing. Change a number here instead of in code.
 - [dialogueScripts](#dialoguescripts)
 - [shopText](#shoptext)
 - [duelText](#dueltext)
+- [hintText](#hinttext)
 - [settings](#settings)
 
 ---
@@ -65,6 +66,13 @@ Stores the math duel's text, one entry per page of the "Mini-game 1: Math duel" 
 
 **The Explanation card**\
 `duelExplanation` holds the words on the lost page's gray card: a title, `Correct answer: {answer}`, where DuelScreen puts the question's answer, and the line under it.
+
+---
+
+## hintText
+
+**Purpose**\
+Stores the chasm hint's words, as in the "Pick a log: hint open" mockup (#84): the Hint button's label, the formula and its caption for the formula card, and the line and Back button the dialog box shows while the card is open. Keeping them here means rewording the hint never touches the chasm screen.
 
 ---
 

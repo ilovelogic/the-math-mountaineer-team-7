@@ -106,6 +106,9 @@ The stage's layers and a chasm to draw: its two sides and the log lengths, in th
 **What it reports**\
 Each click on a log button reports that log's position in the list. Once its controller **`lock`**s it, it stops reporting clicks and shows the picked log as used. **`destroy`** removes everything it drew.
 
+**The hint**\
+A Hint button sits at the top left, just below the Hud's progress tag, since the mockup's spot is taken by that tag in the game. **`onHintClicked`** reports each click, and ChasmController decides what to do. **`showHint`** shows the formula card (drawn by `createFormulaCard` in `view/formulaCard.ts`, which sizes itself to its text) and puts the hint's line and a Back button in the dialog box, and Back reports as choice 0. **`hideHint`** hides the card and puts the question back. Once a pick's feedback shows, the Hint button and card go away for that chasm. The words come from `content/hintText`.
+
 ### DialogueBox
 
 **Purpose**\

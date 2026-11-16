@@ -16,6 +16,7 @@ May import `model/`, `view/`, and `content/`. Nothing else imports from here exc
 - [Loading](#loading)
 - [Starting the game](#starting-the-game)
 - [Crossing one chasm, start to finish](#crossing-one-chasm-start-to-finish)
+- [The hint](#the-hint)
 
 ---
 
@@ -137,3 +138,13 @@ A single answer moves through the game as follows:
    5. GameFlow gets the points from `rules`, adds them to `PlayerProgress`, and records the answer.
    6. GameFlow has the Hud redraw and plays the matching sound (once the sounds are added).
    7. GameFlow saves a checkpoint and moves on to the next step.
+
+---
+
+## The hint
+
+**Purpose**\
+Gives a stuck player the formula, without ever changing their points (#84).
+
+**How it works**\
+ChasmController listens for Hint on ChasmScreen and opens the hint until a log is picked; after that, the feedback explains the answer, so Hint does nothing. While the hint is open, a `hintOpen` flag makes the dialog box's choice 0 mean Back, which closes it. The logs stay clickable, and picking one closes the hint and carries on as usual. Opening and closing the hint never reports an outcome to GameFlow, and GameFlow only scores outcomes, so the hint can't change the points. The controller tests check exactly that with a fake view.
