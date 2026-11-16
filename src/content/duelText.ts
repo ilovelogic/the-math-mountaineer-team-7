@@ -7,6 +7,12 @@ export interface DuelPageText {
   choices: string[];
 }
 
+/** The words beside the store owner's progress on the duel page, so the player knows whose race it is. */
+export const ownerProgressText = {
+  name: 'Store owner',
+  status: 'Solving…',
+};
+
 /**
  * Each duel page's text, worded as in the Math duel mockups. The duel page's buttons are
  * the question's options, so it has none here. The tutorial and solution pages also show

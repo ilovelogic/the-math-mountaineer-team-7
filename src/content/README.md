@@ -62,7 +62,7 @@ Stores each shop's offer: what the shop says when the player walks up to it, and
 ## duelText
 
 **Purpose**\
-Stores the math duel's text, one entry per page of the "Mini-game 1: Math duel" mockups (`challenge`, `tutorialOffer`, `tutorial`, `duel`, `won`, `climb`, `lost` and `solution`), each with its words and its buttons in the order they're shown. DuelShopController decides where each button leads. The duel page's buttons are the question's options, so it lists none. The tutorial and solution pages say how to use the theorem in words, while DuelScreen draws the triangle and the worked steps from the question's numbers.
+Stores the math duel's text, one entry per page of the "Mini-game 1: Math duel" mockups (`challenge`, `tutorialOffer`, `tutorial`, `duel`, `won`, `climb`, `lost` and `solution`), each with its words and its buttons in the order they're shown. DuelShopController decides where each button leads. The duel page's buttons are the question's options, so it lists none. The tutorial and solution pages say how to use the theorem in words, while DuelScreen draws the triangle and the worked steps from the question's numbers. `ownerProgressText` holds the words beside the store owner's progress pie on the duel page.
 
 ---
 
@@ -76,4 +76,4 @@ Stores the chasm hint's words, as in the "Pick a log: hint open" mockup (#84): t
 ## settings
 
 **Purpose**\
-Keeps the values we expect to tweak while playtesting, each with a comment explaining what it does. Today, that's `pointsPerChasm` (10, matching the "+10" in the mockups), `medalLimits` (150, 135, 105 and 75, which are 100%, 90%, 70% and 50% of the 150 points a player can earn, matching the Medal requirements card), `dialogueTransitionMs` (250, how long clicks are ignored after a dialogue box changes), and `loadingScreenDelayMs` (1000, how long loading can take before the loading screen appears, long enough that the sounds' 400 to 500 ms warm-up on a normal load never shows it). Feature toggles will join them as those features land.
+Keeps the values we expect to tweak while playtesting, each with a comment explaining what it does. Today, that's `pointsPerChasm` (10, matching the "+10" in the mockups), `medalLimits` (150, 135, 105 and 75, which are 100%, 90%, 70% and 50% of the 150 points a player can earn, matching the Medal requirements card), `dialogueTransitionMs` (250, how long clicks are ignored after a dialogue box changes), and `loadingScreenDelayMs` (1000, how long loading can take before the loading screen appears, long enough that the sounds' 400 to 500 ms warm-up on a normal load never shows it), and `ownerSolveMs` (30000, how long the store owner takes to solve the duel question, a first guess to tune in playtesting). Feature toggles will join them as those features land.
