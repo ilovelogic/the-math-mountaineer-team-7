@@ -1,3 +1,4 @@
+import { SaveStore } from '../../src/model/SaveStore';
 import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 import { steps, type Step } from '../../src/content/levels';
 import { ACCEPT, DECLINE } from '../../src/content/shopText';
@@ -145,7 +146,40 @@ describe('controller/GameFlow', () => {
     expect(saves.at(-1)).toEqual(progress.toJSON());
     expect(saves.at(-1)?.points).toBe(10);
   });
+it('saves checkpoints to actual storage after every step', () => {
+  const data = new Map<string, string>();
 
+  const storage = {
+    getItem: (key: string) => data.get(key) ?? null,
+    setItem: (key: string, value: string) => {
+      data.set(key, value);
+    },
+  } as Storage;
+
+  const store = new SaveStore(storage);
+
+  const flow = new GameFlow(steps, progress, makeScreen, {
+  save: store.save,
+  });
+
+  flow.run();
+
+  expect(store.load()).toBeNull();
+
+  done();
+  expect(store.load()?.step).toBe(1);
+
+  done();
+  expect(store.load()?.step).toBe(FIRST_CHASM);
+
+  pickRight();
+
+  expect(store.load()?.step).toBe(FIRST_CHASM + 1);
+  expect(store.load()?.points).toBe(10);
+  expect(store.load()).toEqual(progress.toJSON());
+
+  expect(data.has('math-mountaineer-save')).toBe(true);
+});
   it('plays the whole game through to the medal', () => {
     play();
     while (last().request.kind !== 'medal') {

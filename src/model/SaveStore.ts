@@ -1,4 +1,3 @@
-
 import { PlayerProgress, type SavedProgress } from './PlayerProgress';
 
 const SAVE_KEY = 'math-mountaineer-save';
@@ -6,15 +5,15 @@ const SAVE_KEY = 'math-mountaineer-save';
 export class SaveStore {
   constructor(private storage: Storage) {}
 
-  save(checkpoint: SavedProgress): void {
+  save = (checkpoint: SavedProgress): void => {
     try {
       this.storage.setItem(SAVE_KEY, JSON.stringify(checkpoint));
     } catch {
       // Don't crash if storage is unavailable.
     }
-  }
+  };
 
-  load(): SavedProgress | null {
+  load = (): SavedProgress | null => {
     try {
       const saved = this.storage.getItem(SAVE_KEY);
 
@@ -26,5 +25,5 @@ export class SaveStore {
     } catch {
       return null;
     }
-  }
+  };
 }
