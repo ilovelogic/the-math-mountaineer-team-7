@@ -2,7 +2,7 @@ import type { Shop, Step } from '../content/levels';
 import { settings } from '../content/settings';
 import { DECLINE } from '../content/shopText';
 import type { Place, PlayerProgress, SavedProgress } from '../model/PlayerProgress';
-import { checkPick, makeChasm, type Chasm } from '../model/problems';
+import { checkPick, makeChasm, makeDuelQuestion, type Chasm, type DuelQuestion } from '../model/problems';
 import { pointsFor, ziplinePoints, type PickResult } from '../model/rules';
 import { checkZiplineAnswer, makeZiplineProblem, type ZiplineProblem } from '../model/zipline';
 import type { Hud } from '../view/Hud';
@@ -10,8 +10,8 @@ import type { Outcome, Screen } from './Screen';
 
 /**
  * What GameFlow asks for to play a step: the step with everything its screen needs
- * filled in, such as the chasm or zipline problem made from the game's seed, or the
- * points for Level done. GameFlow makes each problem here, once, so it checks the
+ * filled in, such as the chasm, duel question or zipline problem made from the game's
+ * seed, or the points for Level done. GameFlow makes each problem here, once, so it checks the
  * player's answer against the same problem the screen showed.
  */
 export type ScreenRequest =
@@ -21,7 +21,7 @@ export type ScreenRequest =
   | { kind: 'levelDone'; level: number; points: number; possiblePoints: number }
   | { kind: 'medal'; points: number }
   | { kind: 'shopOffer'; shop: Shop }
-  | { kind: 'shopGame'; shop: 'supplies' }
+  | { kind: 'shopGame'; shop: 'supplies'; question: DuelQuestion }
   | { kind: 'shopGame'; shop: 'clothing'; problem: ZiplineProblem };
 
 /** The parts of the game GameFlow keeps up to date. Each is optional, so tests pass only what they check. */
@@ -118,11 +118,15 @@ export class GameFlow {
       case 'shopGame':
         return step.shop === 'clothing'
           ? { kind: 'shopGame', shop: 'clothing', problem: makeZiplineProblem(this.progress.seed) }
-          : { kind: 'shopGame', shop: step.shop };
+          : { kind: 'shopGame', shop: 'supplies', question: makeDuelQuestion(this.progress.seed) };
     }
   }
 
-  /** Acts on what the screen reported and gives the position of the step to play next. */
+  /**
+   * Acts on what the screen reported and gives the position of the step to play next.
+   * The duel reports how it ended (DUEL_RESULT), but nothing acts on that yet, so play
+   * goes on to the next step either way; skipping Level 1 on a win comes with #134.
+   */
   private nextAfter(index: number, request: ScreenRequest, outcome: Outcome): number {
     const step = this.steps[index];
     if (request.kind === 'chasm' && step.kind === 'chasm' && outcome.kind === 'choice') {
