@@ -10,6 +10,12 @@ export interface ChasmView {
     showCorrectFeedback(correctLength: number): void;
     showFeedback(result: 'tooShort' | 'tooLong', selectedLength: number, correctLength: number): void;
     showCrossing(correctLength: number): void;
+    /** Calls `cb` each time the player clicks Hint. */
+    onHintClicked(cb: () => void): void;
+    /** Shows the formula card and the hint's line, whose Back button reports as choice 0. */
+    showHint(): void;
+    /** Hides the formula card and puts the question back. */
+    hideHint(): void;
     lock(): void;
     destroy(): void;
 }
@@ -29,6 +35,7 @@ export class ChasmController implements Screen {
     private pendingIndex: number | null = null;
     private showingCrossing = false;
     private wasCorrect = false;
+    private hintOpen = false;
 
 
     constructor(
@@ -45,6 +52,14 @@ export class ChasmController implements Screen {
             this.handlePick(index);
         });
 
+        // The hint only helps with working out a pick, so it does nothing once a log is picked.
+        // Opening or closing it never reports an outcome, so it can never change the points.
+        this.screen.onHintClicked(() => {
+            if (this.stopped || this.hasPicked) return;
+            this.hintOpen = true;
+            this.screen.showHint();
+        });
+
         // Draw solution screen
         this.solutionScreen.draw();
         this.solutionScreen.onContinueClicked(() => {
@@ -55,6 +70,11 @@ export class ChasmController implements Screen {
         });
 
         this.screen.onChoiceSelected((index) => {
+            // While the hint is open, the dialog box's only button is Back.
+            if (this.hintOpen) {
+                if (index === 0) this.closeHint();
+                return;
+            }
             if (this.pendingIndex === null || (index !== 0 && index !== 1)) return;
 
             if (index === 1) {
@@ -103,6 +123,8 @@ export class ChasmController implements Screen {
         }
 
         this.hasPicked = true;
+        // The logs stay clickable while the hint is open, and picking one closes it.
+        if (this.hintOpen) this.closeHint();
 
         const result = checkPick(this.chasm, index);
 
@@ -122,6 +144,11 @@ export class ChasmController implements Screen {
         const correctLength = this.chasm.logs[this.chasm.correct];
 
         this.screen.showFeedback(result, selectedLength, correctLength);
+    }
+
+    private closeHint(): void {
+        this.hintOpen = false;
+        this.screen.hideHint();
     }
 
 }

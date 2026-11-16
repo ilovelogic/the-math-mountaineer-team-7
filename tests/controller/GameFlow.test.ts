@@ -1,10 +1,13 @@
+import { SaveStore } from '../../src/model/SaveStore';
 import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 import { steps, type Step } from '../../src/content/levels';
 import { ACCEPT, DECLINE } from '../../src/content/shopText';
+import { DUEL_RESULT } from '../../src/controller/DuelShopController';
 import { GameFlow, newSeed, type ScreenRequest } from '../../src/controller/GameFlow';
 import type { Outcome, Screen } from '../../src/controller/Screen';
 import { PlayerProgress, type SavedProgress } from '../../src/model/PlayerProgress';
-import { makeChasm, type Chasm } from '../../src/model/problems';
+import { makeChasm, makeDuelQuestion, type Chasm } from '../../src/model/problems';
+import { makeZiplineProblem, type ZiplineProblem } from '../../src/model/zipline';
 import type { PickResult } from '../../src/model/rules';
 import type { Hud } from '../../src/view/Hud';
 
@@ -72,8 +75,39 @@ const shownChasm = () => (last().request as { kind: 'chasm'; chasm: Chasm }).cha
 /** Picks the log that fits, or one that doesn't, on the chasm being shown. */
 const pickRight = () => last().report({ kind: 'choice', index: shownChasm().correct });
 const pickWrong = () => last().report({ kind: 'choice', index: (shownChasm().correct + 1) % shownChasm().logs.length });
+const shownZipline = () => (last().request as { kind: 'shopGame'; shop: 'clothing'; problem: ZiplineProblem }).problem;
+/** Reports the right guess, or a wrong one, on the zipline problem being shown. */
+const guessZipline = (right: boolean) =>
+  last().report({ kind: 'choice', index: (shownZipline().correct + (right ? 0 : 1)) % shownZipline().options.length });
 
 describe('controller/GameFlow', () => {
+  it('updates the topic for Mini-game 2 and restores it for chasms', () => {
+  const list: Step[] = [
+    { kind: 'chasm', level: 1, topic: 'Pythagorean theorem in 2D', index: 0 },
+    { kind: 'shopOffer', shop: 'clothing' },
+    { kind: 'shopGame', shop: 'clothing', topic: 'Pythagorean theorem in 3D' },
+    { kind: 'chasm', level: 1, topic: 'Pythagorean theorem in 2D', index: 1 },
+  ];
+
+  play(list);
+
+  expect(progress.topic).toBe('Pythagorean theorem in 2D');
+
+  pickRight();
+  expect(progress.topic).toBe('Pythagorean theorem in 2D');
+
+  // Accept the shop offer to enter Mini-game 2.
+  last().report({ kind: 'choice', index: 0 });
+
+  expect(progress.topic).toBe('Pythagorean theorem in 3D');
+  expect(hud.update).toHaveBeenLastCalledWith(progress, undefined);
+
+  // Finish Mini-game 2 and return to the chasm.
+  done();
+
+  expect(progress.topic).toBe('Pythagorean theorem in 2D');
+  expect(hud.update).toHaveBeenLastCalledWith(progress, 2);
+});
   it('plays the steps in order, one screen at a time', () => {
     play();
     done();
@@ -140,16 +174,51 @@ describe('controller/GameFlow', () => {
     expect(saves.at(-1)).toEqual(progress.toJSON());
     expect(saves.at(-1)?.points).toBe(10);
   });
+it('saves checkpoints to actual storage after every step', () => {
+  const data = new Map<string, string>();
 
+  const storage = {
+    getItem: (key: string) => data.get(key) ?? null,
+    setItem: (key: string, value: string) => {
+      data.set(key, value);
+    },
+  } as Storage;
+
+  const store = new SaveStore(storage);
+
+  const flow = new GameFlow(steps, progress, makeScreen, {
+  save: store.save,
+  });
+
+  flow.run();
+
+  expect(store.load()).toBeNull();
+
+  done();
+  expect(store.load()?.step).toBe(1);
+
+  done();
+  expect(store.load()?.step).toBe(FIRST_CHASM);
+
+  pickRight();
+
+  expect(store.load()?.step).toBe(FIRST_CHASM + 1);
+  expect(store.load()?.points).toBe(10);
+  expect(store.load()).toEqual(progress.toJSON());
+
+  expect(data.has('math-mountaineer-save')).toBe(true);
+});
   it('plays the whole game through to the medal', () => {
     play();
     while (last().request.kind !== 'medal') {
       if (last().request.kind === 'chasm') pickRight();
+      else if (last().request.kind === 'shopGame') guessZipline(true);
       else done();
     }
-    expect(last().request).toEqual({ kind: 'medal', points: 150 });
+    expect(last().request).toEqual({ kind: 'medal', points: 200 });
     expect(kinds().filter((kind) => kind === 'chasm')).toHaveLength(15);
     expect(kinds().filter((kind) => kind === 'levelDone')).toHaveLength(2);
+    expect(kinds().filter((kind) => kind === 'shopGame')).toHaveLength(1);
   });
 
   /** Plays Level 1's five chasms from its first one, getting the first `right` of them right. */
@@ -184,7 +253,7 @@ describe('controller/GameFlow', () => {
     play(steps, FIRST_CHASM);
     playLevel1(2);
     last().report({ kind: 'choice', index: 1 });
-    expect(last().request).toEqual({ kind: 'chasm', chasm: makeChasm(SEED, 2, 0) });
+    expect(last().request).toEqual({ kind: 'shopOffer', shop: 'clothing' });
     expect(progress.points).toBe(20);
   });
 
@@ -192,7 +261,7 @@ describe('controller/GameFlow', () => {
     play(steps, FIRST_CHASM);
     playLevel1(5);
     last().report({ kind: 'choice', index: 0 });
-    expect(last().request).toEqual({ kind: 'chasm', chasm: makeChasm(SEED, 2, 0) });
+    expect(last().request).toEqual({ kind: 'shopOffer', shop: 'clothing' });
     expect(progress.points).toBe(50);
   });
 
@@ -239,7 +308,7 @@ describe('controller/GameFlow', () => {
   });
 });
 
-// The real script has no shop steps until a mini-game exists (#55, #61), so these tests use
+// The supply shop isn't in the real script until #134 adds it, so these tests use
 // their own, with the supply shop between the intro and the crossing tutorial as in the mockups.
 const SHOP_SCRIPT: Step[] = [
   { kind: 'dialogue', script: 'intro' },
@@ -256,7 +325,7 @@ describe('controller/GameFlow shop offers (#52, #53)', () => {
     pickOffer(ACCEPT);
     expect(screens.map((screen) => screen.request)).toEqual([
       { kind: 'shopOffer', shop: 'supplies' },
-      { kind: 'shopGame', shop: 'supplies' },
+      { kind: 'shopGame', shop: 'supplies', question: makeDuelQuestion(SEED) },
     ]);
   });
 
@@ -288,6 +357,77 @@ describe('controller/GameFlow shop offers (#52, #53)', () => {
   ] as [string, Step[]][])('refuses a script where an offer is followed by %s, before playing anything', (_, script) => {
     expect(() => play(script)).toThrow('The supplies shop offer at step');
     expect(screens).toEqual([]);
+  });
+});
+
+// Issue #175: the zipline shop pays 50 points for the right guess, checked against the
+// problem GameFlow put in the request, which is the one the shop showed.
+const ZIPLINE_SCRIPT: Step[] = [
+  { kind: 'shopOffer', shop: 'clothing' },
+  { kind: 'shopGame', shop: 'clothing' },
+  { kind: 'medal' },
+];
+const ZIPLINE = 1;
+
+describe('controller/GameFlow zipline shop (#175)', () => {
+  it('gives the shop the zipline problem made from the game’s seed', () => {
+    play(ZIPLINE_SCRIPT, ZIPLINE);
+    expect(last().request).toEqual({ kind: 'shopGame', shop: 'clothing', problem: makeZiplineProblem(SEED) });
+  });
+
+  it('adds 50 points for the right guess, and shows them on the Hud', () => {
+    progress.addPoints(20);
+    play(ZIPLINE_SCRIPT, ZIPLINE);
+    guessZipline(true);
+    expect(progress.points).toBe(70);
+    expect(hud.showPointsGained).toHaveBeenLastCalledWith(50);
+    expect(last().request).toEqual({ kind: 'medal', points: 70 });
+  });
+
+  it('adds nothing for a wrong guess', () => {
+    play(ZIPLINE_SCRIPT, ZIPLINE);
+    guessZipline(false);
+    expect(progress.points).toBe(0);
+    expect(hud.showPointsGained).not.toHaveBeenCalledWith(50);
+  });
+
+  it('adds nothing when the player turns down the store owner’s deal', () => {
+    play(ZIPLINE_SCRIPT, ZIPLINE);
+    done();
+    expect(progress.points).toBe(0);
+    expect(last().request.kind).toBe('medal');
+  });
+
+  it('saves the points with the checkpoint after the shop', () => {
+    play(ZIPLINE_SCRIPT, ZIPLINE);
+    guessZipline(true);
+    expect(saves.at(-1)?.points).toBe(50);
+  });
+});
+
+// Issue #55: the duel is given the question made from the game's seed, and until #134
+// acts on how it ended, every ending goes on to the next step with no points.
+const DUEL = 2;
+
+describe('controller/GameFlow math duel (#55)', () => {
+  it('gives the duel the question made from the game’s seed', () => {
+    play(SHOP_SCRIPT, DUEL);
+    expect(last().request).toEqual({ kind: 'shopGame', shop: 'supplies', question: makeDuelQuestion(SEED) });
+  });
+
+  it('gives the same question after a reload, so the duel is the same one', () => {
+    play(SHOP_SCRIPT, DUEL);
+    const first = last().request;
+    progress = PlayerProgress.fromJSON(progress.toJSON());
+    play(SHOP_SCRIPT, DUEL);
+    expect(last().request).toEqual(first);
+  });
+
+  it.each(Object.entries(DUEL_RESULT))('goes on to the next step with no points when the duel reports %s, until #134', (_, result) => {
+    play(SHOP_SCRIPT, DUEL);
+    last().report({ kind: 'choice', index: result });
+    expect(last().request).toEqual({ kind: 'dialogue', script: 'howCrossingWorks' });
+    expect(progress.points).toBe(0);
   });
 });
 

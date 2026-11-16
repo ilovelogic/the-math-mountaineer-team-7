@@ -2,14 +2,17 @@ import type { Shop, Step } from '../content/levels';
 import { settings } from '../content/settings';
 import { DECLINE } from '../content/shopText';
 import type { Place, PlayerProgress, SavedProgress } from '../model/PlayerProgress';
-import { checkPick, makeChasm, type Chasm } from '../model/problems';
-import { pointsFor, type PickResult } from '../model/rules';
+import { checkPick, makeChasm, makeDuelQuestion, type Chasm, type DuelQuestion } from '../model/problems';
+import { pointsFor, ziplinePoints, type PickResult } from '../model/rules';
+import { checkZiplineAnswer, makeZiplineProblem, type ZiplineProblem } from '../model/zipline';
 import type { Hud } from '../view/Hud';
 import type { Outcome, Screen } from './Screen';
 
 /**
  * What GameFlow asks for to play a step: the step with everything its screen needs
- * filled in, such as the chasm made from the game's seed or the points for Level done.
+ * filled in, such as the chasm, duel question or zipline problem made from the game's
+ * seed, or the points for Level done. GameFlow makes each problem here, once, so it checks the
+ * player's answer against the same problem the screen showed.
  */
 export type ScreenRequest =
   | { kind: 'dialogue'; script: string }
@@ -18,7 +21,8 @@ export type ScreenRequest =
   | { kind: 'levelDone'; level: number; points: number; possiblePoints: number }
   | { kind: 'medal'; points: number }
   | { kind: 'shopOffer'; shop: Shop }
-  | { kind: 'shopGame'; shop: Shop };
+  | { kind: 'shopGame'; shop: 'supplies'; question: DuelQuestion }
+  | { kind: 'shopGame'; shop: 'clothing'; problem: ZiplineProblem };
 
 /** The parts of the game GameFlow keeps up to date. Each is optional, so tests pass only what they check. */
 export interface GameFlowOptions {
@@ -112,15 +116,24 @@ export class GameFlow {
       case 'shopOffer':
         return { kind: 'shopOffer', shop: step.shop };
       case 'shopGame':
-        return { kind: 'shopGame', shop: step.shop };
+        return step.shop === 'clothing'
+          ? { kind: 'shopGame', shop: 'clothing', problem: makeZiplineProblem(this.progress.seed) }
+          : { kind: 'shopGame', shop: 'supplies', question: makeDuelQuestion(this.progress.seed) };
     }
   }
 
-  /** Acts on what the screen reported and gives the position of the step to play next. */
+  /**
+   * Acts on what the screen reported and gives the position of the step to play next.
+   * The duel reports how it ended (DUEL_RESULT), but nothing acts on that yet, so play
+   * goes on to the next step either way; skipping Level 1 on a win comes with #134.
+   */
   private nextAfter(index: number, request: ScreenRequest, outcome: Outcome): number {
     const step = this.steps[index];
     if (request.kind === 'chasm' && step.kind === 'chasm' && outcome.kind === 'choice') {
       this.score(request.chasm, outcome.index, step.index + 1);
+    }
+    if (request.kind === 'shopGame' && request.shop === 'clothing' && outcome.kind === 'choice') {
+      this.scoreZipline(request.problem, outcome.index);
     }
     const missedPoints = request.kind === 'levelDone' && request.points < request.possiblePoints;
     if (missedPoints && outcome.kind === 'choice' && outcome.index === RESTART) {
@@ -147,11 +160,31 @@ export class GameFlow {
     this.options.playCue?.(result);
   }
 
+  /**
+   * The zipline shop reports the player's guess: the right one earns its points, and a wrong
+   * one earns nothing. Leaving before guessing reports no choice, so it never gets here. The
+   * next step updates the Hud's total, so only the "+ points" tag is shown here.
+   */
+  private scoreZipline(problem: ZiplineProblem, guess: number): void {
+    const points = ziplinePoints(checkZiplineAnswer(problem, guess), settings);
+    this.progress.addPoints(points);
+    this.options.hud?.showPointsGained(points);
+  }
+
   /** The level and topic to move to, when the step at `index` is a chasm. */
   private placeOf(index: number): Place | undefined {
-    const step = this.steps[index];
-    return step.kind === 'chasm' ? { level: step.level, topic: step.topic } : undefined;
+  const step = this.steps[index];
+
+  if (step.kind === 'chasm') {
+    return { level: step.level, topic: step.topic };
   }
+
+  if (step.kind === 'shopGame' && step.topic) {
+    return { level: this.progress.level, topic: step.topic };
+  }
+
+  return undefined;
+}
 
   /** Positions in `steps` of the level's chasm steps, in order. */
   private chasmStepsOf(level: number): number[] {

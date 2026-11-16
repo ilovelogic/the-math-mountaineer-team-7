@@ -2,7 +2,7 @@ import { duelText, type DuelPage } from '../content/duelText';
 import { settings } from '../content/settings';
 import type { Outcome, Screen } from './Screen';
 
-/** What DuelShopController needs from its screen, so tests can pass a stand-in. The real view comes with #158 and #55. */
+/** What DuelShopController needs from its screen, so tests can pass a stand-in. In the game, it's DuelScreen. */
 export interface DuelView {
   /** Draws `page` with its text and buttons, replacing the page shown before. */
   show(page: DuelPage, text: string, choices: string[]): void;

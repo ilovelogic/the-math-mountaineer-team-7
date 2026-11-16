@@ -1,6 +1,9 @@
 import Konva from 'konva';
+import { hintText } from '../content/hintText';
+import { createButton } from './components/button';
 import { createDialogBox } from './components/dialogBox';
 import { createLogButton, type LogButton } from './components/logButton';
+import { createFormulaCard } from './formulaCard';
 import type { Layers } from './stage';
 import { colors, text } from './theme';
 import { image } from './assets';
@@ -18,6 +21,14 @@ export interface DrawnChasm {
 }
 
 const QUESTION = 'Which log fits across this gap?';
+
+/**
+ * Where the Hint button and its formula card go. The mockup has Hint at (24, 60), but the
+ * Hud's progress tag is there in the game, so both sit just below it (the tag ends at y = 84),
+ * and the card starts right of the log pile, which reaches x = 216.
+ */
+const HINT_BUTTON = { x: 24, y: 96 } as const;
+const FORMULA_CARD = { x: 232, y: 96 } as const;
 
 /** Where the near cliff ends and the far cliff begins, from the "Pick a log" mockup. */
 const GAP = { left: 300, right: 650, near: 300, far: 180 } as const;
@@ -53,6 +64,9 @@ export class ChasmScreen {
   private locked = false;
   private player!: Konva.Image;
   private logHeading!: Konva.Text;
+  private hintCallback: (() => void) | null = null;
+  private readonly hintButton = createButton(hintText.button, () => this.hintCallback?.(), 'secondary');
+  private readonly formulaCard = createFormulaCard(hintText.formula, hintText.caption);
 
   constructor(
     private readonly layers: Layers,
@@ -70,6 +84,7 @@ export class ChasmScreen {
     this.props.add(this.selectedLog);
 
     this.drawLogButtons();
+    this.drawHint();
     this.drawPrompt();
 
     this.layers.background.add(this.scenery);
@@ -87,6 +102,23 @@ export class ChasmScreen {
 
   onChoiceSelected(cb: (index: number) => void): void {
     this.choiceCallback = cb;
+  }
+
+  /** Calls `cb` each time Hint is clicked. ChasmController decides whether to open the hint. */
+  onHintClicked(cb: () => void): void {
+    this.hintCallback = cb;
+  }
+
+  /** Shows the formula card, and the hint's line with its Back button in the dialog box. Back reports as choice 0. */
+  showHint(): void {
+    this.formulaCard.visible(true);
+    this.prompt.show(hintText.line, [hintText.back]);
+  }
+
+  /** Hides the formula card and puts the question back in the dialog box. */
+  hideHint(): void {
+    this.formulaCard.visible(false);
+    this.prompt.show(QUESTION, []);
   }
 
   /** Stops reporting clicks and greys out the log that was picked, if any. */
@@ -107,6 +139,7 @@ export class ChasmScreen {
     this.controls.destroy();
   }
   showCorrectFeedback(correctLength: number): void {
+    this.retireHint();
     this.locked = true;
     this.updateHypotenuseLabel(correctLength);
     this.crossChasm(true);
@@ -122,6 +155,7 @@ export class ChasmScreen {
     this.positionLogButtons();
   }
   showFeedback(result: 'tooShort' | 'tooLong', selectedLength: number, correctLength: number): void {
+    this.retireHint();
     this.locked = true;
     if (this.picked !== null) {
         this.buttons[this.picked].setState('used');
@@ -253,6 +287,21 @@ export class ChasmScreen {
   private setCursor(cursor: string): void {
     const stage = this.controls.getStage();
     if (stage) stage.container().style.cursor = cursor;
+  }
+
+  private drawHint(): void {
+    this.hintButton.position(HINT_BUTTON).name('hint-button');
+    this.formulaCard.position(FORMULA_CARD).visible(false);
+    this.controls.add(this.hintButton, this.formulaCard);
+  }
+  // Optional documentation
+  // - position(...).name('hint-button'): Konva's setters give back the node, so they can be chained; the name lets tests find it with find('.hint-button').
+  // - visible(false): hides the node and everything inside it, and a hidden node can't be clicked.
+
+  /** Once a log is picked the feedback explains the answer, so the hint goes away for this chasm. */
+  private retireHint(): void {
+    this.hintButton.visible(false);
+    this.formulaCard.visible(false);
   }
 
   private drawPrompt(): void {
