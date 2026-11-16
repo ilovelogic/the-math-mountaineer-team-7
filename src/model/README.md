@@ -79,6 +79,12 @@ Every chasm offers three logs: the one that fits (the hypotenuse, `c`) and two w
 **Checking a pick**\
 **`checkPick`** compares the picked log to `c` and reports `'fits'`, `'tooShort'` or `'tooLong'`.
 
+**The duel question**\
+**`makeDuelQuestion`** takes the game's seed and gives the supply shop's duel: one of Level 1's triangles (since winning skips Level 1, and small numbers suit a timed race) with three answers, `c` and two wrong ones made by **`answerChoices`**. `correct` is where `c` sits.
+
+**Answer choices**\
+**`answerChoices`** makes the three answers for the duel and the zipline: the right one and two wrong ones, each 1 to 3 away from it and different from each other, shuffled. The right answer is equally likely to be the smallest, middle or largest of the three, so always picking the middle number doesn't win. The chasm logs don't use it, since their wrong logs are meant to range much further from `c`.
+
 **Seeded random numbers**\
 **`makeRng`** turns a seed into a generator of random numbers that repeat exactly for the same seed. That's what makes a saved game and a test both reproducible.
 
@@ -133,5 +139,4 @@ In the game, `main.ts` passes in the browser's `localStorage`. In the tests, a p
 ## Still to come
 
    - **solutionSteps** (#48): The worked steps for finding the right log, using the chasm's own numbers, for the "How to find the right log" screen.
-   - **More problem types**: The duel question (#56), which goes in `problems`, and the 3D zipline problem (#62), which gets its own file next to it.
    - **More rules**: Skipping a level after winning the duel (#58), the zipline's points (#63), and the easier round after struggling (#88).

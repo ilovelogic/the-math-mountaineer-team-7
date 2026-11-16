@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { checkZiplineAnswer, makeZiplineProblem, ziplineBoxes } from '../../src/model/zipline';
+import { checkZiplineAnswer, fillZiplineText, makeZiplineProblem, ziplineBoxes } from '../../src/model/zipline';
 
 /**
  * Checks issue #62: the zipline problem is a box with a whole-number space
  * diagonal, the same seed always gives the same problem, and an answer is right
- * only when it's the diagonal. Most checks run over seeds 0 to 199, enough to
- * meet every box in `ziplineBoxes`.
+ * only when it's the diagonal, which isn't always the middle guess (#168).
+ * Most checks run over seeds 0 to 199, enough to meet every box in `ziplineBoxes`.
  */
 
 const seeds = Array.from({ length: 200 }, (_, seed) => seed);
@@ -37,20 +37,24 @@ describe('makeZiplineProblem', () => {
     }
   });
 
-  it('offers the diagonal, one shorter guess and one longer guess, each within 3', () => {
+  it('offers the diagonal and two different positive wrong guesses, each within 3', () => {
     for (const p of problems) {
       expect(p.options[p.correct]).toBe(p.diagonal);
-      const wrong = p.options.filter((option) => option !== p.diagonal).sort((x, y) => x - y);
-      expect(wrong).toHaveLength(2);
-      expect(p.diagonal - wrong[0]).toBeGreaterThanOrEqual(1);
-      expect(p.diagonal - wrong[0]).toBeLessThanOrEqual(3);
-      expect(wrong[1] - p.diagonal).toBeGreaterThanOrEqual(1);
-      expect(wrong[1] - p.diagonal).toBeLessThanOrEqual(3);
+      expect(new Set(p.options).size).toBe(3);
+      for (const option of p.options) {
+        expect(option).toBeGreaterThan(0);
+        expect(Math.abs(option - p.diagonal)).toBeLessThanOrEqual(3);
+      }
     }
   });
 
   it('puts the right guess in each of the three places', () => {
     expect(new Set(problems.map((p) => p.correct))).toEqual(new Set([0, 1, 2]));
+  });
+
+  it('sometimes makes the diagonal the smallest or the largest guess, not always the middle', () => {
+    const places = problems.map((p) => p.options.filter((option) => option < p.diagonal).length);
+    expect(new Set(places)).toEqual(new Set([0, 1, 2]));
   });
 
   it.each([-1, 1.5, NaN])('rejects the seed %s', (seed) => {
@@ -71,9 +75,23 @@ describe('checkZiplineAnswer', () => {
   });
 });
 
+describe('fillZiplineText', () => {
+  const problem = { length: 12, width: 3, height: 4, diagonal: 13, options: [11, 13, 15], correct: 1 };
+
+  it('puts in the sides, the floor’s diagonal squared, and the zip line squared and its length', () => {
+    expect(fillZiplineText('{length} {width} {height} {floor} {squared} {diagonal}', problem)).toBe('12 3 4 153 169 13');
+  });
+
+  it('leaves text without a known name in braces as it is', () => {
+    expect(fillZiplineText('x = {toString} or {nothing}, not {}', problem)).toBe('x = {toString} or {nothing}, not {}');
+  });
+});
+
 // Optional documentation
 // - Array.from({ length: 200 }, (_, seed) => seed): the list 0, 1, ..., 199; the `_` is the unused first argument.
 // - seeds.map(makeZiplineProblem): one problem per seed, made once and shared by the tests.
 // - x ** 2: x squared.
 // - new Set(...): keeps one copy of each value, so its size counts the different ones.
+// - Math.abs(x): x without its sign, so it measures distance either way.
+// - p.options.filter((option) => option < p.diagonal).length: how many guesses are smaller than the diagonal, which is the diagonal's place from smallest (0) to largest (2).
 // - it.each([...])('... %s', fn): runs the test once per value, putting the value into the test's name.

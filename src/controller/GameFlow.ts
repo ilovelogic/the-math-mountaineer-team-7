@@ -3,23 +3,26 @@ import { settings } from '../content/settings';
 import { DECLINE } from '../content/shopText';
 import type { Place, PlayerProgress, SavedProgress } from '../model/PlayerProgress';
 import { checkPick, makeChasm, type Chasm } from '../model/problems';
-import { pointsFor, type PickResult } from '../model/rules';
+import { pointsFor, ziplinePoints, type PickResult } from '../model/rules';
+import { checkZiplineAnswer, makeZiplineProblem, type ZiplineProblem } from '../model/zipline';
 import type { Hud } from '../view/Hud';
 import type { Outcome, Screen } from './Screen';
 
 /**
  * What GameFlow asks for to play a step: the step with everything its screen needs
- * filled in, such as the chasm made from the game's seed or the points for Level done.
+ * filled in, such as the chasm or zipline problem made from the game's seed, or the
+ * points for Level done. GameFlow makes each problem here, once, so it checks the
+ * player's answer against the same problem the screen showed.
  */
 export type ScreenRequest =
-  | { kind: 'title' }
   | { kind: 'dialogue'; script: string }
   | { kind: 'chasm'; chasm: Chasm }
   /** `points` is what the player earned on this level alone, out of `possiblePoints`. */
   | { kind: 'levelDone'; level: number; points: number; possiblePoints: number }
   | { kind: 'medal'; points: number }
   | { kind: 'shopOffer'; shop: Shop }
-  | { kind: 'shopGame'; shop: Shop };
+  | { kind: 'shopGame'; shop: 'supplies' }
+  | { kind: 'shopGame'; shop: 'clothing'; problem: ZiplineProblem };
 
 /** The parts of the game GameFlow keeps up to date. Each is optional, so tests pass only what they check. */
 export interface GameFlowOptions {
@@ -97,8 +100,6 @@ export class GameFlow {
 
   private requestFor(step: Step): ScreenRequest {
     switch (step.kind) {
-      case 'title':
-        return { kind: 'title' };
       case 'dialogue':
         return { kind: 'dialogue', script: step.script };
       case 'chasm':
@@ -115,7 +116,9 @@ export class GameFlow {
       case 'shopOffer':
         return { kind: 'shopOffer', shop: step.shop };
       case 'shopGame':
-        return { kind: 'shopGame', shop: step.shop };
+        return step.shop === 'clothing'
+          ? { kind: 'shopGame', shop: 'clothing', problem: makeZiplineProblem(this.progress.seed) }
+          : { kind: 'shopGame', shop: step.shop };
     }
   }
 
@@ -132,6 +135,9 @@ export class GameFlow {
           this.levelPoints(step.level),
         );
       }
+    }
+    if (request.kind === 'shopGame' && request.shop === 'clothing' && outcome.kind === 'choice') {
+      this.scoreZipline(request.problem, outcome.index);
     }
     const missedPoints = request.kind === 'levelDone' && request.points < request.possiblePoints;
     if (missedPoints && outcome.kind === 'choice' && outcome.index === RESTART) {
@@ -156,6 +162,17 @@ export class GameFlow {
     this.options.hud?.update(this.progress, chasmNumber);
     this.options.hud?.showPointsGained(points);
     this.options.playCue?.(result);
+  }
+
+  /**
+   * The zipline shop reports the player's guess: the right one earns its points, and a wrong
+   * one earns nothing. Leaving before guessing reports no choice, so it never gets here. The
+   * next step updates the Hud's total, so only the "+ points" tag is shown here.
+   */
+  private scoreZipline(problem: ZiplineProblem, guess: number): void {
+    const points = ziplinePoints(checkZiplineAnswer(problem, guess), settings);
+    this.progress.addPoints(points);
+    this.options.hud?.showPointsGained(points);
   }
 
   /** The level and topic to move to, when the step at `index` is a chasm. */

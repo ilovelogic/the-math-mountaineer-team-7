@@ -1,4 +1,4 @@
-import { makeRng } from './problems';
+import { answerChoices, makeRng } from './problems';
 
 /**
  * The zipline shop's problem: a box-shaped store whose zipline runs along its
@@ -44,21 +44,16 @@ const MAX_MISS = 3;
 /**
  * Makes the zipline problem for a game. The same seed always gives the same box
  * and the same guesses, so a loaded save shows the same problem. One guess is
- * the diagonal, one is 1 to 3 shorter and one is 1 to 3 longer, shuffled.
+ * the diagonal and the other two are each within 3 of it, shuffled.
  */
 export function makeZiplineProblem(seed: number): ZiplineProblem {
   if (!Number.isInteger(seed) || seed < 0) {
     throw new Error('Seed must be 0 or a positive integer');
   }
   const rng = makeRng(seed);
-  const miss = () => 1 + Math.floor(rng() * MAX_MISS);
 
   const [width, height, length, diagonal] = ziplineBoxes[Math.floor(rng() * ziplineBoxes.length)];
-  const options = [diagonal - miss(), diagonal, diagonal + miss()];
-  for (let i = options.length - 1; i > 0; i--) {
-    const j = Math.floor(rng() * (i + 1));
-    [options[i], options[j]] = [options[j], options[i]];
-  }
+  const options = answerChoices(rng, diagonal, MAX_MISS);
 
   return { length, width, height, diagonal, options, correct: options.indexOf(diagonal) };
 }
@@ -70,3 +65,25 @@ export function checkZiplineAnswer(problem: ZiplineProblem, index: number): bool
   }
   return problem.options[index] === problem.diagonal;
 }
+
+/**
+ * Puts the problem's numbers into a zipline page's text from content/ziplineText, where
+ * it says {length}, {width}, {height}, {floor} (length² + width²), {squared} (the
+ * diagonal²) or {diagonal}. Anything else in braces is left as it is.
+ */
+export function fillZiplineText(text: string, problem: ZiplineProblem): string {
+  const { length, width, height, diagonal } = problem;
+  const values: Record<string, number> = {
+    length,
+    width,
+    height,
+    floor: length ** 2 + width ** 2,
+    squared: diagonal ** 2,
+    diagonal,
+  };
+  return text.replace(/\{(\w+)\}/g, (marker, name: string) => (Object.hasOwn(values, name) ? String(values[name]) : marker));
+}
+// Optional documentation
+// - x ** 2: x squared.
+// - text.replace(/\{(\w+)\}/g, fn): finds every word in braces, like {floor}, and swaps each for what fn returns; `name` is the word without its braces.
+// - Object.hasOwn(values, name): true only for the names listed in values, so a word like {toString} isn't mistaken for one.
