@@ -304,7 +304,7 @@ describe('controller/GameFlow shop offers (#52, #53)', () => {
 // - expect(() => ...).toThrow(text): passes only if calling the function throws an error whose message contains `text`.
 describe('level attempt history (#87)', () => {
   it('keeps both scores after restarting a level and loading a save', () => {
-    play(steps, 3);
+    play(steps, steps.findIndex((step) => step.kind === 'chasm'));
 
     // First attempt: one correct answer, four wrong.
     pickRight();
