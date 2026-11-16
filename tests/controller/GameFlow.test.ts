@@ -154,7 +154,7 @@ it('saves checkpoints to actual storage after every step', () => {
   const store = new SaveStore(storage);
 
   const flow = new GameFlow(steps, progress, makeScreen, {
-    save: (saved) => store.save(saved),
+  save: store.save,
   });
 
   flow.run();
