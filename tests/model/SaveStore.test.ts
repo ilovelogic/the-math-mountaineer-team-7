@@ -17,7 +17,7 @@ function fakeStorage(): Storage {
 }
 
 const checkpoint: SavedProgress = {
-  version: 1,
+  version: 2,
   seed: 42,
   level: 1,
   step: 3,
