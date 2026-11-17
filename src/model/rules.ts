@@ -1,4 +1,5 @@
 import { Settings } from '../content/settings';
+import type { Answer } from './PlayerProgress';
 
 /** How a picked log compares to the gap it has to cross. */
 export type PickResult = 'fits' | 'tooShort' | 'tooLong';
@@ -15,4 +16,35 @@ export function pointsFor(result: PickResult, settings: Settings): number {
 /** The zipline shop pays only for the right answer; a wrong one, or leaving, earns nothing. */
 export function ziplinePoints(right: boolean, settings: Settings): number {
   return right ? settings.pointsPerZipline : 0;
+}
+
+/** Whether a pick was right: only the log that fits is. */
+export function isRight(result: PickResult): boolean {
+  return result === 'fits';
+}
+
+/** How the player did on one topic: how many picks were right out of how many were made. */
+export interface TopicResult {
+  level: number;
+  topic: string;
+  right: number;
+  total: number;
+}
+
+/**
+ * Counts the picks per topic, for the end screen's results. Every pick counts, including
+ * ones made again after a level restart. Topics come in the order they were first played.
+ */
+export function resultsByTopic(answers: readonly Answer[]): TopicResult[] {
+  const byTopic = new Map<string, TopicResult>();
+  for (const answer of answers) {
+    let counts = byTopic.get(answer.topic);
+    if (!counts) {
+      counts = { level: answer.level, topic: answer.topic, right: 0, total: 0 };
+      byTopic.set(answer.topic, counts);
+    }
+    counts.total += 1;
+    if (isRight(answer.result)) counts.right += 1;
+  }
+  return [...byTopic.values()];
 }
