@@ -15,6 +15,7 @@ import { ShopOfferController } from '../../src/controller/ShopOfferController';
 import { ZiplineShopController } from '../../src/controller/ZiplineShopController';
 import { PlayerProgress } from '../../src/model/PlayerProgress';
 import { makeChasm, makeDuelQuestion } from '../../src/model/problems';
+import type { PickResult } from '../../src/model/rules';
 import { makeZiplineProblem } from '../../src/model/zipline';
 import type { Layers } from '../../src/view/stage';
 import { standInLoadedImages } from '../standInImage';
@@ -70,6 +71,16 @@ describe('createScreenFactory', () => {
     for (const log of chasm.logs) {
       expect(drawn, `log of ${log} m`).toContain(`${log} m`);
     }
+  });
+
+  it('passes the sound player to the chasm, so picking a log plays its sound', () => {
+    standInLoadedImages();
+    const cues: PickResult[] = [];
+    const chasm = makeChasm(1, 1, 0);
+    const screen = createScreenFactory(layers, new PlayerProgress(1), (cue) => cues.push(cue))({ kind: 'chasm', chasm });
+    screen.start(() => {});
+    layers.ui.find('.log-button')[chasm.correct].fire('click');
+    expect(cues).toEqual(['fits']);
   });
 
   it('congratulates a player who earned every point on the level', () => {
@@ -137,6 +148,9 @@ describe('createScreenFactory', () => {
 // - for (const log of chasm.logs): runs the check once for each log length.
 // - expect(value, message): the message is shown if the check fails, here naming the log that wasn't drawn.
 // - `${log} m`: a template string; the value inside ${ } is inserted into the text, matching the button's label such as "13 m".
+// - createScreenFactory(...)({ kind: 'chasm', chasm }): calls the function the factory returns straight away, here with a sound player that records instead of playing.
+// - (cue) => cues.push(cue): stands in for the sound player, writing down each sound's name instead of playing it.
+// - layers.ui.find('.log-button')[chasm.correct].fire('click'): finds the log buttons by name, takes the right log's button, and clicks it as a player would.
 // - expect(a).not.toBe(b): passes if a and b are not the very same object.
 // - standInLoadedImages(): Node has no browser Image, so this gives the shop offer an already-loaded 1 × 1 picture to draw (see tests/standInImage.ts).
 // - const { text, accept, decline } = shopOffers.clothing: destructuring, which unpacks the offer's three fields into variables with the same names.

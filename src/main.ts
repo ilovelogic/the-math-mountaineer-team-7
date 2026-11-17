@@ -34,7 +34,7 @@ const store = new SaveStore(window.localStorage);
 function play(progress: PlayerProgress): void {
   // The Hud is made only now, so the title screen has no top bar, like its mockup.
   const hud = new Hud(layers);
-  const flow = new GameFlow(steps, progress, createScreenFactory(layers, progress), {
+  const flow = new GameFlow(steps, progress, createScreenFactory(layers, progress, playSound), {
     hud,
     // Wrapped in an arrow function so `save` still knows which SaveStore it belongs to.
     save: (saved) => store.save(saved),
