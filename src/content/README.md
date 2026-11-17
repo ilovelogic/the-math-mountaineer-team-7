@@ -13,6 +13,7 @@ Imports nothing. Change a number here instead of in code.
 - [dialogueScripts](#dialoguescripts)
 - [shopText](#shoptext)
 - [duelText](#dueltext)
+- [ziplineText](#ziplinetext)
 - [hintText](#hinttext)
 - [settings](#settings)
 
@@ -69,6 +70,13 @@ Stores the math duel's text, one entry per page of the "Mini-game 1: Math duel" 
 
 ---
 
+## ziplineText
+
+**Purpose**\
+Stores the zipline shop's text, one entry per page of the "Mini-game 2: Clothing shop" mockups (`deal`, `problem`, `tutorial`, `answer`, `right`, `wrong`, `solution`, `onwardDressed` and `onwardPacked`), each with its words and its buttons in the order they're shown. ZiplineShopController decides where each button leads. The answer page's buttons are the engineers' three guesses, so it lists none. Where the text needs the problem's numbers, it says `{length}`, `{width}`, `{height}`, `{floor}`, `{squared}` or `{diagonal}`, and `fillZiplineText` in [model/](../model/README.md#zipline) fills them in.
+
+---
+
 ## hintText
 
 **Purpose**\
@@ -79,4 +87,4 @@ Stores the chasm hint's words, as in the "Pick a log: hint open" mockup (#84): t
 ## settings
 
 **Purpose**\
-Keeps the values we expect to tweak while playtesting, each with a comment explaining what it does. Today, that's `pointsPerChasm` (10, matching the "+10" in the mockups), `medalLimits` (150, 135, 105 and 75, which are 100%, 90%, 70% and 50% of the 150 points a player can earn, matching the Medal requirements card), `dialogueTransitionMs` (250, how long clicks are ignored after a dialogue box changes), and `loadingScreenDelayMs` (1000, how long loading can take before the loading screen appears, long enough that the sounds' 400 to 500 ms warm-up on a normal load never shows it), and `ownerSolveMs` (30000, how long the store owner takes to solve the duel question, a first guess to tune in playtesting). Feature toggles will join them as those features land.
+Keeps the values we expect to tweak while playtesting, each with a comment explaining what it does. Today, that's `pointsPerChasm` (10, matching the "+10" in the mockups), `medalLimits` (150, 135, 105 and 75, which are 100%, 90%, 70% and 50% of the 150 points the chasms are worth, with the zipline's 50 as a bonus on top, matching the Medal requirements card), `dialogueTransitionMs` (250, how long clicks are ignored after a dialogue box changes), `loadingScreenDelayMs` (1000, how long loading can take before the loading screen appears, long enough that the sounds' 400 to 500 ms warm-up on a normal load never shows it), and `ownerSolveMs` (30000, how long the store owner takes to solve the duel question, a first guess to tune in playtesting). Feature toggles will join them as those features land.

@@ -6,8 +6,9 @@ export interface Settings {
   pointsPerChasm: number;
   /**
    * The fewest points that earn each medal: 100%, 90%, 70% and 50% of the 150 points
-   * a player can earn right now (15 chasms worth 10 each), matching the Medal
-   * requirements card in the mockups. Change them together with that card.
+   * the chasms are worth (15 chasms worth 10 each), matching the Medal requirements
+   * card in the mockups. The zipline's points count on top as a bonus, so a player who
+   * fell behind can catch up. Change them together with that card.
    */
   medalLimits: MedalLimits;
   /** How many points the right answer at the zipline shop is worth, matching the +50 in the "Right answer" mockup. */
