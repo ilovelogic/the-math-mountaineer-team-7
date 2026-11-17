@@ -22,6 +22,12 @@ export interface Settings {
    * screen on every load. A second is also about when people notice a wait at all.
    */
   loadingScreenDelayMs: number;
+  /**
+   * How long the store owner takes to solve the duel question, in ms. The player must
+   * answer before their progress fills up, or the store owner wins. A first guess at
+   * enough time to square two sides, add them and take a square root; tune it in playtesting.
+   */
+  ownerSolveMs: number;
 }
 
 export const settings: Settings = {
@@ -30,4 +36,5 @@ export const settings: Settings = {
   dialogueTransitionMs: 250,
   pointsPerZipline: 50,
   loadingScreenDelayMs: 1000,
+  ownerSolveMs: 30000,
 };

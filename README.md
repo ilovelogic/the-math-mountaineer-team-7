@@ -22,7 +22,7 @@ We present a fun and educational game for all those 8th graders out there! Stude
 
 *Up-to-date as of November 16, 2026, the end of Sprint 2*
 
-In Sprint 1, we built and tested the core game: the chasm problems and screen, the points and medals, the player's progress and its saving, the Hud, the dialogue, and GameFlow, which plays the game's steps in order with a controller for each screen. In Sprint 2, we made it a game that teaches. It opens on a title screen with New game and Continue, shows a loading screen when files are slow, and offers a hint at every chasm. After a pick, the chasm shows what happened to the log and the mountaineer, and after a wrong one, the player crosses with the right log and can first see how to find it, worked out with that chasm's numbers. Level 2 opens at the clothing shop, whose zipline challenge brings in the Pythagorean theorem in 3D for 50 bonus points, and the game keeps the score of every attempt at each level. The math duel at the supply shop is built and tested, and it joins the game with #134. `npm run dev` plays all of it, from the title to the medal, and the game is online at the link above.
+In Sprint 1, we built and tested the core game: the chasm problems and screen, the points and medals, the player's progress and its saving, the Hud, the dialogue, and GameFlow, which plays the game's steps in order with a controller for each screen. In Sprint 2, we made it a game that teaches. It opens on a title screen with New game and Continue, shows a loading screen when files are slow, and offers a hint at every chasm. After a pick, the chasm shows what happened to the log and the mountaineer, and after a wrong one, the player crosses with the right log and can first see how to find it, worked out with that chasm's numbers. Level 2 opens at the clothing shop, whose zipline challenge brings in the Pythagorean theorem in 3D for 50 bonus points, and the game keeps the score of every attempt at each level. The math duel at the supply shop, a race against the store owner, is built and tested, and it joins the game with #134. `npm run dev` plays all of it, from the title to the medal, and the game is online at the link above.
 
 What this means for our team:
    - **Model, view, and content code can be built and tested on its own.** (Nothing in those folders needs the game to be running.)
@@ -99,7 +99,7 @@ These are grouped by what they're for. Each links to its section in the folder d
 5. **The shops**:
    - [ShopOfferScreen](src/view/README.md#shopofferscreen): A shop asks whether the player wants to come in, and declining skips its mini-game.
    - [zipline](src/model/README.md#zipline), [ZiplineScreen](src/view/README.md#ziplinescreen) and [ZiplineShopController](src/controller/README.md#the-screen-controllers): The clothing shop's challenge, finding a store's space diagonal from three guesses, with a tutorial and a worked solution, for 50 bonus points.
-   - [DuelScreen](src/view/README.md#duelscreen) and [DuelShopController](src/controller/README.md#the-screen-controllers): The supply shop's math duel, with a tutorial and a worked solution. It's built and tested, and joins the game's script with #134.
+   - [DuelScreen](src/view/README.md#duelscreen) and [DuelShopController](src/controller/README.md#the-screen-controllers): The supply shop's math duel, a race against the store owner's timer, with a tutorial and a worked solution. It's built and tested, and joins the game's script with #134.
 
 6. **Running the game**:
    - [GameFlow](src/controller/README.md#gameflow): Plays every step in order, one screen at a time, and decides what happens after each one, including scoring a pick, restarting a level, and saving a checkpoint.
@@ -107,7 +107,7 @@ These are grouped by what they're for. Each links to its section in the folder d
    - [The screen factory](src/controller/README.md#the-screen-factory): Builds the right screen for each step GameFlow plays.
    - [Starting the game](src/controller/README.md#starting-the-game): Shows the title screen and starts a new game or the saved one.
 
-**Next up, in Sprint 3**: putting the duel in the game and skipping Level 1 after a win (#134, #58), the store owner's side of the race (#57), the easier round after struggling (#88), the results at the end (#78, #81), playing the sounds in the game, and giving the three solution pages one shared look (#183).
+**Next up, in Sprint 3**: putting the duel in the game and skipping Level 1 after a win (#134, #58), the easier round after struggling (#88), the results at the end (#78, #81), playing the sounds in the game, and giving the three solution pages one shared look (#183).
 
 ---
 
