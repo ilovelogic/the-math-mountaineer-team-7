@@ -14,7 +14,6 @@ export interface DrawnChasm {
   a: number;
   /** The gap's width, drawn along the bottom. */
   b: number;
-  c: number;
   /** Log lengths, in the order the screen shows them; a click reports a position in this list. */
   logs: readonly number[];
   correct: number;
@@ -48,7 +47,9 @@ export class ChasmScreen {
   private readonly scenery = new Konva.Group();
   private readonly props = new Konva.Group();
   private readonly controls = new Konva.Group();
-  private readonly logPile = new Konva.Group();
+  private readonly logPile = new Konva.Group({
+    name: 'log-pile',
+  });
   private readonly selectedLog = new Konva.Group({
     name: 'selected-log',
   });
@@ -179,8 +180,11 @@ export class ChasmScreen {
   }
 
   showCrossing(correctLength: number): void {
+    // Exclude the correct log from log pile
+    this.drawLogPile(true);
     this.updateHypotenuseLabel(correctLength);
     this.crossChasm(false);
+
     this.prompt.show(
       `You lay down the ${correctLength} m log and cross the chasm.`,
       ['Continue']
@@ -227,25 +231,25 @@ export class ChasmScreen {
    * Stacks the logs on the near cliff, shortest on top, from 90 px to 200 px
    * wide like the mockup. The pile isn't clickable, so its order can differ from the buttons'.
    */
-  private drawLogPile(): void {
-  this.logPile.destroyChildren();
+  private drawLogPile(excludeCorrect = false): void {
+    this.logPile.destroyChildren();
 
-  const pile = this.chasm.logs
-    .filter((_, index) => index !== this.picked)
-    .sort((x, y) => x - y);
+    const pile = this.chasm.logs
+      .filter((_, index) => index !== this.picked && (!excludeCorrect || index !== this.chasm.correct))
+      .sort((x, y) => x - y);
 
-  if (pile.length === 0) return;
+    if (pile.length === 0) return;
 
-  const shortest = pile[0];
-  const spread = pile[pile.length - 1] - shortest || 1;
+    const shortest = pile[0];
+    const spread = pile[pile.length - 1] - shortest || 1;
+    // Each log is 52 px tall and overlaps the one below by 6 px, so the last one rests on the cliff.
+    const top = GAP.near - 52 - 46 * (pile.length - 1);
 
-  const top = GAP.near - 52 - 46 * (pile.length - 1);
+    pile.forEach((length, i) => {
+      const width = Math.round(90 + (110 * (length - shortest)) / spread);
 
-  pile.forEach((length, i) => {
-    const width = Math.round(90 + (110 * (length - shortest)) / spread);
-
-    this.logPile.add(pileLog(length, width, 16, top + i * 46));
-  });
+      this.logPile.add(pileLog(length, width, 16, top + i * 46));
+    });
 }
 
   /** One button per log */
@@ -338,18 +342,27 @@ export class ChasmScreen {
 
     this.selectedLog.destroyChildren();
 
-    const log = new Konva.Rect({
-        x: -width / 2,
-        y: -12,
-        width,
-        height: 24,
-        fill: '#8B5A2B',
-        stroke: '#573719',
-        strokeWidth: 3,
-        cornerRadius: 10,
-    });
-
-    this.selectedLog.add(log);
+    this.selectedLog.add(
+      new Konva.Rect({
+          x: -width / 2 + 12,
+          y: -10,
+          width: width - 24,
+          height: 20,
+          fill: colors.wood,
+      }),
+      new Konva.Circle({
+          x: -width / 2 + 12,
+          y: 0,
+          radius: 12,
+          fill: colors.woodDark,
+      }),
+      new Konva.Circle({
+          x: width / 2 - 12,
+          y: 0,
+          radius: 12,
+          fill: colors.woodDark,
+      }),
+  );
 
     this.selectedLog.position({
         x: (GAP.left + GAP.right) / 2,
@@ -375,15 +388,13 @@ export class ChasmScreen {
     const dx = GAP.right - GAP.left;
     const dy = GAP.far - GAP.near;
     const angle = Math.atan2(dy, dx) * (180 / Math.PI);
+    const gapLength = Math.sqrt(dx * dx + dy * dy);
+    const width = gapLength * 1.3;
 
     this.selectedLog.position({
-        x: GAP.left,
-        y: GAP.near,
+      x: GAP.left + (width / 2) * Math.cos(angle * Math.PI / 180),
+      y: GAP.near + (width / 2) * Math.sin(angle * Math.PI / 180),
     });
-
-    // The log extends from its left endpoint.
-    const log = this.selectedLog.findOne<Konva.Rect>('Rect')!;
-    log.x(0);
 
     this.selectedLog.rotation(angle);
   }

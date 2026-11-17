@@ -4,6 +4,8 @@ import { hintText } from '../../src/content/hintText';
 import { makeChasm } from '../../src/model/problems';
 import { ChasmScreen } from '../../src/view/ChasmScreen';
 import { STAGE_WIDTH, type Layers } from '../../src/view/stage';
+import { image } from '../../src/view/assets';
+
 vi.mock('../../src/view/assets', async () => {
   const { createCanvas } = await import('canvas');
 
@@ -56,10 +58,39 @@ describe('view/ChasmScreen', () => {
     expect(player).not.toBeNull();
     expect(player!.width()).toBe(45);
     expect(player!.height()).toBe(70);
+
+    expect(player!.x()).toBeLessThan(300);
+  });
+  it('moves the mountaineer to the right cliff after a correct answer', () => {
+    screen.showCorrectFeedback(13);
+
+    const player = layers.sprites.findOne<Konva.Image>('Image');
+
+    expect(player).not.toBeNull();
+    expect(player!.x()).toBeGreaterThan(650);
+  });
+  it('shows the celebrating mountaineer after a correct answer', () => {
+    screen.showCorrectFeedback(13);
+
+    const player = layers.sprites.findOne<Konva.Image>('Image');
+
+    expect(image).toHaveBeenCalledWith('playerCelebrating');
+    expect(player!.x()).toBeGreaterThan(650);
+  });
+  // Shouldn't show the celebrating pose
+  it('moves the mountaineer across the gap when showing the crossing screen', () => {
+    screen.showCrossing(13);
+
+    const player = layers.sprites.findOne<Konva.Image>('Image');
+
+    expect(player).not.toBeNull();
+    expect(player!.x()).toBeGreaterThan(650);
+    // Test hypotenuse label
+    expect(texts(layers.sprites)).toContain('c = 13 m');
   });
   it('shows a button for each log in the chasm’s order, and piles them shortest on top', () => {
     screen.destroy();
-    screen = new ChasmScreen(layers, { a: 7, b: 24, c: 25, logs: [31, 20, 25], correct: 0 });
+    screen = new ChasmScreen(layers, { a: 7, b: 24,logs: [31, 20, 25], correct: 0 });
     screen.draw();
     expect(buttons().map((button) => button.findOne<Konva.Text>('Text')?.text())).toEqual(['31 m', '20 m', '25 m']);
     expect(texts(layers.sprites).filter((t) => ['20 m', '25 m', '31 m'].includes(t))).toEqual(['20 m', '25 m', '31 m']);
@@ -169,33 +200,38 @@ describe('view/ChasmScreen', () => {
   it('draws the correct log across the gap', () => {
     screen.showCorrectFeedback(13);
 
-    const logGroup = layers.sprites.findOne<Konva.Group>('.selected-log');
-    const log = logGroup?.findOne<Konva.Rect>('Rect');
+    const logGroup = layers.sprites.findOne<Konva.Group>('.selected-log')!;
+    const leftCap = logGroup!.find<Konva.Circle>('Circle')[0];
+    const rightCap = logGroup!.find<Konva.Circle>('Circle')[1];
 
-    expect(log).not.toBeNull();
-    expect(log!.width()).toBeCloseTo(370, 0);
+    expect(leftCap).not.toBeNull();
+    expect(rightCap).not.toBeNull();
+    expect(rightCap.x() - leftCap.x() + 24).toBeCloseTo(370, 0);
 
-    //const label = layers.sprites.findOne<Konva.Text>('Text');
     expect(texts(layers.sprites)).toContain('c = 13 m');
   });
   it('draws a short log falling into the chasm', () => {
     screen.showFeedback('tooShort', 5, 13);
 
     const logGroup = layers.sprites.findOne<Konva.Group>('.selected-log');
-    const log = logGroup?.findOne<Konva.Rect>('Rect');
+    const leftCap = logGroup!.find<Konva.Circle>('Circle')[0];
+    const rightCap = logGroup!.find<Konva.Circle>('Circle')[1];
 
-    expect(log).not.toBeNull();
-    expect(log!.width()).toBeCloseTo(370 * 0.7, 0);
+    expect(leftCap).not.toBeNull();
+    expect(rightCap).not.toBeNull();
+    expect(rightCap.x() - leftCap.x() + 24).toBeCloseTo(370 * 0.7, 0);
+    expect(logGroup!.rotation()).toBe(65);
   });
   it('draws a long log extending past the right cliff', () => {
     screen.showFeedback('tooLong', 17, 13);
 
     const logGroup = layers.sprites.findOne<Konva.Group>('.selected-log');
-    const log = logGroup?.findOne<Konva.Rect>('Rect');
+    const leftCap = logGroup!.find<Konva.Circle>('Circle')[0];
+    const rightCap = logGroup!.find<Konva.Circle>('Circle')[1];
 
-    expect(log).not.toBeNull();
-    expect(log!.width()).toBeCloseTo(370 * 1.3, 0);
-    expect(log!.x()).toBe(0);
+    expect(leftCap).not.toBeNull();
+    expect(rightCap).not.toBeNull();
+    expect(rightCap.x() - leftCap.x() + 24).toBeCloseTo(370 * 1.3, 0);
   });
   it('locks the log buttons after showing incorrect feedback', () => {
     screen.showFeedback('tooShort', 5, 13);
@@ -224,7 +260,30 @@ describe('view/ChasmScreen', () => {
     const shortDialogueY = logButtonY();
 
     expect(shortDialogueY).toBeGreaterThan(longDialogueY);
-});
+  });
+  it('removes the selected and correct logs from the pile when crossing', () => {
+    screen.showFeedback('tooShort', 5, 13);
+    screen.showCrossing(13);
+
+    const logPile = layers.sprites.findOne<Konva.Group>('.log-pile')!;
+    expect(logPile).not.toBeNull();
+    // One log should be left in the pile after showCrossing
+    expect(logPile!.getChildren()).toHaveLength(2);
+  });
+  it('positions the long log starting at the left cliff', () => {
+    screen.showFeedback('tooLong', 17, 13);
+
+    const logGroup = layers.sprites.findOne<Konva.Group>('.selected-log')!;
+    const leftCap = logGroup.find<Konva.Circle>('Circle')[0];
+
+    const leftEndpoint = logGroup.getAbsoluteTransform().point({
+        x: leftCap.x() - leftCap.radius(),
+        y: 0,
+    });
+
+    expect(leftEndpoint.x).toBeCloseTo(300, 0);
+    expect(leftEndpoint.y).toBeCloseTo(300, 0);
+  });
 });
 
 // Optional documentation
