@@ -152,7 +152,20 @@ export class PlayerProgress {
     }
     this._answers.push({ step: this._step, level: this._level, topic: this._topic, result });
   }
+  /** Restores a checkpoint without replacing the PlayerProgress object. */
+  restore(saved: SavedProgress): void {
+    const restored = PlayerProgress.fromJSON(saved);
 
+    if (restored.seed !== this.seed) {
+      throw new Error('Checkpoint belongs to a different game');
+    }
+
+    this._level = restored.level;
+    this._step = restored.step;
+    this._points = restored.points;
+    this._topic = restored.topic;
+    this._answers = restored.answers.map((answer) => ({ ...answer }));
+  }
   /** Plain data for saving. Returns copies, so changing them doesn't change the progress. */
   toJSON(): SavedProgress {
     return {

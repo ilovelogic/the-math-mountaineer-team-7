@@ -95,6 +95,185 @@ function playToMedal(duel: number): void {
 }
 
 describe('controller/GameFlow', () => {
+
+  // Issue #69: Screen failure recovery
+
+  it('recovers a failed screen from the saved checkpoint', () => {
+    const recoverySteps: Step[] = [
+      { kind: 'dialogue', script: 'intro' },
+      { kind: 'dialogue', script: 'howCrossingWorks' },
+      { kind: 'chasm', level: 1, topic: TOPIC, index: 0 },
+    ];
+    const data = new Map<string, string>();
+    const storage = {
+      getItem: (key: string) => data.get(key) ?? null,
+      setItem: (key: string, value: string) => {
+        data.set(key, value);
+      },
+    } as Storage;
+
+    const store = new SaveStore(storage);
+    let failOnce = true;
+
+    const flow = new GameFlow(
+      recoverySteps,
+      progress,
+      (request) => {
+        if (
+          request.kind === 'dialogue' &&
+          request.script === 'howCrossingWorks' &&
+          failOnce
+        ) {
+          failOnce = false;
+          throw new Error('Screen failed');
+        }
+        return makeScreen(request);
+      },
+      {
+        save: store.save,
+        load: store.load,
+      },
+    );
+
+    flow.run();
+    done();
+
+    expect(progress.step).toBe(1);
+    expect(store.load()?.step).toBe(1);
+    expect(last().request).toEqual({
+      kind: 'dialogue',
+      script: 'howCrossingWorks',
+    });
+
+    done();
+    expect(progress.step).toBe(2);
+    expect(store.load()?.step).toBe(2);
+  });
+
+  it('throws when a screen fails and no checkpoint exists', () => {
+    let attempts = 0;
+
+    const flow = new GameFlow(
+      steps,
+      progress,
+      () => {
+        attempts++;
+        throw new Error('Screen failed');
+      },
+      { load: () => null },
+    );
+
+    expect(() => flow.run()).toThrow('Screen failed');
+    expect(attempts).toBe(1);
+  });
+
+  it('does not retry a permanently broken screen forever', () => {
+    const saved = progress.toJSON();
+    let attempts = 0;
+
+    const flow = new GameFlow(
+      steps,
+      progress,
+      () => {
+        attempts++;
+        throw new Error('Persistent screen failure');
+      },
+      { load: () => saved },
+    );
+
+    expect(() => flow.run()).toThrow('Persistent screen failure');
+    expect(attempts).toBe(2);
+  });
+  it('does not recover twice when a screen transition fails', () => {
+    const recoverySteps: Step[] = [
+      { kind: 'dialogue', script: 'intro' },
+      { kind: 'dialogue', script: 'howCrossingWorks' },
+    ];
+    progress.moveTo(1);
+    const saved = progress.toJSON();
+    progress.moveTo(0);
+
+    let loadCalls = 0;
+    let attempts = 0;
+
+    const flow = new GameFlow(
+      recoverySteps,
+      progress,
+      (request) => {
+        if (
+          request.kind === 'dialogue' &&
+          request.script === 'howCrossingWorks'
+        ) {
+          attempts++;
+          throw new Error('Screen failed');
+        }
+        return makeScreen(request);
+      },
+      {
+        save: () => {},
+        load: () => {
+          loadCalls++;
+          return saved;
+        },
+      },
+    );
+
+    flow.run();
+
+    expect(() => done()).toThrow('Screen failed');
+    expect(attempts).toBe(2);
+    expect(loadCalls).toBe(1);
+  });
+
+  it('restores progress after a chasm pick partially succeeds', () => {
+    progress.moveTo(FIRST_CHASM, { level: 1, topic: TOPIC });
+    const saved = progress.toJSON();
+
+    // First HUD update shows the chasm. The next fails after scoring.
+    hud.update
+      .mockImplementationOnce(() => {})
+      .mockImplementationOnce(() => {
+        throw new Error('HUD failed after scoring');
+      });
+
+    const flow = new GameFlow(steps, progress, makeScreen, {
+      hud,
+      load: () => saved,
+    });
+
+    flow.run();
+    const originalScreen = last();
+    pickRight();
+
+    // Undo points and answers added before the failed HUD update.
+    expect(progress.toJSON()).toEqual(saved);
+    expect(progress.points).toBe(0);
+    expect(progress.answers).toEqual([]);
+    expect(originalScreen.stopped).toBe(true);
+    expect(screens).toHaveLength(2);
+    expect(last().request).toEqual(originalScreen.request);
+  });
+
+  it('rejects a checkpoint from a different game seed', () => {
+    const saved = new PlayerProgress(SEED + 1).toJSON();
+    const original = progress.toJSON();
+    let attempts = 0;
+
+    const flow = new GameFlow(
+      steps,
+      progress,
+      () => {
+        attempts++;
+        throw new Error('Original screen failure');
+      },
+      { load: () => saved },
+    );
+
+    expect(() => flow.run()).toThrow('Original screen failure');
+    expect(progress.toJSON()).toEqual(original);
+    expect(attempts).toBe(1);
+  });
+
   it('updates the topic for Mini-game 2 and restores it for chasms', () => {
   const list: Step[] = [
     { kind: 'chasm', level: 1, topic: 'Pythagorean theorem in 2D', index: 0 },
