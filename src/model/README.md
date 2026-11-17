@@ -123,7 +123,7 @@ Small, pure rules that turn outcomes into points and, later, into decisions abou
 **`ziplinePoints`** gives the points for the zipline guess: `pointsPerZipline` from `content/settings` (50) for the right answer, and nothing for a wrong one. Leaving the shop before guessing never reaches it, so it earns nothing too.
 
 **Results by topic**\
-**`isRight`** says whether a pick was right, which only the log that fits is. **`resultsByTopic`** takes the progress's `answers` and gives, for each topic in the order it was first played, its level, how many picks were right and how many were made. Every pick counts, including ones made again after a level restart. The end screen shows these counts.
+**`isRight`** says whether a pick was right, which only the log that fits is. **`resultsByTopic`** takes the progress's `answers` and gives, for each topic in the order it was first played, its level, how many picks were right and how many were made. Every pick counts, including ones made again after a level restart. The end screen will show these counts (#78).
 
 ---
 
