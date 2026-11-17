@@ -31,6 +31,8 @@ export interface GameFlowOptions {
   hud?: Pick<Hud, 'update' | 'showPointsGained'>;
   /** Stores a checkpoint, such as SaveStore's `save`. */
   save?: (saved: SavedProgress) => void;
+  /** Loads the latest checkpoint for recovery after a screen failure. */
+  load?: () => SavedProgress | null;
   /** Plays a sound, such as view/audio's `play`. GameFlow plays the Level done and medal sounds as those steps start. */
   playCue?: (cue: Cue) => void;
 }
@@ -52,7 +54,8 @@ export class GameFlow {
   private screen: Screen | null = null;
   /** Goes up each time a screen starts or stops, so a report from a screen that's no longer current is ignored. */
   private current = 0;
-
+  /** Prevents repeated recovery attempts if the restarted screen fails. */
+  private recovering = false;
   constructor(
     private readonly steps: readonly Step[],
     private readonly progress: PlayerProgress,
@@ -80,26 +83,82 @@ export class GameFlow {
     this.screen = null;
   }
 
+  /** Plays one step and recovers from a screen failure when a checkpoint is available. */
   private play(index: number): void {
-    const step = this.steps[index];
-    const request = this.requestFor(step);
-    this.options.hud?.update(this.progress, step.kind === 'chasm' ? step.index + 1 : undefined);
-    if (step.kind === 'levelDone' || step.kind === 'medal') this.options.playCue?.(step.kind);
+    let callbackRan = false;
 
-    const screen = this.makeScreen(request);
-    const id = ++this.current;
-    this.screen = screen;
-    screen.start((outcome) => {
-      if (id !== this.current) return;
-      const next = this.nextAfter(index, request, outcome);
-      // After the last step the game is over, so its screen (the medal) stays up.
-      if (next >= this.steps.length) return;
-      this.stop();
-      this.progress.moveTo(next, this.placeOf(next));
-      // The checkpoint points at the step to play next, so a closed tab loses at most that step.
-      this.options.save?.(this.progress.toJSON());
-      this.play(next);
-    });
+    try {
+      const step = this.steps[index];
+      const request = this.requestFor(step);
+
+      this.options.hud?.update(
+        this.progress,
+        step.kind === 'chasm' ? step.index + 1 : undefined,
+      );
+      if (step.kind === 'levelDone' || step.kind === 'medal') this.options.playCue?.(step.kind);
+
+      const screen = this.makeScreen(request);
+      const id = ++this.current;
+      this.screen = screen;
+
+      screen.start((outcome) => {
+        callbackRan = true;
+        if (id !== this.current) return;
+
+        let next: number;
+
+        try {
+          next = this.nextAfter(index, request, outcome);
+
+          // After the last step the game is over, so its screen stays visible.
+          if (next >= this.steps.length) return;
+
+          this.stop();
+          this.progress.moveTo(next, this.placeOf(next));
+
+          // The checkpoint points at the step to play next,
+          // so a closed tab loses at most that step.
+          this.options.save?.(this.progress.toJSON());
+        } catch (error) {
+          this.recover(error);
+          return;
+        }
+
+        // Starting the next screen outside the catch prevents double recovery.
+        this.play(next);
+      });
+    } catch (error) {
+      if (callbackRan) throw error;
+      this.recover(error);
+    }
+  }
+
+    /** Stops a failed screen and replays the latest valid checkpoint. */
+  private recover(error: unknown): void {
+    if (this.recovering) throw error;
+
+    this.stop();
+
+    const saved = this.options.load?.();
+
+    // Without a usable checkpoint, preserve the original error.
+    if (!saved || !this.steps[saved.step]) {
+      throw error;
+    }
+
+    this.recovering = true;
+
+    try {
+      // Restore the existing progress object so shared references remain valid.
+      this.progress.restore(saved);
+
+      // Replay the saved step instead of the failed screen's current position.
+      this.run(saved.step);
+    } catch {
+      throw error;
+    } finally {
+      this.recovering = false;
+    }
   }
 
   private requestFor(step: Step): ScreenRequest {

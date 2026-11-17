@@ -38,6 +38,7 @@ function play(progress: PlayerProgress): void {
     hud,
     // Wrapped in an arrow function so `save` still knows which SaveStore it belongs to.
     save: (saved) => store.save(saved),
+    load: () => store.load(),
     playCue: playSound,
   });
   flow.run();
