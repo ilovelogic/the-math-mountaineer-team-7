@@ -11,6 +11,11 @@ export interface Answer {
   topic: string;
   result: PickResult;
 }
+/** Score earned in one completed attempt at a level. */
+export interface LevelAttempt {
+  readonly level: number;
+  readonly points: number;
+}
 
 /** Where the player is in the game's script: the level and topic of the current step. */
 export interface Place {
@@ -31,6 +36,7 @@ export interface SavedProgress {
   points: number;
   topic: string;
   answers: Answer[];
+  levelAttempts?: LevelAttempt[];
 }
 
 /**
@@ -58,6 +64,8 @@ export class PlayerProgress {
   private _points: number;
   private _topic: string;
   private _answers: Answer[];
+  private _levelAttempts: LevelAttempt[] = [];
+
 
   /** A new game: level 1, step 0, no points and no answers yet. */
   constructor(seed: number, place: Place = { level: 1, topic: '' }) {
@@ -91,6 +99,18 @@ export class PlayerProgress {
   /** Every pick so far, oldest first. Read-only so callers can't change the record. */
   get answers(): readonly Answer[] {
     return this._answers;
+  }
+
+  /** Completed level attempts, oldest first. */
+  get levelAttempts(): readonly LevelAttempt[] {
+    return this._levelAttempts.map((attempt) => ({ ...attempt }));
+  }
+
+  /** Keeps this attempt's score without replacing earlier attempts. */
+  recordLevelAttempt(level: number, points: number): void {
+    checkWholeNumber('level', level, 1);
+    checkWholeNumber('attempt points', points, 0);
+    this._levelAttempts.push({ level, points });
   }
 
   /** Adds `n` points. `n` can be 0, since a wrong pick earns nothing, but never negative. */
@@ -143,6 +163,7 @@ export class PlayerProgress {
       points: this._points,
       topic: this._topic,
       answers: this._answers.map((answer) => ({ ...answer })),
+      levelAttempts: this._levelAttempts.map((attempt) => ({ ...attempt })),
     };
   }
 
@@ -173,6 +194,20 @@ export class PlayerProgress {
     progress.moveTo(saved.step);
     progress._points = saved.points;
     progress._answers = saved.answers.map(({ step, level, topic, result }) => ({ step, level, topic, result }));
+
+    if (saved.levelAttempts !== undefined) {
+      if (!Array.isArray(saved.levelAttempts)) {
+        throw new Error('levelAttempts must be a list');
+      }
+
+      for (const attempt of saved.levelAttempts) {
+        if (typeof attempt !== 'object' || attempt === null) {
+          throw new Error('Saved level attempt is not valid');
+        }
+        progress.recordLevelAttempt(attempt.level, attempt.points);
+      }
+    }
+
     return progress;
   }
 }
