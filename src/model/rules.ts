@@ -57,3 +57,32 @@ export function resultsByTopic(answers: readonly Answer[]): TopicResult[] {
   }
   return [...byTopic.values()];
 }
+/**
+ * Finds the topic with the lowest correct-answer rate.
+ * Ties favor the topic encountered first.
+ * Returns null when there are no mistakes.
+ */
+export function worthReviewing(
+  answers: readonly Answer[],
+): { level: number; topic: string } | null {
+  const results = resultsByTopic(answers);
+  let weakest: TopicResult | null = null;
+
+  for (const result of results) {
+    if (
+      weakest === null ||
+      result.right * weakest.total < weakest.right * result.total
+    ) {
+      weakest = result;
+    }
+  }
+
+  if (!weakest || weakest.right === weakest.total) {
+    return null;
+  }
+
+  return {
+    level: weakest.level,
+    topic: weakest.topic,
+  };
+}

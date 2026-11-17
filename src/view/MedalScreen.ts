@@ -1,3 +1,4 @@
+
 import Konva from 'konva';
 import type { Layers } from './stage';
 import { STAGE_WIDTH, STAGE_HEIGHT } from './stage';
@@ -16,6 +17,10 @@ export type MedalType =
 export interface MedalScreenData {
   medal: MedalType;
   points: number;
+
+  /** The weakest level and topic, or null for a perfect score. */
+  worthReviewing?: { level: number; topic: string } | null;
+
   /** Called when the player presses See Results. */
   onSeeResults: () => void;
 }
@@ -169,14 +174,29 @@ export function drawMedalScreen(
     }),
   );
 
+  // Issue #81: Show the weakest level and topic suggested by the model.
+  if (data.worthReviewing) {
+    panel.add(
+      new Konva.Text({
+        ...text.label,
+        x: 30,
+        y: 450,
+        width: 260,
+        height: 40,
+        fontSize: 14,
+        text: `Worth reviewing: Level ${data.worthReviewing.level} — ${data.worthReviewing.topic}`,
+      }),
+    );
+  }
+
   const resultsButton = createButton(
     'See Results',
-    data.onSeeResults
+    data.onSeeResults,
   );
 
   resultsButton.position({
     x: 30,
-    y: 475,
+    y: 495,
   });
 
   panel.add(resultsButton);
@@ -211,6 +231,7 @@ export function drawMedalScreen(
     panel.destroy();
   };
 }
+
 // Optional documentation
 // - import type { Layers }: imports only the type, for checking; nothing from stage.ts runs because of this line.
 // - mountainPeaks.forEach((top, i) => ...): runs the function once per peak, also passing its position, starting at 0.
