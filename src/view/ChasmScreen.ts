@@ -114,12 +114,14 @@ export class ChasmScreen {
   showHint(): void {
     this.formulaCard.visible(true);
     this.prompt.show(hintText.line, [hintText.back]);
+    this.positionLogButtons();
   }
 
   /** Hides the formula card and puts the question back in the dialog box. */
   hideHint(): void {
     this.formulaCard.visible(false);
     this.prompt.show(QUESTION, []);
+    this.positionLogButtons();
   }
 
   /** Stops reporting clicks and greys out the log that was picked, if any. */
