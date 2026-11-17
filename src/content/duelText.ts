@@ -9,8 +9,9 @@ export interface DuelPageText {
 
 /**
  * Each duel page's text, worded as in the Math duel mockups. The duel page's buttons are
- * the question's options, so it has none here. The tutorial and solution text stand in
- * until #158 draws those pages.
+ * the question's options, so it has none here. The tutorial and solution pages also show
+ * a triangle and worked steps, which DuelScreen draws from the question's numbers, and
+ * the duel page's text goes on the card with the question instead of in the dialog box.
  */
 export const duelText: Record<DuelPage, DuelPageText> = {
   challenge: {
@@ -27,7 +28,9 @@ export const duelText: Record<DuelPage, DuelPageText> = {
     choices: ['Yes, view tutorial', 'Let’s battle now!'],
   },
   tutorial: {
-    text: 'The Pythagorean theorem says that in a right triangle, a² + b² = c², where c is the longest side.',
+    text:
+      'The Pythagorean theorem says that in a right triangle, a² + b² = c², where c is the longest side, across ' +
+      'from the right angle. Square the two shorter sides, add them, and take the square root to find c.',
     choices: ['Let’s battle now!'],
   },
   duel: {
@@ -49,9 +52,18 @@ export const duelText: Record<DuelPage, DuelPageText> = {
     choices: ['Understand the solution', 'Leave now'],
   },
   solution: {
-    text: 'The Pythagorean theorem says that in a right triangle, a² + b² = c², where c is the longest side.',
+    text: 'Here’s how to solve it: square the two shorter sides, add them, and take the square root.',
     choices: ['Back to the trail'],
   },
+};
+
+/**
+ * The Explanation card on the lost page, like the mockup's gray panel. `{answer}` marks
+ * where DuelScreen puts the question's answer, so the words stay here.
+ */
+export const duelExplanation = {
+  title: 'Correct answer: {answer}',
+  line: 'The store owner won',
 };
 // Optional documentation
 // - Record<DuelPage, DuelPageText>: an object with exactly one entry for each page name, so leaving a page out or misspelling one doesn't compile.

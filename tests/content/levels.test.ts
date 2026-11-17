@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { steps, type Step } from '../../src/content/levels';
+import { steps, TOPIC_3D, type Step } from '../../src/content/levels';
 import { makeChasm, triplesByLevel } from '../../src/model/problems';
 
 type ChasmStep = Extract<Step, { kind: 'chasm' }>;
@@ -32,6 +32,17 @@ describe('content/levels', () => {
       const next = steps[lastChasm + 1];
       expect(next).toEqual(level === lastLevel ? { kind: 'medal' } : { kind: 'levelDone', level });
     }
+  });
+
+  it('offers the clothing shop and its zipline once, right as Level 2 starts (#64)', () => {
+    const levelOneDone = steps.findIndex((step) => step.kind === 'levelDone' && step.level === 1);
+    expect(steps.slice(levelOneDone + 1, levelOneDone + 4)).toEqual([
+      { kind: 'shopOffer', shop: 'clothing' },
+      { kind: 'shopGame', shop: 'clothing', topic: TOPIC_3D },
+      { kind: 'chasm', level: 2, topic: chasmSteps[0].topic, index: 0 },
+    ]);
+    const shopSteps = steps.filter((step) => step.kind === 'shopOffer' || step.kind === 'shopGame');
+    expect(shopSteps).toHaveLength(2);
   });
 
   it('gives every chasm step a topic and a problem makeChasm can build', () => {

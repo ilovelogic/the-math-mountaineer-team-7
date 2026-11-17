@@ -54,7 +54,8 @@ describe('startGame', () => {
   it('plays the saved game on Continue', () => {
     const { pick, played } = start(SAVE);
     pick(CONTINUE);
-    expect(played.map((progress) => progress.toJSON())).toEqual([SAVE]);
+    expect(played.map((progress) => progress.toJSON())).toEqual([{ ...SAVE, levelAttempts: [] }]);
+
   });
 
   it('plays a new game on New game, even when a save exists', () => {

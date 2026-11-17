@@ -20,6 +20,7 @@ May import Konva, other `view/` files, and `model/` or `content/` to read what t
   - [DialogueBox](#dialoguebox)
   - [MedalScreen](#medalscreen)
   - [ShopOfferScreen](#shopofferscreen)
+  - [DuelScreen](#duelscreen)
   - [TitleScreen](#titlescreen)
   - [Hud](#hud)
 - [Still to come](#still-to-come)
@@ -105,6 +106,9 @@ The stage's layers and a chasm to draw: its two sides and the log lengths, in th
 **What it reports**\
 Each click on a log button reports that log's position in the list. Once its controller **`lock`**s it, it stops reporting clicks and shows the picked log as used. **`destroy`** removes everything it drew.
 
+**The hint**\
+A Hint button sits at the top left, just below the Hud's progress tag, since the mockup's spot is taken by that tag in the game. **`onHintClicked`** reports each click, and ChasmController decides what to do. **`showHint`** shows the formula card (drawn by `createFormulaCard` in `view/formulaCard.ts`, which sizes itself to its text) and puts the hint's line and a Back button in the dialog box, and Back reports as choice 0. **`hideHint`** hides the card and puts the question back. Once a pick's feedback shows, the Hint button and card go away for that chasm. The words come from `content/hintText`.
+
 ### DialogueBox
 
 **Purpose**\
@@ -128,6 +132,21 @@ Draws the outside of a shop with the player walking up to it, and the shop's off
 
 **How it's used**\
 `new ShopOfferScreen(layers, shop, offer)` takes the shop's name and its offer from `content/shopText`. **`draw`** draws the scene and the offer once, **`onChoice`** registers the callback for a button click, and **`destroy`** removes everything. A click reports the button's position, accept first and decline second, and ShopOfferController decides what it means.
+
+### DuelScreen
+
+**Purpose**\
+Draws the math duel at the supply shop one page at a time, like the Math duel mockups:
+   - **Challenge**: The inside of the shop, with shelves of goods, a window, the store owner behind the counter and the player.
+   - **Tutorial offer**: The store owner up close.
+   - **Tutorial and solution**: Squared paper, as in "Tutorial (2D)" and "Solution (2D)", with the shared right triangle beside a card of numbered, worked steps. The tutorial uses a general example (12, 16 and 20, with the sides called a, b and c, a triangle the game never asks about so it can't give away an answer), and the solution uses the duel question's own numbers, solving for x as the duel page asks.
+   - **The duel**: A white card with "Solve for x.", the question's triangle and its answers, between the player and the store owner. The dialog box is hidden on this page, and the answers are plain buttons, so the first can't look like a hint. The top-left corner is left empty for the store owner's progress, which #57 draws.
+   - **Won**: A card with the bag of climbing gear.
+   - **Climb**: The player climbing a cliff on a rope, in front of the mountains.
+   - **Lost**: The player, the celebrating store owner, and the Explanation card, a gray panel with the right answer.
+
+**How it's used**\
+`new DuelScreen(layers, question)` takes the duel question from `model/problems`. **`show(page, text, choices)`** draws a page with its text from `content/duelText` and its buttons, replacing the page before; **`onChoice`** registers the callback for a button click, and **`destroy`** removes everything. A click reports the button's position, and DuelShopController decides what it means.
 
 ### TitleScreen
 

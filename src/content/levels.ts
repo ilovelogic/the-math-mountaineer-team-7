@@ -17,10 +17,10 @@ export type Step =
    */
   | { kind: 'shopOffer'; shop: Shop }
   /** The shop's mini-game: the math duel for the supply shop, and the zipline for the clothing shop. */
-  | { kind: 'shopGame'; shop: Shop };
+  | { kind: 'shopGame'; shop: Shop; topic?: string };
 
 const TOPIC_2D = 'Pythagorean theorem in 2D';
-
+export const TOPIC_3D = 'Pythagorean theorem in 3D';
 /**
  * The game's script: every step in the order it happens. Each chasm is its own step,
  * so a closed tab loses at most one chasm. Its problem comes from the game's seed plus
@@ -37,7 +37,10 @@ export const steps: Step[] = [
   { kind: 'chasm', level: 1, topic: TOPIC_2D, index: 4 },
   { kind: 'levelDone', level: 1 },
 
-  { kind: 'chasm', level: 2, topic: TOPIC_2D, index: 0 },
+  // Level 2 opens at the clothing shop, where the zipline challenge can earn extra points.
+  { kind: 'shopOffer', shop: 'clothing' },
+{ kind: 'shopGame', shop: 'clothing', topic: TOPIC_3D },
+{ kind: 'chasm', level: 2, topic: TOPIC_2D, index: 0 },
   { kind: 'chasm', level: 2, topic: TOPIC_2D, index: 1 },
   { kind: 'chasm', level: 2, topic: TOPIC_2D, index: 2 },
   { kind: 'chasm', level: 2, topic: TOPIC_2D, index: 3 },
