@@ -25,7 +25,7 @@ May import `model/`, `view/`, and `content/`. Nothing else imports from here exc
 This is the folder that turns our separate screens into a game. It holds the `Screen` contract, GameFlow, which plays the game's steps, a controller for each kind of screen built so far, and the screen factory, which builds the right screen for each step. `main.ts` shows the title screen first, then creates GameFlow with that factory for the game the player picked.
 
 <img src="../../docs/images/cc-view.png" width="900" />\
-*The runtime (C&C) view, showing what talks to what while the game runs. Connector names match the code, and components marked "Not built yet" show the design. View the live version in [Figma](https://www.figma.com/design/LLtfHewfTMLycUXFUVuyEH).*
+*The runtime (C&C) view, showing what talks to what while the game runs. Connector names match the code. `audio` is built but not called yet, so its connector shows the design it will follow. View the live version in [Figma](https://www.figma.com/design/LLtfHewfTMLycUXFUVuyEH).*
 
 ---
 

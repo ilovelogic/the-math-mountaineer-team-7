@@ -114,7 +114,7 @@ These are grouped by what they're for. Each links to its section in the folder d
 ## Architecture Overview
 
 <img src="docs/images/module-view.png" width="900" />\
-*The module view showing which modules exist and what each one may use. Faded boxes aren't built yet. View the live version in [Figma](https://www.figma.com/board/UqaCm5s3LuddFWG7xfzhlS).*
+*The module view showing which modules exist and what each one may use. Every module is built as of the end of Sprint 2; a faded box would mean one that isn't built yet. View the live version in [Figma](https://www.figma.com/board/UqaCm5s3LuddFWG7xfzhlS).*
 
 We follow MVC, with a fourth folder for data. Each of these is a folder in `src/` and offers its own README:
 
