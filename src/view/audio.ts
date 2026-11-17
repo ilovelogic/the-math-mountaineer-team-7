@@ -1,12 +1,15 @@
 import { sound } from './assets';
 
+/** The name of each sound the game plays, matching its entry in `SOUND_FILES`. */
+export type Cue = 'fits' | 'tooShort' | 'tooLong' | 'levelDone' | 'medal';
+
 /**
  * Plays the sound for one outcome, starting it over if it's already playing so
  * quick repeat picks are each heard. If the browser refuses to play it, for
  * example before the player has clicked anything, the sound is skipped, since
  * the game works fine without it.
  */
-export function play(cue: 'fits' | 'tooShort' | 'tooLong' | 'levelDone' | 'medal'): void {
+export function play(cue: Cue): void {
     const soundEffect = sound(cue);
     soundEffect.currentTime = 0;
     soundEffect.play().catch( () => {
