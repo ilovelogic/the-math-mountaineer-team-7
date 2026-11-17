@@ -60,11 +60,16 @@ describe('createScreenFactory', () => {
   });
 
   it('draws the chasm it was given, with a button for each of its logs', () => {
+    standInLoadedImages();
+  
     const chasm = makeChasm(1, 1, 0);
     const screen = makeScreen({ kind: 'chasm', chasm });
     expect(screen).toBeInstanceOf(ChasmController);
     const drawn = startAndRead(screen);
-    for (const log of chasm.logs) expect(drawn, `log of ${log} m`).toContain(`${log} m`);
+  
+    for (const log of chasm.logs) {
+      expect(drawn, `log of ${log} m`).toContain(`${log} m`);
+    }
   });
 
   it('congratulates a player who earned every point on the level', () => {
