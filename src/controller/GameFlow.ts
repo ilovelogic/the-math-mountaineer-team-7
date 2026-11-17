@@ -3,8 +3,9 @@ import { settings } from '../content/settings';
 import { DECLINE } from '../content/shopText';
 import type { Place, PlayerProgress, SavedProgress } from '../model/PlayerProgress';
 import { checkPick, makeChasm, makeDuelQuestion, type Chasm, type DuelQuestion } from '../model/problems';
-import { pointsFor, skippedLevelPoints, ziplinePoints, type PickResult } from '../model/rules';
+import { pointsFor, skippedLevelPoints, ziplinePoints } from '../model/rules';
 import { checkZiplineAnswer, makeZiplineProblem, type ZiplineProblem } from '../model/zipline';
+import type { Cue } from '../view/audio';
 import type { Hud } from '../view/Hud';
 import { DUEL_RESULT } from './DuelShopController';
 import type { Outcome, Screen } from './Screen';
@@ -30,8 +31,8 @@ export interface GameFlowOptions {
   hud?: Pick<Hud, 'update' | 'showPointsGained'>;
   /** Stores a checkpoint, such as SaveStore's `save`. */
   save?: (saved: SavedProgress) => void;
-  /** Plays the sound for how a pick went. */
-  playCue?: (cue: PickResult) => void;
+  /** Plays a sound, such as view/audio's `play`. GameFlow plays the Level done and medal sounds as those steps start. */
+  playCue?: (cue: Cue) => void;
 }
 
 /** On the "under 100%" Level done message, the first choice restarts the level (see model/levelDone). */
@@ -83,6 +84,7 @@ export class GameFlow {
     const step = this.steps[index];
     const request = this.requestFor(step);
     this.options.hud?.update(this.progress, step.kind === 'chasm' ? step.index + 1 : undefined);
+    if (step.kind === 'levelDone' || step.kind === 'medal') this.options.playCue?.(step.kind);
 
     const screen = this.makeScreen(request);
     const id = ++this.current;
@@ -163,7 +165,7 @@ export class GameFlow {
     return index + 1;
   }
 
-  /** The "crossing one chasm" path: check the pick, award its points, record it, and show and play how it went. */
+  /** The "crossing one chasm" path: check the pick, award its points, record it, and show how it went. */
   private score(chasm: Chasm, log: number, chasmNumber: number): void {
     const result = checkPick(chasm, log);
     const points = pointsFor(result, settings);
@@ -171,7 +173,6 @@ export class GameFlow {
     this.progress.addPoints(points);
     this.options.hud?.update(this.progress, chasmNumber);
     this.options.hud?.showPointsGained(points);
-    this.options.playCue?.(result);
   }
 
   /**

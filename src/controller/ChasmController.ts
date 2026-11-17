@@ -1,5 +1,6 @@
 import type { Screen, Outcome } from './Screen';
 import { checkPick, type Chasm } from '../model/problems'
+import type { PickResult } from '../model/rules';
 
 
 
@@ -41,7 +42,10 @@ export class ChasmController implements Screen {
     constructor(
         private readonly screen: ChasmView,
         private readonly solutionScreen: ChasmSolutionView,
-        private readonly chasm: Chasm
+        private readonly chasm: Chasm,
+        // Plays the pick's sound as soon as the log is picked, since GameFlow only hears
+        // about the pick after Continue. Tests that don't check sounds can leave it out.
+        private readonly playCue: (cue: PickResult) => void = () => {},
     ) {}
 
     start(onDone: (outcome: Outcome) => void): void {
@@ -127,6 +131,7 @@ export class ChasmController implements Screen {
         if (this.hintOpen) this.closeHint();
 
         const result = checkPick(this.chasm, index);
+        this.playCue(result);
 
         if (result === 'fits') {
             this.wasCorrect = true;
@@ -152,3 +157,5 @@ export class ChasmController implements Screen {
     }
 
 }
+// Optional documentation
+// - playCue: (cue: PickResult) => void = () => {}: a default value, a function that does nothing, used when no fourth argument is passed.

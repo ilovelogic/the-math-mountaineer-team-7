@@ -9,7 +9,7 @@ import type { Outcome, Screen } from '../../src/controller/Screen';
 import { PlayerProgress, type SavedProgress } from '../../src/model/PlayerProgress';
 import { makeChasm, makeDuelQuestion, type Chasm } from '../../src/model/problems';
 import { makeZiplineProblem, type ZiplineProblem } from '../../src/model/zipline';
-import type { PickResult } from '../../src/model/rules';
+import type { Cue } from '../../src/view/audio';
 import type { Hud } from '../../src/view/Hud';
 
 /**
@@ -36,7 +36,7 @@ let screens: StandIn[];
 let hud: { update: Mock<Hud['update']>; showPointsGained: Mock<Hud['showPointsGained']> };
 let progress: PlayerProgress;
 let saves: SavedProgress[];
-let cues: PickResult[];
+let cues: Cue[];
 
 beforeEach(() => {
   screens = [];
@@ -162,14 +162,15 @@ describe('controller/GameFlow', () => {
     expect(hud.update).toHaveBeenLastCalledWith(progress, 1);
   });
 
-  it('awards points for the log that fits, and shows and plays how it went', () => {
+  it('awards points for the log that fits, and shows how it went', () => {
     play(steps, FIRST_CHASM);
     pickRight();
     expect(progress.points).toBe(10);
     expect(progress.answers).toEqual([{ step: FIRST_CHASM, level: 1, topic: TOPIC, result: 'fits' }]);
     expect(hud.update).toHaveBeenCalledWith(progress, 1);
     expect(hud.showPointsGained).toHaveBeenCalledWith(10);
-    expect(cues).toEqual(['fits']);
+    // GameFlow only hears about a pick after Continue, too late for its sound, so it plays none.
+    expect(cues).toEqual([]);
   });
 
   it('records a wrong pick as too short or too long, with no points', () => {
@@ -179,7 +180,6 @@ describe('controller/GameFlow', () => {
     const result = chasm.logs[(chasm.correct + 1) % chasm.logs.length] < chasm.c ? 'tooShort' : 'tooLong';
     expect(progress.points).toBe(0);
     expect(progress.answers).toEqual([{ step: FIRST_CHASM, level: 1, topic: TOPIC, result }]);
-    expect(cues).toEqual([result]);
   });
 
   it('saves a checkpoint after every step, pointing at the step to play next', () => {
@@ -235,6 +235,17 @@ it('saves checkpoints to actual storage after every step', () => {
     expect(kinds().filter((kind) => kind === 'chasm')).toHaveLength(15);
     expect(kinds().filter((kind) => kind === 'levelDone')).toHaveLength(2);
     expect(kinds().filter((kind) => kind === 'shopGame')).toHaveLength(2);
+  });
+
+  it('plays the Level done and medal sounds as those steps start, and no others', () => {
+    play();
+    playToMedal(DUEL_RESULT.notWon);
+    expect(cues).toEqual(['levelDone', 'levelDone', 'medal']);
+  });
+
+  it('plays the Level done sound again when a save resumes on that step', () => {
+    play(steps, steps.findIndex((step) => step.kind === 'levelDone'));
+    expect(cues).toEqual(['levelDone']);
   });
 
   /** Plays Level 1's five chasms from its first one, getting the first `right` of them right. */
