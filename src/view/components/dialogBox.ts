@@ -7,6 +7,7 @@ import { createButton } from './button';
 export interface DialogBox {
   group: Konva.Group;
   show(line: string, choices: string[], options?: ShowOptions): void;
+  getTop(): number;
 }
 
 export interface ShowOptions {
@@ -63,7 +64,7 @@ export function createDialogBox(onChoice: (index: number) => void): DialogBox {
     group.y(STAGE_HEIGHT - height);
   }
 
-  return { group, show };
+  return { group, show, getTop: () => group.y() };
 }
 // Optional documentation
 // - { ...text.dialog, x: ..., width: ... }: the spread `...` copies every property of text.dialog into the new object; the properties after it add to or override them.
