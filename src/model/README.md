@@ -39,16 +39,16 @@ Where the player is and how they're doing. Here, we have the game's seed, the cu
    - `seed`: Picked once when a game starts and never changed. Every chasm is rebuilt from it, so a saved game gets the same chasms back.
    - `level`, `step`, `topic`: Where the player is. `step` is a position in the game's list of steps in `content/levels`.
    - `points`: The running total.
-   - `answers`: Every pick so far, oldest first, each recording the step it was made on and whether the log fit, was too short or was too long.
+   - `answers`: Every pick so far, oldest first, each recording the step it was made on, that step's level and topic, and whether the log fit, was too short or was too long. Only a log that fits is right.
 
 **How it changes**
    - **`addPoints`** adds to the total. Zero is allowed, since a wrong pick earns nothing, but a negative number is refused.
    - **`moveTo`** goes to another step, and also changes the level and topic when a new level starts.
-   - **`recordAnswer`** adds a pick to `answers`.
+   - **`recordAnswer`** adds a pick to `answers`, with the current level and topic.
    - **`removePoints`** takes points back when the player restarts a level, so its points can be earned again. The answers stay, since they're the record of every pick, and it never takes more than the player has.
 
 **Saving**\
-`toJSON` turns the progress into plain data that's safe to store, and `fromJSON` rebuilds it, refusing anything that isn't a valid save. The saved data carries a version number, so a later save format can tell old saves apart.
+`toJSON` turns the progress into plain data that's safe to store, and `fromJSON` rebuilds it, refusing anything that isn't a valid save. The saved data carries a version number, so a later save format can tell old saves apart. Version 2 added each answer's level and topic, so a version 1 save is refused and the player starts a new game.
 
 **ProgressView**\
 A read-only version of the type, with the values and none of the methods. The Hud and screens receive this, so they can show progress but can't change it.
@@ -80,7 +80,10 @@ Every chasm offers three logs: the one that fits (the hypotenuse, `c`) and two w
 **`checkPick`** compares the picked log to `c` and reports `'fits'`, `'tooShort'` or `'tooLong'`.
 
 **The duel question**\
-**`makeDuelQuestion`** takes the game's seed and gives the supply shop's duel: one of Level 1's triangles (since winning skips Level 1, and small numbers suit a timed race) with three answers, `c`, one 1 to 3 shorter and one 1 to 3 longer, shuffled. `correct` is where `c` sits. It mixes a constant into the seed so its triangle doesn't always match the last chasm of Level 1, which reads the same first random number.
+**`makeDuelQuestion`** takes the game's seed and gives the supply shop's duel: one of Level 1's triangles (since winning skips Level 1, and small numbers suit a timed race) with three answers, `c` and two wrong ones made by **`answerChoices`**. `correct` is where `c` sits.
+
+**Answer choices**\
+**`answerChoices`** makes the three answers for the duel and the zipline: the right one and two wrong ones, each 1 to 3 away from it and different from each other, shuffled. The right answer is equally likely to be the smallest, middle or largest of the three, so always picking the middle number doesn't win. The chasm logs don't use it, since their wrong logs are meant to range much further from `c`.
 
 **Seeded random numbers**\
 **`makeRng`** turns a seed into a generator of random numbers that repeat exactly for the same seed. That's what makes a saved game and a test both reproducible.
@@ -94,6 +97,9 @@ Small, pure rules that turn outcomes into points and, later, into decisions abou
 
 **Points**\
 **`pointsFor`** gives the points for a pick: only the log that fits earns any, and how many comes from `content/settings` (10 per chasm today). A log that's too short falls into the chasm, and one that's too long smashes the item waiting on the other side, so neither earns points.
+
+**Results by topic**\
+**`isRight`** says whether a pick was right, which only the log that fits is. **`resultsByTopic`** takes the progress's `answers` and gives, for each topic in the order it was first played, its level, how many picks were right and how many were made. Every pick counts, including ones made again after a level restart. The end screen shows these counts.
 
 ---
 

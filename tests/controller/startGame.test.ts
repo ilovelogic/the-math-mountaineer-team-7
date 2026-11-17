@@ -14,7 +14,7 @@ import type { PlayerProgress, SavedProgress } from '../../src/model/PlayerProgre
  */
 
 const LAST_STEP = 20;
-const SAVE: SavedProgress = { version: 1, seed: 7, level: 2, step: 12, points: 60, topic: 'Pythagorean theorem in 3D', answers: [{ step: 3, result: 'fits' }] };
+const SAVE: SavedProgress = { version: 2, seed: 7, level: 2, step: 12, points: 60, topic: 'Pythagorean theorem in 3D', answers: [{ step: 3, level: 1, topic: 'Pythagorean theorem in 2D', result: 'fits' }] };
 
 /** Starts the game with this save, and gives back the stand-in title and what `play` was handed. */
 function start(saved: SavedProgress | null) {
@@ -54,7 +54,8 @@ describe('startGame', () => {
   it('plays the saved game on Continue', () => {
     const { pick, played } = start(SAVE);
     pick(CONTINUE);
-    expect(played.map((progress) => progress.toJSON())).toEqual([SAVE]);
+    expect(played.map((progress) => progress.toJSON())).toEqual([{ ...SAVE, levelAttempts: [] }]);
+
   });
 
   it('plays a new game on New game, even when a save exists', () => {

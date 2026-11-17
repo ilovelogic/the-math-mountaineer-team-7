@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { settings } from '../../src/content/settings';
-import { pointsFor, ziplinePoints } from '../../src/model/rules';
+import { PlayerProgress } from '../../src/model/PlayerProgress';
+import { isRight, pointsFor, resultsByTopic, ziplinePoints } from '../../src/model/rules';
 
 /**
  * Checks how many points each chasm pick earns (issue #37). `pointsFor` takes
@@ -36,7 +37,74 @@ describe('ziplinePoints', () => {
   });
 });
 
+describe('isRight', () => {
+  it('counts only the log that fits as right', () => {
+    expect(isRight('fits')).toBe(true);
+    expect(isRight('tooShort')).toBe(false);
+    expect(isRight('tooLong')).toBe(false);
+  });
+});
+
+// Issue #77: a handful of fixed answers recorded through PlayerProgress, so the expected counts are easy to check by hand.
+describe('resultsByTopic', () => {
+  const twoD = { level: 1, topic: 'Pythagorean theorem in 2D' };
+  const threeD = { level: 2, topic: 'Pythagorean theorem in 3D' };
+
+  function playedGame(): PlayerProgress {
+    const progress = new PlayerProgress(42, twoD);
+    progress.moveTo(3);
+    progress.recordAnswer('tooShort');
+    progress.recordAnswer('fits');
+    progress.moveTo(4);
+    progress.recordAnswer('fits');
+    progress.moveTo(9, threeD);
+    progress.recordAnswer('tooLong');
+    progress.recordAnswer('tooShort');
+    progress.recordAnswer('fits');
+    return progress;
+  }
+
+  it('gives no results before any pick', () => {
+    expect(resultsByTopic([])).toEqual([]);
+  });
+
+  it('counts right picks out of all picks for each topic, in the order the topics were played', () => {
+    expect(resultsByTopic(playedGame().answers)).toEqual([
+      { ...twoD, right: 2, total: 3 },
+      { ...threeD, right: 1, total: 3 },
+    ]);
+  });
+
+  it('matches the recorded answers, topic by topic', () => {
+    const { answers } = playedGame();
+
+    for (const result of resultsByTopic(answers)) {
+      const picks = answers.filter((answer) => answer.topic === result.topic);
+      expect(result.total).toBe(picks.length);
+      expect(result.right).toBe(picks.filter((answer) => answer.result === 'fits').length);
+    }
+    const counted = resultsByTopic(answers).reduce((sum, result) => sum + result.total, 0);
+    expect(counted).toBe(answers.length);
+  });
+
+  it('gives the same results after a save and load', () => {
+    const progress = playedGame();
+    const loaded = PlayerProgress.fromJSON(JSON.parse(JSON.stringify(progress)));
+
+    expect(resultsByTopic(loaded.answers)).toEqual(resultsByTopic(progress.answers));
+  });
+
+  it('counts picks made again after a level restart', () => {
+    const progress = playedGame();
+    progress.moveTo(3, twoD);
+    progress.recordAnswer('fits');
+
+    expect(resultsByTopic(progress.answers)[0]).toEqual({ ...twoD, right: 3, total: 4 });
+  });
+});
+
 // Optional documentation
 // - describe(name, fn): groups related tests under a heading in the test output; Vitest calls fn right away to find the it(...) calls inside.
 // - it(name, fn): registers one test; Vitest runs fn after collecting every test, and the test fails if anything inside fn throws.
 // - expect(value).toBe(expected): throws, failing the test, unless the two values are exactly equal.
+// - resultsByTopic(...).reduce((sum, result) => sum + result.total, 0): adds up every topic's total, which should be every recorded pick.

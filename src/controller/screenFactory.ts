@@ -2,14 +2,16 @@ import { dialogueScripts } from '../content/dialogueScripts';
 import { shopOffers } from '../content/shopText';
 import type { DialogueLine } from '../model/Dialogue';
 import { levelDoneLines } from '../model/levelDone';
-import { makeZiplineProblem } from '../model/zipline';
 import type { ProgressView } from '../model/PlayerProgress';
 import { ChasmScreen } from '../view/ChasmScreen';
+import { DuelScreen } from '../view/DuelScreen';
+import { OwnerProgress } from '../view/OwnerProgress';
 import { ShopOfferScreen } from '../view/ShopOfferScreen';
 import { ZiplineScreen } from '../view/ZiplineScreen';
 import type { Layers } from '../view/stage';
 import { ChasmController } from './ChasmController';
 import { DialogueController } from './DialogueController';
+import { DuelShopController } from './DuelShopController';
 import type { ScreenRequest } from './GameFlow';
 import { MedalController } from './MedalController';
 import type { Screen } from './Screen';
@@ -47,11 +49,9 @@ export function createScreenFactory(layers: Layers, progress: ProgressView): (re
         return new ShopOfferController(new ShopOfferScreen(layers, request.shop, shopOffers[request.shop]));
       case 'shopGame': {
         if (request.shop === 'clothing') {
-          const problem = makeZiplineProblem(progress.seed);
-          return new ZiplineShopController(new ZiplineScreen(layers, problem), problem);
+          return new ZiplineShopController(new ZiplineScreen(layers, request.problem), request.problem);
         }
-        // The math duel's screen (#55) isn't built yet.
-        throw new Error(`The ${request.shop} shop's mini-game isn't built yet.`);
+        return new DuelShopController(new DuelScreen(layers, request.question), request.question, new OwnerProgress(layers.ui));
       }
       default: {
         const unhandled: never = request;

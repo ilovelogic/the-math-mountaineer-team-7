@@ -16,6 +16,7 @@ May import `model/`, `view/`, and `content/`. Nothing else imports from here exc
 - [Loading](#loading)
 - [Starting the game](#starting-the-game)
 - [Crossing one chasm, start to finish](#crossing-one-chasm-start-to-finish)
+- [The hint](#the-hint)
 
 ---
 
@@ -50,13 +51,14 @@ Runs the whole game by playing the steps in `content/levels` in order, one scree
 **What it's given**
    - `steps`: The game's script from `content/levels`.
    - `progress`: The player's `PlayerProgress`, new or loaded from a save.
-   - `makeScreen`: A function that turns a `ScreenRequest` into a `Screen`. In the game, that's the [screen factory](#the-screen-factory). A request is a step with everything its screen needs filled in, such as the chasm built from the game's seed, or the points earned on a level for its Level done message.
+   - `makeScreen`: A function that turns a `ScreenRequest` into a `Screen`. In the game, that's the [screen factory](#the-screen-factory). A request is a step with everything its screen needs filled in, such as the chasm or duel question built from the game's seed, or the points earned on a level for its Level done message.
    - **Options** (each optional, so tests pass only what they check): the Hud to keep up to date, a `save` function such as SaveStore's, and a `playCue` function for the sound after a pick.
 
 **After each screen**
    - **After a chasm**, GameFlow checks the pick with `model/problems`, turns it into points with `model/rules`, records the answer and adds the points to `PlayerProgress`, and then has the Hud redraw and show its "+ points" tag.
    - **After a Level done message** where the player missed points and chose to restart, it takes back that attempt's points (so they can be earned again) and goes back to the level's first chasm. Choice 0 means restart, matching the order in `model/levelDone`.
    - **After a shop offer**, it plays the shop's mini-game next if the player accepted, and skips it if they declined, so declining earns no points. When GameFlow is created, it checks that every offer comes right before its own shop's mini-game, so a reordered script fails before anything plays instead of skipping the wrong step.
+   - **After the math duel**, it reads how the duel ended from `DUEL_RESULT`. A win where the player climbs (`skipLevel`) gives the level's full points (50 for Level 1, worked out from `pointsPerChasm` as Level done does, until #58's skip-level rule replaces it), shows the "+ points" tag, and jumps to the step after the next Level done, which is the start of Level 2. Turning down the gear (`normalPath`) or not winning (`notWon`) goes on to the next step. When GameFlow is created, it checks that a Level done comes after the duel, so a win always has somewhere to go.
    - **After any step**, it saves a checkpoint that points at the step to play next, so a closed tab loses at most that step.
 
 **Reports that arrive late**\
@@ -74,7 +76,7 @@ Each one pairs a view from `view/` with the `Screen` contract:
    - **DialogueController**: Plays one dialogue scene, from `content/dialogueScripts` or `model/levelDone`, one box per click, and reports when it ends, including which button was picked on a box with choices. The click time comes from a clock it's given, so tests can use a fake one, and the transition length comes from `settings`.
    - **MedalController**: Works out the medal from the player's points with `model/medals`, has `MedalScreen` draw it, and reports `done` once when the player presses See Results. It reads the points when it starts, so it can be created before the last chasm is scored.
    - **ShopOfferController**: Shows a shop's offer and reports the first button picked, `ACCEPT` or `DECLINE` from `content/shopText`. Later clicks, and clicks after `stop()`, report nothing. It works with any `ShopOfferView` (anything with `draw`, `onChoice` and `destroy`), so its tests use a fake view instead of `ShopOfferScreen`.
-   - **DuelShopController**: Plays the math duel page by page, as in the Math duel mockups: the challenge, the tutorial offer and tutorial, the duel, and the won (then climb) or lost (then solution) pages, with each page's text from `content/duelText`. On the duel page, the right option wins, while a wrong one or the store owner's timer finishing first loses. It reports how the duel ended once, as a choice from `DUEL_RESULT`: `skipLevel` (won and took the shortcut), `normalPath` (won but turned down the gear) or `notWon` (left before the duel, or lost), and GameFlow decides what that means (#134). Clicks just after a page appears are ignored, using the same `dialogueTransitionMs` as dialogue, so a fast double click never presses a button on the next page. It works with any `DuelView`, `DuelQuestionChoices` and `OpponentTimer`, so its tests use stand-ins; the real view, the question (#56) and the timer (#57) come with #158 and #55.
+   - **DuelShopController**: Plays the math duel page by page, as in the Math duel mockups: the challenge, the tutorial offer and tutorial, the duel, and the won (then climb) or lost (then solution) pages, with each page's text from `content/duelText`. On the duel page, the right option wins, while a wrong one or the store owner's timer finishing first loses. It reports how the duel ended once, as a choice from `DUEL_RESULT`: `skipLevel` (won and took the shortcut), `normalPath` (won but turned down the gear) or `notWon` (left before the duel, or lost), and GameFlow decides what that means (#134). Clicks just after a page appears are ignored, using the same `dialogueTransitionMs` as dialogue, so a fast double click never presses a button on the next page. It works with any `DuelView`, `DuelQuestionChoices` and `OpponentTimer`, so its tests use stand-ins. In the game its view is `DuelScreen` and its question is `makeDuelQuestion`'s (#56), which GameFlow puts in the request. Its timer is `OwnerProgress` (#57), the store owner's progress pie, which the screen factory draws on the ui layer; if it fills before the player answers, the player loses.
 
    - **TitleController**: Shows the title screen with New game, plus Continue when it's told there's a game to continue, and reports the first button picked, `NEW_GAME` or `CONTINUE`. It never reads the save itself (see [Starting the game](#starting-the-game)). It works with any `TitleView`, so its tests use a fake view instead of `TitleScreen`.
 
@@ -94,7 +96,7 @@ Builds the screen for each step GameFlow plays, so GameFlow never needs to know 
    - **A Level done step**: A `DialogueController` playing `levelDoneLines(...)`, filled in with the level's points.
    - **The medal**: A `MedalController`.
    - **A shop offer**: A `ShopOfferController` around a new `ShopOfferScreen`, showing that shop's offer from `content/shopText`.
-   - **A shop mini-game**: Throws an error saying it isn't built yet, until #55 and #61 fill in this case.
+   - **A shop mini-game**: For the supply shop, a `DuelShopController` around a new `DuelScreen`, both given the duel question from the request and an `OwnerProgress` for the store owner's race. For the clothing shop, a `ZiplineShopController` around a new `ZiplineScreen` for the zipline problem from the request.
 
 **When something's wrong**\
 A dialogue step naming a scene that doesn't exist (e.g., a typo in `content/levels`) throws an error naming that scene, instead of handing `undefined` to the screen. A `never` check after the `switch` also means a new kind of step added to GameFlow without a case here stops the build, so the forgotten case is caught before it merges.
@@ -137,3 +139,13 @@ A single answer moves through the game as follows:
    5. GameFlow gets the points from `rules`, adds them to `PlayerProgress`, and records the answer.
    6. GameFlow has the Hud redraw and plays the matching sound (once the sounds are added).
    7. GameFlow saves a checkpoint and moves on to the next step.
+
+---
+
+## The hint
+
+**Purpose**\
+Gives a stuck player the formula, without ever changing their points (#84).
+
+**How it works**\
+ChasmController listens for Hint on ChasmScreen and opens the hint until a log is picked; after that, the feedback explains the answer, so Hint does nothing. While the hint is open, a `hintOpen` flag makes the dialog box's choice 0 mean Back, which closes it. The logs stay clickable, and picking one closes the hint and carries on as usual. Opening and closing the hint never reports an outcome to GameFlow, and GameFlow only scores outcomes, so the hint can't change the points. The controller tests check exactly that with a fake view.

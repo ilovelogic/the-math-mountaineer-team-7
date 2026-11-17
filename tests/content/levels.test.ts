@@ -1,16 +1,23 @@
 import { describe, expect, it } from 'vitest';
-import { steps, type Step } from '../../src/content/levels';
+import { steps, TOPIC_3D, type Step } from '../../src/content/levels';
 import { makeChasm, triplesByLevel } from '../../src/model/problems';
 
 type ChasmStep = Extract<Step, { kind: 'chasm' }>;
 const chasmSteps = steps.filter((step): step is ChasmStep => step.kind === 'chasm');
 
 describe('content/levels', () => {
-  it('opens with the intro and the crossing tutorial', () => {
-    expect(steps.slice(0, 2)).toEqual([
+  it('opens with the intro, the supply shop and its duel, then the crossing tutorial (#134)', () => {
+    expect(steps.slice(0, 4)).toEqual([
       { kind: 'dialogue', script: 'intro' },
+      { kind: 'shopOffer', shop: 'supplies' },
+      { kind: 'shopGame', shop: 'supplies' },
       { kind: 'dialogue', script: 'howCrossingWorks' },
     ]);
+  });
+
+  it('puts the supply shop before Level 1’s chasms, so winning its duel can skip them', () => {
+    const duel = steps.findIndex((step) => step.kind === 'shopGame' && step.shop === 'supplies');
+    expect(duel).toBeLessThan(steps.indexOf(chasmSteps[0]));
   });
 
   it('ends with the medal', () => {
@@ -32,6 +39,17 @@ describe('content/levels', () => {
       const next = steps[lastChasm + 1];
       expect(next).toEqual(level === lastLevel ? { kind: 'medal' } : { kind: 'levelDone', level });
     }
+  });
+
+  it('offers the clothing shop and its zipline once, right as Level 2 starts (#64)', () => {
+    const levelOneDone = steps.findIndex((step) => step.kind === 'levelDone' && step.level === 1);
+    expect(steps.slice(levelOneDone + 1, levelOneDone + 4)).toEqual([
+      { kind: 'shopOffer', shop: 'clothing' },
+      { kind: 'shopGame', shop: 'clothing', topic: TOPIC_3D },
+      { kind: 'chasm', level: 2, topic: chasmSteps[0].topic, index: 0 },
+    ]);
+    const clothingSteps = steps.filter((step) => (step.kind === 'shopOffer' || step.kind === 'shopGame') && step.shop === 'clothing');
+    expect(clothingSteps).toHaveLength(2);
   });
 
   it('gives every chasm step a topic and a problem makeChasm can build', () => {

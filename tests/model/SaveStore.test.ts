@@ -17,7 +17,7 @@ function fakeStorage(): Storage {
 }
 
 const checkpoint: SavedProgress = {
-  version: 1,
+  version: 2,
   seed: 42,
   level: 1,
   step: 3,
@@ -30,7 +30,11 @@ describe('SaveStore', () => {
   it('saves and loads the same progress', () => {
     const store = new SaveStore(fakeStorage());
     store.save(checkpoint);
-    expect(store.load()).toEqual(checkpoint);
+    expect(store.load()).toEqual({
+      ...checkpoint,
+      levelAttempts: [],
+    });
+
   });
 
   it('returns null when nothing is saved', () => {
@@ -55,7 +59,7 @@ describe('SaveStore', () => {
     expect(() => store.save(checkpoint)).not.toThrow();
     expect(store.load()).toBeNull();
   });
-    it('returns null for invalid progress data', () => {
+  it('returns null for invalid progress data', () => {
     const storage = fakeStorage();
     storage.setItem('math-mountaineer-save', '{"version":2}');
 

@@ -84,17 +84,20 @@ describe('PlayerProgress', () => {
     expect(progress.points).toBe(10);
   });
 
-  it('records each pick with the step it was made on', () => {
+  it('records each pick with the step, level and topic it was made on', () => {
     const progress = new PlayerProgress(42, level1);
     progress.recordAnswer('tooShort');
     progress.recordAnswer('fits');
     progress.moveTo(1);
     progress.recordAnswer('fits');
+    progress.moveTo(2, level2);
+    progress.recordAnswer('tooLong');
 
     expect(progress.answers).toEqual([
-      { step: 0, result: 'tooShort' },
-      { step: 0, result: 'fits' },
-      { step: 1, result: 'fits' },
+      { step: 0, ...level1, result: 'tooShort' },
+      { step: 0, ...level1, result: 'fits' },
+      { step: 1, ...level1, result: 'fits' },
+      { step: 2, ...level2, result: 'tooLong' },
     ]);
   });
 
@@ -132,7 +135,7 @@ describe('PlayerProgress saving', () => {
     expect(loaded.topic).toBe('Pythagorean theorem in 3D');
     expect(loaded.step).toBe(7);
     expect(loaded.points).toBe(30);
-    expect(loaded.answers).toHaveLength(3);
+    expect(loaded.answers).toEqual(progress.answers);
   });
 
   it('keeps playing normally after loading', () => {
@@ -144,14 +147,14 @@ describe('PlayerProgress saving', () => {
 
     expect(loaded.step).toBe(8);
     expect(loaded.points).toBe(35);
-    expect(loaded.answers.at(-1)).toEqual({ step: 8, result: 'tooShort' });
+    expect(loaded.answers.at(-1)).toEqual({ step: 8, ...level2, result: 'tooShort' });
   });
 
   it('does not share data with the saved copy', () => {
     const progress = playedGame();
     const saved = progress.toJSON();
 
-    saved.answers.push({ step: 99, result: 'fits' });
+    saved.answers.push({ step: 99, ...level2, result: 'fits' });
     saved.answers[0].result = 'fits';
     const loaded = PlayerProgress.fromJSON(saved);
     saved.answers.length = 0;
@@ -166,19 +169,62 @@ describe('PlayerProgress saving', () => {
     const bad: unknown[] = [
       null,
       'not a save',
-      { ...good, version: 2 },
+      { ...good, version: 1 },
+      { ...good, version: 3 },
       { ...good, seed: -1 },
       { ...good, level: 0 },
       { ...good, step: 1.5 },
       { ...good, points: '30' },
       { ...good, topic: undefined },
       { ...good, answers: 'none' },
-      { ...good, answers: [{ step: 0, result: 'maybe' }] },
-      { ...good, answers: [{ step: -1, result: 'fits' }] },
+      { ...good, answers: [{ step: 0, ...level1, result: 'maybe' }] },
+      { ...good, answers: [{ step: -1, ...level1, result: 'fits' }] },
+      { ...good, answers: [{ step: 0, result: 'fits' }] },
+      { ...good, answers: [{ step: 0, level: 0, topic: level1.topic, result: 'fits' }] },
+      { ...good, answers: [{ step: 0, level: 1, topic: 7, result: 'fits' }] },
     ];
 
     for (const saved of bad) {
       expect(() => PlayerProgress.fromJSON(saved as SavedProgress)).toThrow();
     }
+  });
+});
+describe('level attempt saving (#87)', () => {
+  it('loads an older save without levelAttempts', () => {
+    const oldSave: SavedProgress = {
+      version: 2,
+      seed: 42,
+      level: 1,
+      step: 3,
+      points: 10,
+      topic: 'Pythagorean theorem in 2D',
+      answers: [{ step: 2, level: 1, topic: 'Pythagorean theorem in 2D', result: 'fits' }],
+    };
+
+    const loaded = PlayerProgress.fromJSON(oldSave);
+
+    expect(loaded.levelAttempts).toEqual([]);
+    expect(loaded.points).toBe(10);
+    expect(loaded.answers).toEqual(oldSave.answers);
+
+    loaded.recordLevelAttempt(1, 20);
+    expect(loaded.levelAttempts).toEqual([
+      { level: 1, points: 20 },
+    ]);
+  });
+
+  it('keeps zero-score attempts through saving and loading', () => {
+    const progress = new PlayerProgress(42);
+    progress.recordLevelAttempt(1, 0);
+    progress.recordLevelAttempt(1, 30);
+
+    const loaded = PlayerProgress.fromJSON(
+      JSON.parse(JSON.stringify(progress)),
+    );
+
+    expect(loaded.levelAttempts).toEqual([
+      { level: 1, points: 0 },
+      { level: 1, points: 30 },
+    ]);
   });
 });

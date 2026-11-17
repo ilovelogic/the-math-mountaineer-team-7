@@ -13,6 +13,7 @@ Imports nothing. Change a number here instead of in code.
 - [dialogueScripts](#dialoguescripts)
 - [shopText](#shoptext)
 - [duelText](#dueltext)
+- [hintText](#hinttext)
 - [settings](#settings)
 
 ---
@@ -34,10 +35,10 @@ Lists the game's script, which is every step in the order the player meets it, s
    - `levelDone`: The end of a level. GameFlow picks the "all points" or "under 100%" message based on the level's points.
    - `medal`: The end screen.
    - `shopOffer`: A shop asks whether the player wants to come in, with its `shop` (`'supplies'` or `'clothing'`). It must come right before that shop's `shopGame` step, which GameFlow checks when it starts: accepting plays the mini-game, and declining skips it with no points.
-   - `shopGame`: The shop's mini-game, the math duel (#55) or the zipline (#61). Neither is built yet, so the current script has no shop steps.
+   - `shopGame`: The shop's mini-game, the math duel (#55) or the zipline (#61). A supplies `shopGame` must have a Level done step somewhere after it, since winning the duel skips to the step after it, and GameFlow checks this when it starts.
 
 **The current script**\
-Starts with the intro and the "how crossing works" scene, followed by three levels of five chasms each. Levels 1 and 2 end with a Level done step, while Level 3 goes straight to the medal. As a result of each chasm being its own step, a closed tab loses at most one chasm.
+Starts with the intro, then the supply shop and its math duel, then the "how crossing works" scene, followed by three levels of five chasms each. Levels 1 and 2 end with a Level done step, while Level 3 goes straight to the medal. Winning the duel and taking the shortcut skips Level 1 (and the crossing scene) for its 50 points, going straight to the start of Level 2. Level 2 opens at the clothing shop, whose zipline challenge pays 50 points for the right answer. As a result of each chasm being its own step, a closed tab loses at most one chasm.
 
 ---
 
@@ -61,11 +62,21 @@ Stores each shop's offer: what the shop says when the player walks up to it, and
 ## duelText
 
 **Purpose**\
-Stores the math duel's text, one entry per page of the "Mini-game 1: Math duel" mockups (`challenge`, `tutorialOffer`, `tutorial`, `duel`, `won`, `climb`, `lost` and `solution`), each with its words and its buttons in the order they're shown. DuelShopController decides where each button leads. The duel page's buttons are the question's options, so it lists none, and the tutorial and solution text stand in until #158 draws those pages.
+Stores the math duel's text, one entry per page of the "Mini-game 1: Math duel" mockups (`challenge`, `tutorialOffer`, `tutorial`, `duel`, `won`, `climb`, `lost` and `solution`), each with its words and its buttons in the order they're shown. DuelShopController decides where each button leads. The duel page's buttons are the question's options, so it lists none. The tutorial and solution pages say how to use the theorem in words, while DuelScreen draws the triangle and the worked steps from the question's numbers. The duel page's text goes on the card with the question instead of in the dialog box. `ownerProgressText` holds the words beside the store owner's progress pie on the duel page.
+
+**The Explanation card**\
+`duelExplanation` holds the words on the lost page's gray card: a title, `Correct answer: {answer}`, where DuelScreen puts the question's answer, and the line under it.
+
+---
+
+## hintText
+
+**Purpose**\
+Stores the chasm hint's words, as in the "Pick a log: hint open" mockup (#84): the Hint button's label, the formula and its caption for the formula card, and the line and Back button the dialog box shows while the card is open. Keeping them here means rewording the hint never touches the chasm screen.
 
 ---
 
 ## settings
 
 **Purpose**\
-Keeps the values we expect to tweak while playtesting, each with a comment explaining what it does. Today, that's `pointsPerChasm` (10, matching the "+10" in the mockups), `medalLimits` (150, 135, 105 and 75, which are 100%, 90%, 70% and 50% of the 150 points a player can earn, matching the Medal requirements card), `dialogueTransitionMs` (250, how long clicks are ignored after a dialogue box changes), and `loadingScreenDelayMs` (1000, how long loading can take before the loading screen appears, long enough that the sounds' 400 to 500 ms warm-up on a normal load never shows it). Feature toggles will join them as those features land.
+Keeps the values we expect to tweak while playtesting, each with a comment explaining what it does. Today, that's `pointsPerChasm` (10, matching the "+10" in the mockups), `medalLimits` (150, 135, 105 and 75, which are 100%, 90%, 70% and 50% of the 150 points a player can earn, matching the Medal requirements card), `dialogueTransitionMs` (250, how long clicks are ignored after a dialogue box changes), and `loadingScreenDelayMs` (1000, how long loading can take before the loading screen appears, long enough that the sounds' 400 to 500 ms warm-up on a normal load never shows it), and `ownerSolveMs` (30000, how long the store owner takes to solve the duel question, a first guess to tune in playtesting). Feature toggles will join them as those features land.
