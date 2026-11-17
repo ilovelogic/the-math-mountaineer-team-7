@@ -149,7 +149,7 @@ describe('controller/GameFlow', () => {
     play(steps, FIRST_CHASM);
     pickRight();
     expect(progress.points).toBe(10);
-    expect(progress.answers).toEqual([{ step: FIRST_CHASM, result: 'fits' }]);
+    expect(progress.answers).toEqual([{ step: FIRST_CHASM, level: 1, topic: TOPIC, result: 'fits' }]);
     expect(hud.update).toHaveBeenCalledWith(progress, 1);
     expect(hud.showPointsGained).toHaveBeenCalledWith(10);
     expect(cues).toEqual(['fits']);
@@ -161,7 +161,7 @@ describe('controller/GameFlow', () => {
     pickWrong();
     const result = chasm.logs[(chasm.correct + 1) % chasm.logs.length] < chasm.c ? 'tooShort' : 'tooLong';
     expect(progress.points).toBe(0);
-    expect(progress.answers).toEqual([{ step: FIRST_CHASM, result }]);
+    expect(progress.answers).toEqual([{ step: FIRST_CHASM, level: 1, topic: TOPIC, result }]);
     expect(cues).toEqual([result]);
   });
 
@@ -277,7 +277,7 @@ it('saves checkpoints to actual storage after every step', () => {
   });
 
   it('resumes from the step a save points at', () => {
-    progress = PlayerProgress.fromJSON({ version: 1, seed: SEED, level: 1, step: FIRST_CHASM + 2, points: 20, topic: TOPIC, answers: [] });
+    progress = PlayerProgress.fromJSON({ version: 2, seed: SEED, level: 1, step: FIRST_CHASM + 2, points: 20, topic: TOPIC, answers: [] });
     play();
     expect(kinds()).toEqual(['chasm']);
     expect(last().request).toEqual({ kind: 'chasm', chasm: makeChasm(SEED, 1, 2) });
