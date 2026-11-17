@@ -13,6 +13,7 @@ Imports nothing. Change a number here instead of in code.
 - [dialogueScripts](#dialoguescripts)
 - [shopText](#shoptext)
 - [duelText](#dueltext)
+- [ziplineText](#ziplinetext)
 - [hintText](#hinttext)
 - [settings](#settings)
 
@@ -66,6 +67,13 @@ Stores the math duel's text, one entry per page of the "Mini-game 1: Math duel" 
 
 **The Explanation card**\
 `duelExplanation` holds the words on the lost page's gray card: a title, `Correct answer: {answer}`, where DuelScreen puts the question's answer, and the line under it.
+
+---
+
+## ziplineText
+
+**Purpose**\
+Stores the zipline shop's text, one entry per page of the "Mini-game 2: Clothing shop" mockups (`deal`, `problem`, `tutorial`, `answer`, `right`, `wrong`, `solution`, `onwardDressed` and `onwardPacked`), each with its words and its buttons in the order they're shown. ZiplineShopController decides where each button leads. The answer page's buttons are the engineers' three guesses, so it lists none. Where the text needs the problem's numbers, it says `{length}`, `{width}`, `{height}`, `{floor}`, `{squared}` or `{diagonal}`, and `fillZiplineText` in [model/](../model/README.md#zipline) fills them in.
 
 ---
 
