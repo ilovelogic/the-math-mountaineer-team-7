@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import {ChasmController, type ChasmView, type ChasmSolutionView } from '../../src/controller/ChasmController';
 import type { Outcome } from '../../src/controller/Screen';
+import type { PickResult } from '../../src/model/rules';
 
 const chasm = {
     a: 3,
@@ -397,4 +398,41 @@ const   controller = new ChasmController(screen, solutionScreen, chasm);
         screen.clickHint();
         expect(screen.showHintCalls).toBe(0);
     });
+
+    /** Starts a controller that records the sounds it plays, on fresh stand-ins. */
+    function startListening() {
+        const screen = new FakeChasmScreen();
+        const onDone = vi.fn();
+        const cues: PickResult[] = [];
+        new ChasmController(screen, new FakeChasmSolutionScreen(), chasm, (cue) => cues.push(cue)).start(onDone);
+        return { screen, onDone, cues };
+    }
+
+    it('plays the matching sound as soon as a log is picked, before anything is reported', () => {
+        const short = startListening();
+        short.screen.clickLog(0);
+        expect(short.cues).toEqual(['tooShort']);
+        expect(short.onDone).not.toHaveBeenCalled();
+
+        const fits = startListening();
+        fits.screen.clickLog(1);
+        expect(fits.cues).toEqual(['fits']);
+
+        const long = startListening();
+        long.screen.clickLog(2);
+        expect(long.cues).toEqual(['tooLong']);
+    });
+
+    it('plays only one sound per chasm, however the player goes on', () => {
+        const { screen, onDone, cues } = startListening();
+        screen.clickLog(0);
+        screen.clickLog(1);
+        screen.clickChoice(0);
+        screen.clickChoice(0);
+        expect(onDone).toHaveBeenCalledTimes(1);
+        expect(cues).toEqual(['tooShort']);
+    });
 });
+// Optional documentation
+// - (cue) => cues.push(cue): stands in for the sound player, writing down each sound's name instead of playing it.
+// - expect(fn).toHaveBeenCalledTimes(n): passes if the stand-in function was called exactly n times.

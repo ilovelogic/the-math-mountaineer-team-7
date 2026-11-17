@@ -3,6 +3,7 @@ import { shopOffers } from '../content/shopText';
 import type { DialogueLine } from '../model/Dialogue';
 import { levelDoneLines } from '../model/levelDone';
 import type { ProgressView } from '../model/PlayerProgress';
+import type { PickResult } from '../model/rules';
 import { ChasmScreen } from '../view/ChasmScreen';
 import { DuelScreen } from '../view/DuelScreen';
 import { OwnerProgress } from '../view/OwnerProgress';
@@ -23,10 +24,15 @@ import { solutionSteps } from '../model/problems';
 /**
  * Builds the screen for each step GameFlow plays, so GameFlow never needs to know
  * which controller or view a step uses. `main.ts` makes one factory with the stage's
- * layers and the player's progress, and hands it to GameFlow as `makeScreen`. Adding
- * a new kind of screen means adding one case here, and nothing else in GameFlow moves.
+ * layers, the player's progress and the sound player, and hands it to GameFlow as
+ * `makeScreen`. Adding a new kind of screen means adding one case here, and nothing
+ * else in GameFlow moves.
  */
-export function createScreenFactory(layers: Layers, progress: ProgressView): (request: ScreenRequest) => Screen {
+export function createScreenFactory(
+  layers: Layers,
+  progress: ProgressView,
+  playCue: (cue: PickResult) => void = () => {},
+): (request: ScreenRequest) => Screen {
   return (request) => {
     switch (request.kind) {
       case 'dialogue':
@@ -39,7 +45,8 @@ export function createScreenFactory(layers: Layers, progress: ProgressView): (re
             request.chasm,
             solutionSteps(request.chasm)
           ),
-          request.chasm
+          request.chasm,
+          playCue,
         );
       case 'levelDone':
         return new DialogueController(layers, levelDoneLines(request.level, request.points, request.possiblePoints));
@@ -61,6 +68,7 @@ export function createScreenFactory(layers: Layers, progress: ProgressView): (re
   };
 }
 // Optional documentation
+// - playCue: (cue: PickResult) => void = () => {}: a default value, a function that does nothing, used when no third argument is passed, as in tests that don't check sounds.
 // - (layers, progress): (request: ScreenRequest) => Screen: the return type is itself a function type, so createScreenFactory returns a function that GameFlow calls once per step.
 // - return (request) => { ... }: the function it returns still has access to `layers` and `progress` after createScreenFactory has finished, so each screen it builds draws into the same layers.
 // - const unhandled: never = request: `never` is the type with no possible values. If every kind has a case above, `request` can't reach here, so this compiles; add a kind without a case and the build fails on this line.
