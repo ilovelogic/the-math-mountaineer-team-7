@@ -6,11 +6,18 @@ type ChasmStep = Extract<Step, { kind: 'chasm' }>;
 const chasmSteps = steps.filter((step): step is ChasmStep => step.kind === 'chasm');
 
 describe('content/levels', () => {
-  it('opens with the intro and the crossing tutorial', () => {
-    expect(steps.slice(0, 2)).toEqual([
+  it('opens with the intro, the supply shop and its duel, then the crossing tutorial (#134)', () => {
+    expect(steps.slice(0, 4)).toEqual([
       { kind: 'dialogue', script: 'intro' },
+      { kind: 'shopOffer', shop: 'supplies' },
+      { kind: 'shopGame', shop: 'supplies' },
       { kind: 'dialogue', script: 'howCrossingWorks' },
     ]);
+  });
+
+  it('puts the supply shop before Level 1’s chasms, so winning its duel can skip them', () => {
+    const duel = steps.findIndex((step) => step.kind === 'shopGame' && step.shop === 'supplies');
+    expect(duel).toBeLessThan(steps.indexOf(chasmSteps[0]));
   });
 
   it('ends with the medal', () => {
@@ -41,8 +48,8 @@ describe('content/levels', () => {
       { kind: 'shopGame', shop: 'clothing', topic: TOPIC_3D },
       { kind: 'chasm', level: 2, topic: chasmSteps[0].topic, index: 0 },
     ]);
-    const shopSteps = steps.filter((step) => step.kind === 'shopOffer' || step.kind === 'shopGame');
-    expect(shopSteps).toHaveLength(2);
+    const clothingSteps = steps.filter((step) => (step.kind === 'shopOffer' || step.kind === 'shopGame') && step.shop === 'clothing');
+    expect(clothingSteps).toHaveLength(2);
   });
 
   it('gives every chasm step a topic and a problem makeChasm can build', () => {

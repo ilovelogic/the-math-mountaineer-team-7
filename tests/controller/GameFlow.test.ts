@@ -79,6 +79,20 @@ const shownZipline = () => (last().request as { kind: 'shopGame'; shop: 'clothin
 /** Reports the right guess, or a wrong one, on the zipline problem being shown. */
 const guessZipline = (right: boolean) =>
   last().report({ kind: 'choice', index: (shownZipline().correct + (right ? 0 : 1)) % shownZipline().options.length });
+/**
+ * Plays on from the current screen to the medal: every pick right, every shop accepted,
+ * the zipline guessed right, and the duel ending with `duel`.
+ */
+function playToMedal(duel: number): void {
+  while (last().request.kind !== 'medal') {
+    const request = last().request;
+    if (request.kind === 'chasm') pickRight();
+    else if (request.kind === 'shopOffer') last().report({ kind: 'choice', index: ACCEPT });
+    else if (request.kind === 'shopGame' && request.shop === 'clothing') guessZipline(true);
+    else if (request.kind === 'shopGame') last().report({ kind: 'choice', index: duel });
+    else done();
+  }
+}
 
 describe('controller/GameFlow', () => {
   it('updates the topic for Mini-game 2 and restores it for chasms', () => {
@@ -111,9 +125,11 @@ describe('controller/GameFlow', () => {
   it('plays the steps in order, one screen at a time', () => {
     play();
     done();
+    last().report({ kind: 'choice', index: DECLINE });
     done();
     expect(screens.map((screen) => screen.request)).toEqual([
       { kind: 'dialogue', script: 'intro' },
+      { kind: 'shopOffer', shop: 'supplies' },
       { kind: 'dialogue', script: 'howCrossingWorks' },
       { kind: 'chasm', chasm: makeChasm(SEED, 1, 0) },
     ]);
@@ -149,7 +165,7 @@ describe('controller/GameFlow', () => {
     play(steps, FIRST_CHASM);
     pickRight();
     expect(progress.points).toBe(10);
-    expect(progress.answers).toEqual([{ step: FIRST_CHASM, result: 'fits' }]);
+    expect(progress.answers).toEqual([{ step: FIRST_CHASM, level: 1, topic: TOPIC, result: 'fits' }]);
     expect(hud.update).toHaveBeenCalledWith(progress, 1);
     expect(hud.showPointsGained).toHaveBeenCalledWith(10);
     expect(cues).toEqual(['fits']);
@@ -161,16 +177,17 @@ describe('controller/GameFlow', () => {
     pickWrong();
     const result = chasm.logs[(chasm.correct + 1) % chasm.logs.length] < chasm.c ? 'tooShort' : 'tooLong';
     expect(progress.points).toBe(0);
-    expect(progress.answers).toEqual([{ step: FIRST_CHASM, result }]);
+    expect(progress.answers).toEqual([{ step: FIRST_CHASM, level: 1, topic: TOPIC, result }]);
     expect(cues).toEqual([result]);
   });
 
   it('saves a checkpoint after every step, pointing at the step to play next', () => {
     play();
     done();
+    last().report({ kind: 'choice', index: DECLINE });
     done();
     pickRight();
-    expect(saves.map((saved) => saved.step)).toEqual([1, 2, 3]);
+    expect(saves.map((saved) => saved.step)).toEqual([1, FIRST_CHASM - 1, FIRST_CHASM, FIRST_CHASM + 1]);
     expect(saves.at(-1)).toEqual(progress.toJSON());
     expect(saves.at(-1)?.points).toBe(10);
   });
@@ -197,6 +214,8 @@ it('saves checkpoints to actual storage after every step', () => {
   done();
   expect(store.load()?.step).toBe(1);
 
+  // Turn down the supply shop, then finish the crossing scene.
+  screens[screens.length - 1].report({ kind: 'choice', index: DECLINE });
   done();
   expect(store.load()?.step).toBe(FIRST_CHASM);
 
@@ -210,15 +229,11 @@ it('saves checkpoints to actual storage after every step', () => {
 });
   it('plays the whole game through to the medal', () => {
     play();
-    while (last().request.kind !== 'medal') {
-      if (last().request.kind === 'chasm') pickRight();
-      else if (last().request.kind === 'shopGame') guessZipline(true);
-      else done();
-    }
+    playToMedal(DUEL_RESULT.notWon);
     expect(last().request).toEqual({ kind: 'medal', points: 200 });
     expect(kinds().filter((kind) => kind === 'chasm')).toHaveLength(15);
     expect(kinds().filter((kind) => kind === 'levelDone')).toHaveLength(2);
-    expect(kinds().filter((kind) => kind === 'shopGame')).toHaveLength(1);
+    expect(kinds().filter((kind) => kind === 'shopGame')).toHaveLength(2);
   });
 
   /** Plays Level 1's five chasms from its first one, getting the first `right` of them right. */
@@ -277,7 +292,7 @@ it('saves checkpoints to actual storage after every step', () => {
   });
 
   it('resumes from the step a save points at', () => {
-    progress = PlayerProgress.fromJSON({ version: 1, seed: SEED, level: 1, step: FIRST_CHASM + 2, points: 20, topic: TOPIC, answers: [] });
+    progress = PlayerProgress.fromJSON({ version: 2, seed: SEED, level: 1, step: FIRST_CHASM + 2, points: 20, topic: TOPIC, answers: [] });
     play();
     expect(kinds()).toEqual(['chasm']);
     expect(last().request).toEqual({ kind: 'chasm', chasm: makeChasm(SEED, 1, 2) });
@@ -308,13 +323,14 @@ it('saves checkpoints to actual storage after every step', () => {
   });
 });
 
-// The supply shop isn't in the real script until #134 adds it, so these tests use
-// their own, with the supply shop between the intro and the crossing tutorial as in the mockups.
+// A short script with the supply shop between the intro and the crossing tutorial, as in
+// the real one. It ends with a Level done step, since a duel needs one to skip to.
 const SHOP_SCRIPT: Step[] = [
   { kind: 'dialogue', script: 'intro' },
   { kind: 'shopOffer', shop: 'supplies' },
   { kind: 'shopGame', shop: 'supplies' },
   { kind: 'dialogue', script: 'howCrossingWorks' },
+  { kind: 'levelDone', level: 1 },
 ];
 const OFFER = 1;
 const pickOffer = (index: number) => last().report({ kind: 'choice', index });
@@ -344,7 +360,7 @@ describe('controller/GameFlow shop offers (#52, #53)', () => {
   });
 
   it('ends the game when the declined mini-game was the last step', () => {
-    play(SHOP_SCRIPT.slice(0, 3), OFFER);
+    play([{ kind: 'dialogue', script: 'intro' }, ...ZIPLINE_SCRIPT.slice(0, 2)], OFFER);
     pickOffer(DECLINE);
     expect(kinds()).toEqual(['shopOffer']);
     expect(last().stopped).toBe(false);
@@ -405,11 +421,14 @@ describe('controller/GameFlow zipline shop (#175)', () => {
   });
 });
 
-// Issue #55: the duel is given the question made from the game's seed, and until #134
-// acts on how it ended, every ending goes on to the next step with no points.
+// Issues #55 and #134: the duel is given the question made from the game's seed, and
+// GameFlow carries on from the right place however it ends.
 const DUEL = 2;
+const REAL_DUEL = steps.findIndex((step) => step.kind === 'shopGame' && step.shop === 'supplies');
+/** Where Level 2 starts in the real script: the step after Level 1's Level done. */
+const LEVEL_2_START = steps.findIndex((step) => step.kind === 'levelDone' && step.level === 1) + 1;
 
-describe('controller/GameFlow math duel (#55)', () => {
+describe('controller/GameFlow math duel (#55, #134)', () => {
   it('gives the duel the question made from the game’s seed', () => {
     play(SHOP_SCRIPT, DUEL);
     expect(last().request).toEqual({ kind: 'shopGame', shop: 'supplies', question: makeDuelQuestion(SEED) });
@@ -423,17 +442,65 @@ describe('controller/GameFlow math duel (#55)', () => {
     expect(last().request).toEqual(first);
   });
 
-  it.each(Object.entries(DUEL_RESULT))('goes on to the next step with no points when the duel reports %s, until #134', (_, result) => {
-    play(SHOP_SCRIPT, DUEL);
+  it.each([
+    ['turning down the gear', DUEL_RESULT.normalPath],
+    ['losing or leaving', DUEL_RESULT.notWon],
+  ])('goes on to the crossing scene with no points after %s', (_, result) => {
+    play(steps, REAL_DUEL);
     last().report({ kind: 'choice', index: result });
     expect(last().request).toEqual({ kind: 'dialogue', script: 'howCrossingWorks' });
     expect(progress.points).toBe(0);
+    expect(hud.showPointsGained).not.toHaveBeenCalled();
+  });
+
+  it('skips Level 1 on a win with the climb, going straight to the start of Level 2', () => {
+    play(steps, REAL_DUEL);
+    last().report({ kind: 'choice', index: DUEL_RESULT.skipLevel });
+    expect(last().request).toEqual(requestAt(LEVEL_2_START));
+    expect(kinds()).not.toContain('chasm');
+    expect(kinds()).not.toContain('levelDone');
+  });
+
+  it('gives Level 1’s 50 points for skipping it, and shows them on the Hud', () => {
+    play(steps, REAL_DUEL);
+    last().report({ kind: 'choice', index: DUEL_RESULT.skipLevel });
+    expect(progress.points).toBe(50);
+    expect(hud.showPointsGained).toHaveBeenCalledWith(50);
+    expect(hud.update).toHaveBeenLastCalledWith(progress, undefined);
+  });
+
+  it('saves the skip, so a reload continues at the start of Level 2 with the points', () => {
+    play(steps, REAL_DUEL);
+    last().report({ kind: 'choice', index: DUEL_RESULT.skipLevel });
+    expect(saves.at(-1)).toMatchObject({ step: LEVEL_2_START, points: 50 });
+  });
+
+  it('counts the skipped level’s points in the medal at the end', () => {
+    play();
+    playToMedal(DUEL_RESULT.skipLevel);
+    // 50 for skipping Level 1, 100 for Levels 2 and 3, and 50 for the zipline.
+    expect(last().request).toEqual({ kind: 'medal', points: 200 });
+    expect(kinds().filter((kind) => kind === 'chasm')).toHaveLength(10);
+    expect(kinds().filter((kind) => kind === 'levelDone')).toHaveLength(1);
+  });
+
+  it('throws a clear error for a script where the duel has no Level done after it', () => {
+    const script: Step[] = SHOP_SCRIPT.slice(0, 4);
+    expect(() => play(script)).toThrow("The supply shop's duel at step 2 needs a Level done step after it");
   });
 });
+
+/** What GameFlow asks for at `index` of the real script, for steps that need nothing from the seed. */
+function requestAt(index: number): ScreenRequest {
+  const step = steps[index];
+  if (step.kind !== 'shopOffer') throw new Error(`Step ${index} isn't a shop offer.`);
+  return { kind: 'shopOffer', shop: step.shop };
+}
 
 // Optional documentation
 // - Stand-in screen: an object with the same start/stop methods as a real screen, which records what it was asked for and reports only when the test calls report().
 // - vi.fn<Hud['update']>(): a stand-in function with the same type as the Hud's method that records each call, so a test can check it with toHaveBeenLastCalledWith.
+// - toMatchObject({ step, points }): passes when the object has at least these values, ignoring its other fields.
 // - steps.findIndex(...): the position of the first step the function returns true for, so the tests don't break when a scene is added before the first chasm.
 // - play(steps, FIRST_CHASM): starts at the first chasm, as if loading a save there.
 // - expect(fn).not.toHaveBeenCalled(): passes when the stand-in function was never called.

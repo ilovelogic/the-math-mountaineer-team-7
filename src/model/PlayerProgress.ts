@@ -1,8 +1,14 @@
 import type { PickResult } from './rules';
 
-/** One pick the player made: which step it was on and how the log fit. */
+/**
+ * One pick the player made: which step it was on, the level and topic it belonged to,
+ * and how the log fit. Only `'fits'` is right (see `isRight`). The level and topic are
+ * stored rather than looked up from `step`, so results by topic need only the answers.
+ */
 export interface Answer {
   step: number;
+  level: number;
+  topic: string;
   result: PickResult;
 }
 /** Score earned in one completed attempt at a level. */
@@ -19,10 +25,11 @@ export interface Place {
 
 /**
  * PlayerProgress as plain data, safe for `JSON.stringify`. SaveStore stores this.
- * `version` lets a later save format tell old saves apart.
+ * `version` lets a later save format tell old saves apart. Version 2 added each
+ * answer's level and topic; a version 1 save is refused, since its answers lack them.
  */
 export interface SavedProgress {
-  version: 1;
+  version: 2;
   seed: number;
   level: number;
   step: number;
@@ -138,18 +145,18 @@ export class PlayerProgress {
     this._step = step;
   }
 
-  /** Records a pick on the current step. */
+  /** Records a pick on the current step, with the current level and topic. */
   recordAnswer(result: PickResult): void {
     if (!FITS.includes(result)) {
       throw new Error(`Unknown pick result: ${String(result)}`);
     }
-    this._answers.push({ step: this._step, result });
+    this._answers.push({ step: this._step, level: this._level, topic: this._topic, result });
   }
 
   /** Plain data for saving. Returns copies, so changing them doesn't change the progress. */
   toJSON(): SavedProgress {
     return {
-      version: 1,
+      version: 2,
       seed: this.seed,
       level: this._level,
       step: this._step,
@@ -168,7 +175,7 @@ export class PlayerProgress {
     if (typeof saved !== 'object' || saved === null) {
       throw new Error('Saved progress must be an object');
     }
-    if (saved.version !== 1) {
+    if (saved.version !== 2) {
       throw new Error(`Unknown save version: ${String(saved.version)}`);
     }
     checkWholeNumber('points', saved.points, 0);
@@ -180,12 +187,13 @@ export class PlayerProgress {
         throw new Error('Saved answers are not valid');
       }
       checkWholeNumber('answer step', answer.step, 0);
+      checkPlace(answer);
     }
 
     const progress = new PlayerProgress(saved.seed, { level: saved.level, topic: saved.topic });
     progress.moveTo(saved.step);
     progress._points = saved.points;
-    progress._answers = saved.answers.map((answer) => ({ step: answer.step, result: answer.result }));
+    progress._answers = saved.answers.map(({ step, level, topic, result }) => ({ step, level, topic, result }));
 
     if (saved.levelAttempts !== undefined) {
       if (!Array.isArray(saved.levelAttempts)) {

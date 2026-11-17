@@ -6,6 +6,7 @@ import { checkPick, makeChasm, makeDuelQuestion, type Chasm, type DuelQuestion }
 import { pointsFor, ziplinePoints, type PickResult } from '../model/rules';
 import { checkZiplineAnswer, makeZiplineProblem, type ZiplineProblem } from '../model/zipline';
 import type { Hud } from '../view/Hud';
+import { DUEL_RESULT } from './DuelShopController';
 import type { Outcome, Screen } from './Screen';
 
 /**
@@ -59,6 +60,7 @@ export class GameFlow {
   ) {
     steps.forEach((step, index) => {
       if (step.kind === 'shopOffer') requireShopGameAfter(steps, index, step.shop);
+      if (step.kind === 'shopGame' && step.shop === 'supplies') levelDoneAfter(steps, index);
     });
   }
 
@@ -124,8 +126,8 @@ export class GameFlow {
 
   /**
    * Acts on what the screen reported and gives the position of the step to play next.
-   * The duel reports how it ended (DUEL_RESULT), but nothing acts on that yet, so play
-   * goes on to the next step either way; skipping Level 1 on a win comes with #134.
+   * Winning the duel and taking the shortcut skips the rest of the level; every other
+   * way the duel ends (turning down the gear, losing, or leaving) goes on to the next step.
    */
   private nextAfter(index: number, request: ScreenRequest, outcome: Outcome): number {
     const step = this.steps[index];
@@ -142,6 +144,9 @@ export class GameFlow {
     }
     if (request.kind === 'shopGame' && request.shop === 'clothing' && outcome.kind === 'choice') {
       this.scoreZipline(request.problem, outcome.index);
+    }
+    if (request.kind === 'shopGame' && request.shop === 'supplies' && outcome.kind === 'choice' && outcome.index === DUEL_RESULT.skipLevel) {
+      return this.skipLevel(index);
     }
     const missedPoints = request.kind === 'levelDone' && request.points < request.possiblePoints;
     if (missedPoints && outcome.kind === 'choice' && outcome.index === RESTART) {
@@ -177,6 +182,27 @@ export class GameFlow {
     const points = ziplinePoints(checkZiplineAnswer(problem, guess), settings);
     this.progress.addPoints(points);
     this.options.hud?.showPointsGained(points);
+  }
+
+  /**
+   * The duel was won and the player climbed past the rest of the level: award the level's
+   * points and give the position of the step after its Level done, the start of the next
+   * level. No answers are recorded, since no chasm was played.
+   */
+  private skipLevel(duelIndex: number): number {
+    const levelDone = levelDoneAfter(this.steps, duelIndex);
+    const points = this.skippedLevelPoints(levelDone.level);
+    this.progress.addPoints(points);
+    this.options.hud?.showPointsGained(points);
+    return levelDone.position + 1;
+  }
+
+  /**
+   * Stands in for #58's skip-level rule until it lands: every point the skipped level
+   * could have earned, worked out from settings as Level done does (50 for Level 1).
+   */
+  private skippedLevelPoints(level: number): number {
+    return this.chasmStepsOf(level).length * settings.pointsPerChasm;
   }
 
   /** The level and topic to move to, when the step at `index` is a chasm. */
@@ -237,3 +263,19 @@ function requireShopGameAfter(steps: readonly Step[], index: number, shop: Shop)
 }
 // Optional documentation
 // - next?.kind: reads kind only if there is a next step; past the end of the list it gives undefined, which fails the check.
+
+/**
+ * Winning the duel skips to the step after the next Level done, so a duel must have one
+ * after it. Checking when GameFlow is made means a reordered script fails before anything
+ * is played, instead of a win having nowhere to go.
+ */
+function levelDoneAfter(steps: readonly Step[], index: number): { position: number; level: number } {
+  for (let position = index + 1; position < steps.length; position++) {
+    const step = steps[position];
+    if (step.kind === 'levelDone') return { position, level: step.level };
+  }
+  throw new Error(`The supply shop's duel at step ${index} needs a Level done step after it, for a win to skip to.`);
+}
+// Optional documentation
+// - { position: number; level: number }: gives back two values at once, where the Level done step is and which level it ends.
+// - if (step.kind === 'levelDone') return ...: after the check, TypeScript knows the step is a Level done one, so step.level is allowed.
