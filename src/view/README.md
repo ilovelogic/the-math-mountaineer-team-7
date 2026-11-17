@@ -21,6 +21,7 @@ May import Konva, other `view/` files, and `model/` or `content/` to read what t
   - [MedalScreen](#medalscreen)
   - [ShopOfferScreen](#shopofferscreen)
   - [DuelScreen](#duelscreen)
+  - [OwnerProgress](#ownerprogress)
   - [TitleScreen](#titlescreen)
   - [Hud](#hud)
 - [Still to come](#still-to-come)
@@ -147,6 +148,14 @@ Draws the math duel at the supply shop one page at a time, like the Math duel mo
 
 **How it's used**\
 `new DuelScreen(layers, question)` takes the duel question from `model/problems`. **`show(page, text, choices)`** draws a page with its text from `content/duelText` and its buttons, replacing the page before; **`onChoice`** registers the callback for a button click, and **`destroy`** removes everything. A click reports the button's position, and DuelShopController decides what it means.
+
+### OwnerProgress
+
+**Purpose**\
+Shows the store owner's race on the duel page (#57): a small white panel in the top-left corner, under the Hud's level tag, with a pie that fills over `settings.ownerSolveMs` beside "Store owner · Solving…" (words from `content/duelText`). The time comes from `Konva.Animation`'s frame time, not the wall clock.
+
+**How it's used**\
+`new OwnerProgress(layers.ui)` has the shape of DuelShopController's `OpponentTimer`, so it's passed straight to the controller. **`start(onFinish)`** draws an empty pie and starts filling it, calling `onFinish` once when it's full; **`stop()`** stops the animation and removes the panel, and is safe to call when it isn't running or from inside `onFinish`. Nothing is drawn until `start`, so the panel only appears on the duel page.
 
 ### TitleScreen
 
