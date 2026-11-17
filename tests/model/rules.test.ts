@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { settings } from '../../src/content/settings';
 import { PlayerProgress } from '../../src/model/PlayerProgress';
-import { isRight, pointsFor, resultsByTopic, ziplinePoints } from '../../src/model/rules';
+import { isRight, pointsFor, resultsByTopic, skippedLevelPoints, ziplinePoints } from '../../src/model/rules';
 
 /**
  * Checks how many points each chasm pick earns (issue #37). `pointsFor` takes
@@ -34,6 +34,23 @@ describe('ziplinePoints', () => {
 
   it('gives no points for a wrong answer', () => {
     expect(ziplinePoints(false, settings)).toBe(0);
+  });
+});
+
+// Issue #58: as with pointsFor, made-up settings catch a hard-coded 50.
+describe('skippedLevelPoints', () => {
+  it('awards the points in settings for skipping the level', () => {
+    expect(skippedLevelPoints(true, { ...settings, pointsPerSkippedLevel: 7 })).toBe(7);
+    expect(skippedLevelPoints(true, settings)).toBe(50);
+  });
+
+  it('gives no points when the level isn’t skipped, after a loss or turning down the gear', () => {
+    expect(skippedLevelPoints(false, settings)).toBe(0);
+    expect(skippedLevelPoints(false, { ...settings, pointsPerSkippedLevel: 7 })).toBe(0);
+  });
+
+  it('matches a perfect Level 1, so skipping it never changes which medal is reachable', () => {
+    expect(settings.pointsPerSkippedLevel).toBe(5 * settings.pointsPerChasm);
   });
 });
 

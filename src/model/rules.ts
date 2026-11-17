@@ -18,6 +18,15 @@ export function ziplinePoints(right: boolean, settings: Settings): number {
   return right ? settings.pointsPerZipline : 0;
 }
 
+/**
+ * Winning the math duel and taking the shortcut skips the level and earns its points.
+ * Every other ending earns nothing and changes nothing: turning down the gear, a wrong
+ * answer, the store owner finishing first (a loss, like a wrong answer), or leaving.
+ */
+export function skippedLevelPoints(skipped: boolean, settings: Settings): number {
+  return skipped ? settings.pointsPerSkippedLevel : 0;
+}
+
 /** Whether a pick was right: only the log that fits is. */
 export function isRight(result: PickResult): boolean {
   return result === 'fits';

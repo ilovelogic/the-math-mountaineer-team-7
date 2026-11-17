@@ -13,6 +13,12 @@ export interface Settings {
   medalLimits: MedalLimits;
   /** How many points the right answer at the zipline shop is worth, matching the +50 in the "Right answer" mockup. */
   pointsPerZipline: number;
+  /**
+   * How many points the player gets for skipping a level by winning the math duel and
+   * taking the shortcut. It's 50, Level 1's full points (5 chasms worth 10 each), so a
+   * skip earns the same as a perfect Level 1 and leaves the medal limits as they are.
+   */
+  pointsPerSkippedLevel: number;
   /** How long clicks are ignored after a dialogue box changes, so a fast double click never skips a box. */
   dialogueTransitionMs: number;
   /**
@@ -35,6 +41,7 @@ export const settings: Settings = {
   medalLimits: { diamond: 150, gold: 135, silver: 105, bronze: 75 },
   dialogueTransitionMs: 250,
   pointsPerZipline: 50,
+  pointsPerSkippedLevel: 50,
   loadingScreenDelayMs: 1000,
   ownerSolveMs: 30000,
 };
