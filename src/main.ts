@@ -12,6 +12,7 @@ import { TitleController } from './controller/TitleController';
 import type { PlayerProgress } from './model/PlayerProgress';
 import { SaveStore } from './model/SaveStore';
 import { loadAssets } from './view/assets';
+import { play as playSound } from './view/audio';
 import { loadFonts } from './view/fonts';
 import { Hud } from './view/Hud';
 import { showLoadingScreen } from './view/loadingScreen';
@@ -33,16 +34,19 @@ const store = new SaveStore(window.localStorage);
 function play(progress: PlayerProgress): void {
   // The Hud is made only now, so the title screen has no top bar, like its mockup.
   const hud = new Hud(layers);
-  const flow = new GameFlow(steps, progress, createScreenFactory(layers, progress), {
-  hud,
-  save: (saved) => store.save(saved),
-  load: () => store.load(),
-});
+  const flow = new GameFlow(steps, progress, createScreenFactory(layers, progress, playSound), {
+    hud,
+    // Wrapped in an arrow function so `save` still knows which SaveStore it belongs to.
+    save: (saved) => store.save(saved),
+    load: () => store.load(),
+    playCue: playSound,
+  });
   flow.run();
 }
 
 startGame(store.load(), steps.length - 1, (canContinue) => new TitleController(new TitleScreen(layers), canContinue), play);
 // Optional documentation
+// - import { play as playSound }: imports audio's `play` under another name, since this file already has its own `play`.
 // - await at the top level of a module: the rest of this file waits for the promise; it's allowed in ES modules, which Vite builds.
 // - const fontsReady = loadFonts(): starts loading the font without waiting for it, so the images and sounds load at the same time; `await fontsReady` waits for it later.
 // - showWhileSlow(loadAssets, ...): passes the loadAssets function itself, not its result, so showWhileSlow can start it with its own progress callback.
