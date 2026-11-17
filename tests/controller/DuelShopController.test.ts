@@ -148,6 +148,26 @@ describe('DuelShopController', () => {
     expect(timer.running).toBe(false);
   });
 
+  // Issue #58: the store owner finishing first is a loss, so it can only ever report not won.
+  it.each([
+    ['leaving', [1]],
+    ['seeing the solution', [0, 0]],
+  ])('reports not won after the store owner finishes first and the player ends by %s', (_, clicks) => {
+    clickLater(0, 1);
+    timer.finish();
+    clickLater(...clicks);
+    expect(reports).toEqual(reported(DUEL_RESULT.notWon));
+  });
+
+  it('ignores the right answer once the store owner has finished first', () => {
+    clickLater(0, 1);
+    timer.finish();
+    // RIGHT lands on the lost page, where it's the "leave" button, not an answer.
+    clickLater(RIGHT);
+    expect(view.pages.map((shown) => shown.page)).not.toContain('won');
+    expect(reports).toEqual(reported(DUEL_RESULT.notWon));
+  });
+
   it('runs the timer only on the duel page, and ignores the store owner finishing after an answer', () => {
     clickLater(0, 0);
     expect(timer.starts).toBe(0);

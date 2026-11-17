@@ -1,6 +1,7 @@
 import { SaveStore } from '../../src/model/SaveStore';
 import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 import { steps, type Step } from '../../src/content/levels';
+import { settings } from '../../src/content/settings';
 import { ACCEPT, DECLINE } from '../../src/content/shopText';
 import { DUEL_RESULT } from '../../src/controller/DuelShopController';
 import { GameFlow, newSeed, type ScreenRequest } from '../../src/controller/GameFlow';
@@ -467,6 +468,27 @@ describe('controller/GameFlow math duel (#55, #134)', () => {
     expect(progress.points).toBe(50);
     expect(hud.showPointsGained).toHaveBeenCalledWith(50);
     expect(hud.update).toHaveBeenLastCalledWith(progress, undefined);
+  });
+
+  // Issue #58: changing the setting changes the points, so they can't be a hard-coded 50.
+  it('takes the points for skipping from settings', () => {
+    const before = settings.pointsPerSkippedLevel;
+    settings.pointsPerSkippedLevel = 7;
+    try {
+      play(steps, REAL_DUEL);
+      last().report({ kind: 'choice', index: DUEL_RESULT.skipLevel });
+      expect(progress.points).toBe(7);
+      expect(hud.showPointsGained).toHaveBeenCalledWith(7);
+    } finally {
+      settings.pointsPerSkippedLevel = before;
+    }
+  });
+
+  it('changes nothing in the progress when the duel isn’t won, the store owner finishing first included', () => {
+    play(steps, REAL_DUEL);
+    const before = progress.toJSON();
+    last().report({ kind: 'choice', index: DUEL_RESULT.notWon });
+    expect(progress.toJSON()).toEqual({ ...before, step: REAL_DUEL + 1 });
   });
 
   it('saves the skip, so a reload continues at the start of Level 2 with the points', () => {

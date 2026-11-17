@@ -98,6 +98,9 @@ Small, pure rules that turn outcomes into points and, later, into decisions abou
 **Points**\
 **`pointsFor`** gives the points for a pick: only the log that fits earns any, and how many comes from `content/settings` (10 per chasm today). A log that's too short falls into the chasm, and one that's too long smashes the item waiting on the other side, so neither earns points.
 
+**Skipping a level**\
+**`skippedLevelPoints`** gives the points for the math duel (#58): winning and taking the shortcut skips the level and earns `pointsPerSkippedLevel` from `content/settings` (50 today, a perfect Level 1). Every other ending earns nothing, whether that's turning down the gear, a wrong answer, the store owner finishing first, or leaving. GameFlow does the jump past the level.
+
 **Results by topic**\
 **`isRight`** says whether a pick was right, which only the log that fits is. **`resultsByTopic`** takes the progress's `answers` and gives, for each topic in the order it was first played, its level, how many picks were right and how many were made. Every pick counts, including ones made again after a level restart. The end screen shows these counts.
 
@@ -142,4 +145,4 @@ In the game, `main.ts` passes in the browser's `localStorage`. In the tests, a p
 ## Still to come
 
    - **solutionSteps** (#48): The worked steps for finding the right log, using the chasm's own numbers, for the "How to find the right log" screen.
-   - **More rules**: Skipping a level after winning the duel (#58), the zipline's points (#63), and the easier round after struggling (#88).
+   - **More rules**: The zipline's points (#63) and the easier round after struggling (#88).

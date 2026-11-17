@@ -3,7 +3,7 @@ import { settings } from '../content/settings';
 import { DECLINE } from '../content/shopText';
 import type { Place, PlayerProgress, SavedProgress } from '../model/PlayerProgress';
 import { checkPick, makeChasm, makeDuelQuestion, type Chasm, type DuelQuestion } from '../model/problems';
-import { pointsFor, ziplinePoints, type PickResult } from '../model/rules';
+import { pointsFor, skippedLevelPoints, ziplinePoints, type PickResult } from '../model/rules';
 import { checkZiplineAnswer, makeZiplineProblem, type ZiplineProblem } from '../model/zipline';
 import type { Hud } from '../view/Hud';
 import { DUEL_RESULT } from './DuelShopController';
@@ -145,8 +145,9 @@ export class GameFlow {
     if (request.kind === 'shopGame' && request.shop === 'clothing' && outcome.kind === 'choice') {
       this.scoreZipline(request.problem, outcome.index);
     }
-    if (request.kind === 'shopGame' && request.shop === 'supplies' && outcome.kind === 'choice' && outcome.index === DUEL_RESULT.skipLevel) {
-      return this.skipLevel(index);
+    if (request.kind === 'shopGame' && request.shop === 'supplies' && outcome.kind === 'choice') {
+      const skipped = outcome.index === DUEL_RESULT.skipLevel;
+      if (skipped) return this.skipLevel(index, skippedLevelPoints(skipped, settings));
     }
     const missedPoints = request.kind === 'levelDone' && request.points < request.possiblePoints;
     if (missedPoints && outcome.kind === 'choice' && outcome.index === RESTART) {
@@ -185,24 +186,14 @@ export class GameFlow {
   }
 
   /**
-   * The duel was won and the player climbed past the rest of the level: award the level's
-   * points and give the position of the step after its Level done, the start of the next
-   * level. No answers are recorded, since no chasm was played.
+   * The duel was won and the player climbed past the rest of the level: award `points`
+   * (from the skip-level rule) and give the position of the step after its Level done,
+   * the start of the next level. No answers are recorded, since no chasm was played.
    */
-  private skipLevel(duelIndex: number): number {
-    const levelDone = levelDoneAfter(this.steps, duelIndex);
-    const points = this.skippedLevelPoints(levelDone.level);
+  private skipLevel(duelIndex: number, points: number): number {
     this.progress.addPoints(points);
     this.options.hud?.showPointsGained(points);
-    return levelDone.position + 1;
-  }
-
-  /**
-   * Stands in for #58's skip-level rule until it lands: every point the skipped level
-   * could have earned, worked out from settings as Level done does (50 for Level 1).
-   */
-  private skippedLevelPoints(level: number): number {
-    return this.chasmStepsOf(level).length * settings.pointsPerChasm;
+    return levelDoneAfter(this.steps, duelIndex).position + 1;
   }
 
   /** The level and topic to move to, when the step at `index` is a chasm. */
