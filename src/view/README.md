@@ -14,14 +14,17 @@ May import Konva, other `view/` files, and `model/` or `content/` to read what t
   - [theme](#theme)
   - [fonts and assets](#fonts-and-assets)
   - [loadingScreen](#loadingscreen)
+  - [audio](#audio)
 - [Shared components](#shared-components)
 - [Screens and the Hud](#screens-and-the-hud)
   - [ChasmScreen](#chasmscreen)
+  - [ChasmSolutionScreen](#chasmsolutionscreen)
   - [DialogueBox](#dialoguebox)
   - [MedalScreen](#medalscreen)
   - [ShopOfferScreen](#shopofferscreen)
   - [DuelScreen](#duelscreen)
   - [OwnerProgress](#ownerprogress)
+  - [ZiplineScreen](#ziplinescreen)
   - [TitleScreen](#titlescreen)
   - [Hud](#hud)
 - [Still to come](#still-to-come)
@@ -78,6 +81,14 @@ Shows players that the game is working while images and sounds load, instead of 
 **How it's used**\
 **`showLoadingScreen(layer)`** draws it with an empty bar and returns a `LoadingScreen` with **`progress(loaded, total)`**, which fills the bar, and **`remove()`**. When to show and remove it is decided by `showWhileSlow` in [controller/](../controller/README.md#loading), so a fast load never shows it at all.
 
+### audio
+
+**Purpose**\
+Plays the sound for one outcome (#25): **`play(cue)`**, where the cue is `'fits'`, `'tooShort'`, `'tooLong'`, `'levelDone'` or `'medal'`. The first three match `PickResult`, so a pick's result can be passed straight in. It starts the sound over if it's already playing, so quick repeat picks are each heard, and if the browser refuses to play it (for example before the player has clicked anything), the sound is skipped and the game carries on.
+
+**Not heard in the game yet**\
+GameFlow plays a pick's sound through its `playCue` option, but `main.ts` doesn't pass `play` in yet, and nothing plays `'levelDone'` or `'medal'`. So the sounds are loaded and ready, but the game is silent for now.
+
 ---
 
 ## Shared components
@@ -87,6 +98,7 @@ Each matches a component on the Resources page of the mockups, and each is a fun
    - **Button**: A rounded button that grows to fit its label, in a `primary` (teal) or `secondary` (outlined) style. It responds both to clicks and to taps, since school Chromebooks often have touchscreens.
    - **Log button**: One of the logs the player picks from, with a log icon and its length. It has three looks, which are `default`, `selected`, and `used` (faded and ignores clicks).
    - **Top bar**: The dark bar across the top of every play screen, with the game title on the left and the topic, level and points on the right.
+   - **Right triangle**: A right triangle with a dashed diagonal, a right-angle mark and a cream tag on each side, such as `12 m` and `c = ?`. Its shape comes from the width and height it's given, not from the side lengths, so a player can't measure the drawing to work out the answer. The duel and the "How to find the right log" page use it.
    - **Dialog box**: The white box along the bottom that shows one line of the story and up to three choices. It resizes to fit its text and stays pinned to the bottom of the stage. A choice reports its position (0 for the first), which is the same number a screen reports to GameFlow.
 
 ---
@@ -105,10 +117,26 @@ Draws one chasm, which is made up of the sky and mountains, the two cliffs and t
 The stage's layers and a chasm to draw: its two sides and the log lengths, in the order the buttons show them.
 
 **What it reports**\
-Each click on a log button reports that log's position in the list. Once its controller **`lock`**s it, it stops reporting clicks and shows the picked log as used. **`destroy`** removes everything it drew.
+Each click on a log button reports that log's position in the list, and **`onChoiceSelected`** reports which button in the dialog box was clicked. Once its controller **`lock`**s it, it stops reporting log clicks and shows the picked log as used. **`destroy`** removes everything it drew.
+
+**After a pick**\
+ChasmController tells it what to show, and it never decides whether a log fits itself:
+   - **`showCorrectFeedback`**: Says the log fits, with a Continue button, and moves the mountaineer to the far cliff in the celebrating pose, with the log across the gap.
+   - **`showFeedback`**: Says the log was too short (it falls into the chasm) or too long (it reaches past the far edge), names the log that fits, and offers two buttons: "Cross the chasm using the correct log" and "First, see how to derive the correct answer".
+   - **`showCrossing`**: Says the player lays down the right log and crosses, with the right log across the gap and the mountaineer on the far cliff.
+
+Once a pick's message shows, the logs are locked and the picked one is faded, so a second click can't change the pick. The picked log also leaves the pile on the near cliff, and once the right log is across the gap, the `c = ?` tag changes to its length, such as `c = 13 m`. The log buttons move with the top of the dialog box, so they stay above it when a longer message makes it taller.
 
 **The hint**\
 A Hint button sits at the top left, just below the Hud's progress tag, since the mockup's spot is taken by that tag in the game. **`onHintClicked`** reports each click, and ChasmController decides what to do. **`showHint`** shows the formula card (drawn by `createFormulaCard` in `view/formulaCard.ts`, which sizes itself to its text) and puts the hint's line and a Back button in the dialog box, and Back reports as choice 0. **`hideHint`** hides the card and puts the question back. Once a pick's feedback shows, the Hint button and card go away for that chasm. The words come from `content/hintText`.
+
+### ChasmSolutionScreen
+
+**Purpose**\
+Draws the "How to find the right log" page (#48) for one chasm: squared paper, the chasm's triangle (drawn with the shared right triangle), the title "Find the diagonal, c", and a card of the numbered steps from `solutionSteps` in `model/problems`. Its dialog box has one button, "Cross the chasm using the correct log".
+
+**How it's used**\
+ChasmController draws it hidden when the chasm starts, **`show`**s it when the player picks "First, see how to derive the correct answer", and **`hide`**s it once **`onContinueClicked`** reports the button, going back to the chasm to cross. **`destroy`** removes it with the chasm.
 
 ### DialogueBox
 
@@ -157,6 +185,22 @@ Shows the store owner's race on the duel page (#57): a small white panel in the 
 **How it's used**\
 `new OwnerProgress(layers.ui)` has the shape of DuelShopController's `OpponentTimer`, so it's passed straight to the controller. **`start(onFinish)`** draws an empty pie and starts filling it, calling `onFinish` once when it's full; **`stop()`** stops the animation and removes the panel, and is safe to call when it isn't running or from inside `onFinish`. Nothing is drawn until `start`, so the panel only appears on the duel page.
 
+### ZiplineScreen
+
+**Purpose**\
+Draws the zipline challenge at the clothing shop one page at a time, like the "Mini-game 2: Clothing shop" mockups:
+   - **Deal**: The shop's plank wall, with shelves, a window and the store owner behind the counter.
+   - **Problem and answer**: A white card with the store drawn as a box and the zip line on its diagonal. The problem labels the sides with words (length, width and height), and the answer page with the problem's numbers and `x` on the zip line.
+   - **Tutorial and solution**: The same drawing on squared paper, with words on the tutorial and numbers on the solution.
+   - **Right**: The zip line installed, running from the office down to the exit.
+   - **Wrong**: The store owner up close.
+   - **Onward**: The trail outside the shop, with the player in the new outfit (`onwardDressed`) or in the usual clothes (`onwardPacked`), depending on the button picked on the right-answer page.
+
+The store is drawn by **`createZiplineDiagram`** in `view/ZiplineDiagram.ts`, at a fixed size whatever its numbers, so a player can't measure the drawing to find the answer.
+
+**How it's used**\
+`new ZiplineScreen(layers, problem)` takes the zipline problem from `model/zipline`. **`show(page, text, choices)`** draws a page with its text from `content/ziplineText` and its buttons, replacing the page before, and each drawing fits the room left above the dialog box. On the answer page the three guesses are plain buttons, so the first can't look like a hint. **`onChoice`** registers the callback for a button click, and **`destroy`** removes everything. A click reports the button's position, and ZiplineShopController decides what it means.
+
 ### TitleScreen
 
 **Purpose**\
@@ -177,7 +221,4 @@ GameFlow calls **`update`** with the latest progress whenever it changes, and **
 
 ## Still to come
 
-   - **The solution view** (#48): The "How to find the right log" screen, with the triangle and the worked steps.
-   - **audio**: Plays one sound per outcome (#25), once the sound library (#102) lands.
-   - **ZiplineDiagram**: The view for the zipline problem (#61).
    - **Background images**: The plan in #138 is to load backgrounds as images exported from Figma, instead of drawing mountains in code, so every screen shares one copy of the art.

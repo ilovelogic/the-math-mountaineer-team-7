@@ -1,6 +1,6 @@
 # model/
 
-Maintains the game state and math in plain TypeScript. From it, get problems, rules, medals, the Level done messages, `Dialogue`, `PlayerProgress` and `SaveStore`.
+Maintains the game state and math in plain TypeScript. From it, get the chasm and duel problems, the zipline problem, rules, medals, the Level done messages, `Dialogue`, `PlayerProgress` and `SaveStore`.
 
 Never imports Konva, `view/` or `controller/`, so every model runs in Vitest without a browser. Take seeds and times as parameters instead of calling `Math.random()` or `Date.now()`.
 
@@ -12,6 +12,7 @@ Never imports Konva, `view/` or `controller/`, so every model runs in Vitest wit
 - [PlayerProgress](#playerprogress)
 - [Dialogue](#dialogue)
 - [problems](#problems)
+- [zipline](#zipline)
 - [rules](#rules)
 - [levelDone](#leveldone)
 - [medals](#medals)
@@ -40,15 +41,17 @@ Where the player is and how they're doing. Here, we have the game's seed, the cu
    - `level`, `step`, `topic`: Where the player is. `step` is a position in the game's list of steps in `content/levels`.
    - `points`: The running total.
    - `answers`: Every pick so far, oldest first, each recording the step it was made on, that step's level and topic, and whether the log fit, was too short or was too long. Only a log that fits is right.
+   - `levelAttempts`: The score of every finished attempt at each level, oldest first, so a retry adds to the list instead of replacing the earlier score.
 
 **How it changes**
    - **`addPoints`** adds to the total. Zero is allowed, since a wrong pick earns nothing, but a negative number is refused.
    - **`moveTo`** goes to another step, and also changes the level and topic when a new level starts.
    - **`recordAnswer`** adds a pick to `answers`, with the current level and topic.
    - **`removePoints`** takes points back when the player restarts a level, so its points can be earned again. The answers stay, since they're the record of every pick, and it never takes more than the player has.
+   - **`recordLevelAttempt`** adds a finished attempt's level and points to `levelAttempts`. GameFlow calls it after the last chasm of each level.
 
 **Saving**\
-`toJSON` turns the progress into plain data that's safe to store, and `fromJSON` rebuilds it, refusing anything that isn't a valid save. The saved data carries a version number, so a later save format can tell old saves apart. Version 2 added each answer's level and topic, so a version 1 save is refused and the player starts a new game.
+`toJSON` turns the progress into plain data that's safe to store, and `fromJSON` rebuilds it, refusing anything that isn't a valid save. The saved data carries a version number, so a later save format can tell old saves apart. Version 2 added each answer's level and topic, so a version 1 save is refused and the player starts a new game. Within version 2, a save from before `levelAttempts` existed loads with an empty list.
 
 **ProgressView**\
 A read-only version of the type, with the values and none of the methods. The Hud and screens receive this, so they can show progress but can't change it.
@@ -79,6 +82,9 @@ Every chasm offers three logs: the one that fits (the hypotenuse, `c`) and two w
 **Checking a pick**\
 **`checkPick`** compares the picked log to `c` and reports `'fits'`, `'tooShort'` or `'tooLong'`.
 
+**The worked steps**\
+**`solutionSteps`** gives the three lines the "How to find the right log" page shows for a chasm, using its own numbers: `c² = a² + b²`, then the squares filled in and added, then the square root and the log that fits (for 5 and 12, `c = √169 = 13 m. The 13 m log fits.`).
+
 **The duel question**\
 **`makeDuelQuestion`** takes the game's seed and gives the supply shop's duel: one of Level 1's triangles (since winning skips Level 1, and small numbers suit a timed race) with three answers, `c` and two wrong ones made by **`answerChoices`**. `correct` is where `c` sits.
 
@@ -90,6 +96,22 @@ Every chasm offers three logs: the one that fits (the hypotenuse, `c`) and two w
 
 ---
 
+## zipline
+
+**Purpose**\
+Makes the clothing shop's zipline problem and checks the player's guess (#61). The store is a box, and the zip line runs along its space diagonal, from the top corner by the office to the exit at the opposite bottom corner, so this is the Pythagorean theorem in 3D.
+
+**Where the numbers come from**\
+`ziplineBoxes` lists boxes whose diagonal is a whole number, such as 2 × 3 × 6 with a diagonal of 7, leaving out boxes that wouldn't look like a store. **`makeZiplineProblem`** takes the game's seed, picks one of them, and makes three guesses with `answerChoices` (each wrong one within 3 of the diagonal). `correct` is where the diagonal sits, and the same seed always gives the same problem, so a loaded save shows the same one.
+
+**Checking a guess**\
+**`checkZiplineAnswer`** says whether the guess at a position is the diagonal, and refuses a position that isn't one of the three.
+
+**Filling in the text**\
+**`fillZiplineText`** puts the problem's numbers into a page's text from `content/ziplineText`, wherever it says `{length}`, `{width}`, `{height}`, `{floor}` (length² + width²), `{squared}` (the diagonal²) or `{diagonal}`. Anything else in braces is left alone.
+
+---
+
 ## rules
 
 **Purpose**\
@@ -98,8 +120,10 @@ Small, pure rules that turn outcomes into points and, later, into decisions abou
 **Points**\
 **`pointsFor`** gives the points for a pick: only the log that fits earns any, and how many comes from `content/settings` (10 per chasm today). A log that's too short falls into the chasm, and one that's too long smashes the item waiting on the other side, so neither earns points.
 
+**`ziplinePoints`** gives the points for the zipline guess: `pointsPerZipline` from `content/settings` (50) for the right answer, and nothing for a wrong one. Leaving the shop before guessing never reaches it, so it earns nothing too.
+
 **Results by topic**\
-**`isRight`** says whether a pick was right, which only the log that fits is. **`resultsByTopic`** takes the progress's `answers` and gives, for each topic in the order it was first played, its level, how many picks were right and how many were made. Every pick counts, including ones made again after a level restart. The end screen shows these counts.
+**`isRight`** says whether a pick was right, which only the log that fits is. **`resultsByTopic`** takes the progress's `answers` and gives, for each topic in the order it was first played, its level, how many picks were right and how many were made. Every pick counts, including ones made again after a level restart. The end screen will show these counts (#78).
 
 ---
 
@@ -141,5 +165,4 @@ In the game, `main.ts` passes in the browser's `localStorage`. In the tests, a p
 
 ## Still to come
 
-   - **solutionSteps** (#48): The worked steps for finding the right log, using the chasm's own numbers, for the "How to find the right log" screen.
-   - **More rules**: Skipping a level after winning the duel (#58), the zipline's points (#63), and the easier round after struggling (#88).
+   - **More rules**: Skipping a level after winning the duel (#58), and the easier round after struggling (#88), which will read `levelAttempts`.
