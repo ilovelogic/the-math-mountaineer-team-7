@@ -179,11 +179,11 @@ export function drawMedalScreen(
     panel.add(
       new Konva.Text({
         ...text.label,
-        x: 30,
-        y: 450,
-        width: 260,
-        height: 40,
-        fontSize: 14,
+        x: 175,
+        y: 468,
+        width: 125,
+        height: 65,
+        fontSize: 11,
         text: `Worth reviewing: Level ${data.worthReviewing.level} — ${data.worthReviewing.topic}`,
       }),
     );
@@ -196,7 +196,7 @@ export function drawMedalScreen(
 
   resultsButton.position({
     x: 30,
-    y: 495,
+    y: 475,
   });
 
   panel.add(resultsButton);

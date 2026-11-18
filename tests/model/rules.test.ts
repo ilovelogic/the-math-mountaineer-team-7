@@ -179,4 +179,21 @@ describe('worthReviewing (#81, #82)', () => {
       answer(2, '3D', 'tooLong'),
     ])).toEqual({ level: 2, topic: '3D' });
   });
+
+  it('selects the weakest level when multiple levels share a topic', () => {
+    expect(worthReviewing([
+      answer(1, 'Pythagorean theorem in 2D', 'fits'),
+      answer(1, 'Pythagorean theorem in 2D', 'fits'),
+      answer(1, 'Pythagorean theorem in 2D', 'fits'),
+      answer(1, 'Pythagorean theorem in 2D', 'tooShort'),
+      answer(3, 'Pythagorean theorem in 2D', 'fits'),
+      answer(3, 'Pythagorean theorem in 2D', 'tooLong'),
+      answer(3, 'Pythagorean theorem in 2D', 'tooShort'),
+      answer(3, 'Pythagorean theorem in 2D', 'tooLong'),
+    ])).toEqual({
+      level: 3,
+      topic: 'Pythagorean theorem in 2D',
+    });
+  });
+
 });
