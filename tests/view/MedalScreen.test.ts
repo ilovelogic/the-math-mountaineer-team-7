@@ -38,6 +38,27 @@ describe('drawMedalScreen', () => {
     expect(texts(layers.ui)).toContain('You finished with 12 points and earned no medal.');
   });
 
+  it('shows the worth reviewing recommendation when one is provided', () => {
+    draw({
+      worthReviewing: {
+        level: 3,
+        topic: 'Pythagorean theorem in 2D',
+      },
+    });
+
+    expect(texts(layers.ui)).toContain(
+      'Worth reviewing: Level 3 — Pythagorean theorem in 2D',
+    );
+  });
+
+  it('does not show a recommendation when worthReviewing is null', () => {
+    draw({ worthReviewing: null });
+
+    expect(
+      texts(layers.ui).some((value) => value.startsWith('Worth reviewing:')),
+    ).toBe(false);
+  });
+
   it('draws gold, silver and bronze as a circle in that color with two ribbons', () => {
     draw({ medal: 'silver' });
     const circles = layers.sprites.find<Konva.Circle>('Circle');

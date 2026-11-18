@@ -1,8 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { settings } from '../../src/content/settings';
 import { PlayerProgress } from '../../src/model/PlayerProgress';
-import { isRight, pointsFor, resultsByTopic, skippedLevelPoints, ziplinePoints } from '../../src/model/rules';
-
+import { isRight, pointsFor, resultsByTopic, skippedLevelPoints, worthReviewing, ziplinePoints } from '../../src/model/rules';
 /**
  * Checks how many points each chasm pick earns (issue #37). `pointsFor` takes
  * the settings as an argument, so the first test passes in made-up settings:
@@ -125,3 +124,76 @@ describe('resultsByTopic', () => {
 // - it(name, fn): registers one test; Vitest runs fn after collecting every test, and the test fails if anything inside fn throws.
 // - expect(value).toBe(expected): throws, failing the test, unless the two values are exactly equal.
 // - resultsByTopic(...).reduce((sum, result) => sum + result.total, 0): adds up every topic's total, which should be every recorded pick.
+
+describe('worthReviewing (#81, #82)', () => {
+  const answer = (
+    level: number,
+    topic: string,
+    result: 'fits' | 'tooShort' | 'tooLong',
+  ) => ({
+    step: level,
+    level,
+    topic,
+    result,
+  });
+
+  it('returns null when no answers exist', () => {
+    expect(worthReviewing([])).toBeNull();
+  });
+
+  it('selects the topic with the lowest correct-answer rate', () => {
+    expect(worthReviewing([
+      answer(1, '2D', 'fits'),
+      answer(1, '2D', 'fits'),
+      answer(1, '2D', 'tooShort'),
+      answer(2, '3D', 'fits'),
+      answer(2, '3D', 'tooLong'),
+      answer(2, '3D', 'tooShort'),
+    ])).toEqual({ level: 2, topic: '3D' });
+  });
+
+  it('breaks ties by choosing the first encountered topic', () => {
+    expect(worthReviewing([
+      answer(1, '2D', 'fits'),
+      answer(1, '2D', 'tooShort'),
+      answer(2, '3D', 'fits'),
+      answer(2, '3D', 'tooLong'),
+    ])).toEqual({ level: 1, topic: '2D' });
+  });
+
+  it('returns null for a perfect score', () => {
+    expect(worthReviewing([
+      answer(1, '2D', 'fits'),
+      answer(1, '2D', 'fits'),
+      answer(2, '3D', 'fits'),
+    ])).toBeNull();
+  });
+
+  it('compares percentages rather than total mistakes', () => {
+    expect(worthReviewing([
+      answer(1, '2D', 'fits'),
+      answer(1, '2D', 'fits'),
+      answer(1, '2D', 'fits'),
+      answer(1, '2D', 'tooShort'),
+      answer(2, '3D', 'fits'),
+      answer(2, '3D', 'tooLong'),
+    ])).toEqual({ level: 2, topic: '3D' });
+  });
+
+  it('selects the weakest level when multiple levels share a topic', () => {
+    expect(worthReviewing([
+      answer(1, 'Pythagorean theorem in 2D', 'fits'),
+      answer(1, 'Pythagorean theorem in 2D', 'fits'),
+      answer(1, 'Pythagorean theorem in 2D', 'fits'),
+      answer(1, 'Pythagorean theorem in 2D', 'tooShort'),
+      answer(3, 'Pythagorean theorem in 2D', 'fits'),
+      answer(3, 'Pythagorean theorem in 2D', 'tooLong'),
+      answer(3, 'Pythagorean theorem in 2D', 'tooShort'),
+      answer(3, 'Pythagorean theorem in 2D', 'tooLong'),
+    ])).toEqual({
+      level: 3,
+      topic: 'Pythagorean theorem in 2D',
+    });
+  });
+
+});

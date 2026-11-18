@@ -57,3 +57,54 @@ export function resultsByTopic(answers: readonly Answer[]): TopicResult[] {
   }
   return [...byTopic.values()];
 }
+/**
+ * Finds the level with the lowest correct-answer rate.
+ * Ties favor the level encountered first.
+ * Returns null when there are no mistakes.
+ */
+export function worthReviewing(
+  answers: readonly Answer[],
+): { level: number; topic: string } | null {
+  const byLevel = new Map<number, TopicResult>();
+
+  for (const answer of answers) {
+    let counts = byLevel.get(answer.level);
+
+    if (!counts) {
+      counts = {
+        level: answer.level,
+        topic: answer.topic,
+        right: 0,
+        total: 0,
+      };
+      byLevel.set(answer.level, counts);
+    }
+
+    counts.total += 1;
+    if (isRight(answer.result)) {
+      counts.right += 1;
+    }
+  }
+
+  let weakest: TopicResult | null = null;
+
+  for (const result of byLevel.values()) {
+    // Cross-multiplication compares correct-answer rates without division.
+    // For example, a/b < c/d is equivalent to a*d < c*b.
+    if (
+      weakest === null ||
+      result.right * weakest.total < weakest.right * result.total
+    ) {
+      weakest = result;
+    }
+  }
+
+  if (!weakest || weakest.right === weakest.total) {
+    return null;
+  }
+
+  return {
+    level: weakest.level,
+    topic: weakest.topic,
+  };
+}
