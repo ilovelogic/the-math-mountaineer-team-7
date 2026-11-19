@@ -1,7 +1,7 @@
 import { settings } from '../content/settings';
 import { medalFor, type MedalLimits } from '../model/medals';
 import type { ProgressView } from '../model/PlayerProgress';
-import { drawMedalScreen } from '../view/MedalScreen';
+import { drawMedalScreen, drawResultsScreen } from '../view/MedalScreen';
 import type { Layers } from '../view/stage';
 import type { Outcome, Screen } from './Screen';
 
@@ -23,10 +23,21 @@ export class MedalController implements Screen {
   start(onDone: (outcome: Outcome) => void): void {
     this.onDone = onDone;
     const points = this.progress.points;
+    const medal = medalFor(points, this.limits);
+  
     this.erase = drawMedalScreen(this.layers, {
-      medal: medalFor(points, this.limits),
+      medal,
       points,
-      onSeeResults: () => this.finish(),
+      onSeeResults: () => {
+        this.erase?.();
+  
+        this.erase = drawResultsScreen(this.layers, {
+          medal,
+          points,
+          results: this.progress.getResults(),
+          levelResults: this.progress.getLevelResults(),
+        });
+      },
     });
   }
 

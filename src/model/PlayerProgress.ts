@@ -11,10 +11,22 @@ export interface Answer {
   topic: string;
   result: PickResult;
 }
+
+export interface TopicResult {
+  topic: string;
+  correct: number;
+  incorrect: number;
+}
 /** Score earned in one completed attempt at a level. */
 export interface LevelAttempt {
   readonly level: number;
   readonly points: number;
+}
+
+export interface LevelResult {
+  level: number;
+  correct: number;
+  total: number;
 }
 
 /** Where the player is in the game's script: the level and topic of the current step. */
@@ -45,7 +57,7 @@ export interface SavedProgress {
  */
 export type ProgressView = Pick<
   PlayerProgress,
-  'seed' | 'level' | 'step' | 'points' | 'topic' | 'answers'
+  'seed' | 'level' | 'step' | 'points' | 'topic' | 'answers' | 'getResults' | 'getLevelResults'
 >;
 
 const FITS: readonly PickResult[] = ['fits', 'tooShort', 'tooLong'];
@@ -105,6 +117,53 @@ export class PlayerProgress {
   get levelAttempts(): readonly LevelAttempt[] {
     return this._levelAttempts.map((attempt) => ({ ...attempt }));
   }
+
+  getResults(): TopicResult[] {
+  const results = new Map<string, TopicResult>();
+
+  for (const answer of this._answers) {
+    if (!results.has(answer.topic)) {
+      results.set(answer.topic, {
+        topic: answer.topic,
+        correct: 0,
+        incorrect: 0,
+      });
+    }
+
+    const topicResult = results.get(answer.topic)!;
+
+    if (answer.result === 'fits') {
+      topicResult.correct++;
+    } else {
+      topicResult.incorrect++;
+    }
+  }
+
+  return Array.from(results.values());
+}
+
+getLevelResults(): LevelResult[] {
+  const results = new Map<number, LevelResult>();
+
+  for (const answer of this._answers) {
+    if (!results.has(answer.level)) {
+      results.set(answer.level, {
+        level: answer.level,
+        correct: 0,
+        total: 0,
+      });
+    }
+
+    const levelResult = results.get(answer.level)!;
+    levelResult.total++;
+
+    if (answer.result === 'fits') {
+      levelResult.correct++;
+    }
+  }
+
+  return Array.from(results.values());
+}
 
   /** Keeps this attempt's score without replacing earlier attempts. */
   recordLevelAttempt(level: number, points: number): void {
