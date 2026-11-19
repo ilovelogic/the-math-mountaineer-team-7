@@ -67,6 +67,33 @@ describe('makeChasm', () => {
         }
     });
 
+    it('should vary the correct log position across chasms in the same game', () => {
+        const seed = 42;
+        const positions = new Set<number>();
+    
+        for (let level = 1; level <= 3; level++) {
+            for (let index = 0; index < triplesByLevel[level - 1].length; index++) {
+                const chasm = makeChasm(seed, level, index);
+                positions.add(chasm.correct);
+            }
+        }
+    
+        expect(positions.size).toBeGreaterThan(1);
+    });
+
+    it('should generate different log arrangements for different chasm indices', () => {
+        const seed = 42;
+    
+        const arrangements = new Set<string>();
+    
+        for (let index = 0; index < triplesByLevel[0].length; index++) {
+            const chasm = makeChasm(seed, 1, index);
+            arrangements.add(JSON.stringify(chasm.logs));
+        }
+    
+        expect(arrangements.size).toBeGreaterThan(1);
+    });
+
 });
 
 describe('checkPick', () =>  {
