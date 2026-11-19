@@ -28,10 +28,12 @@ export const TOPIC_3D = 'Pythagorean theorem in 3D';
  */
 export const steps: Step[] = [
   { kind: 'dialogue', script: 'intro' },
+  // Comes before the supply shop, so a player who wins the duel and skips Level 1
+  // still learns how to cross a chasm before the first one (#192).
+  { kind: 'dialogue', script: 'howCrossingWorks' },
   // The supply shop, right after the avalanche: winning its duel skips Level 1 (#134).
   { kind: 'shopOffer', shop: 'supplies' },
   { kind: 'shopGame', shop: 'supplies' },
-  { kind: 'dialogue', script: 'howCrossingWorks' },
 
   { kind: 'chasm', level: 1, topic: TOPIC_2D, index: 0 },
   { kind: 'chasm', level: 1, topic: TOPIC_2D, index: 1 },
