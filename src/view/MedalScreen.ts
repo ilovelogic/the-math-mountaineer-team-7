@@ -1,3 +1,4 @@
+
 import Konva from 'konva';
 import type { Layers } from './stage';
 import { STAGE_WIDTH, STAGE_HEIGHT } from './stage';
@@ -17,7 +18,6 @@ export type MedalType =
 export interface MedalScreenData {
   medal: MedalType;
   points: number;
-
   /** Called when the player presses See Results. */
   onSeeResults: () => void;
 }
@@ -27,6 +27,8 @@ export interface ResultsScreenData {
   points: number;
   results: TopicResult[];
   levelResults: LevelResult[];
+  /** The weakest level and topic, or null for a perfect score. */
+  worthReviewing?: { level: number; topic: string } | null;
 }
 
 /**
@@ -181,7 +183,7 @@ export function drawMedalScreen(
 
   const resultsButton = createButton(
     'See Results',
-    data.onSeeResults
+    data.onSeeResults,
   );
 
   resultsButton.position({
@@ -308,19 +310,21 @@ export function drawResultsScreen(
     );
   });
 
-  // Results by level
-  data.levelResults.forEach((result, index) => {
-    panel.add(
-      new Konva.Text({
-        ...text.body,
-        x: 80 + index * 280,
-        y: 310,
-        width: 260,
-        align: 'center',
-        text: `Level ${result.level}: ${result.correct} of ${result.total} right`,
-      }),
-    );
-  });
+  // Show the weakest level and topic
+  const reviewText = data.worthReviewing
+  ? `Worth reviewing: Level ${data.worthReviewing.level} — ${data.worthReviewing.topic}`
+  : 'Nothing to review: every pick was right!';
+
+  panel.add(
+    new Konva.Text({
+      ...text.body,
+      x: 80,
+      y: 310,
+      width: 800,
+      align: 'center',
+      text: reviewText,
+    }),
+  );
   // Points and medal earned
   panel.add(
     new Konva.Text({
@@ -341,6 +345,7 @@ export function drawResultsScreen(
     panel.destroy();
   };
 }
+
 // Optional documentation
 // - import type { Layers }: imports only the type, for checking; nothing from stage.ts runs because of this line.
 // - mountainPeaks.forEach((top, i) => ...): runs the function once per peak, also passing its position, starting at 0.

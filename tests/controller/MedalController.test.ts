@@ -68,19 +68,28 @@ describe('MedalController', () => {
     expect(message()).toContain('You finished with 10 points and earned a bronze medal');
   });
 
-  it('reports nothing until See Results is pressed, then done exactly once', () => {
+  it('opens the results page when See Results is pressed', () => {
     start();
+  
     expect(outcomes).toEqual([]);
     seeResults().fire('click');
-    seeResults().fire('click');
-    expect(outcomes).toEqual([{ kind: 'done' }]);
+  
+    const resultsHeading = layers.ui.find<Konva.Text>('Text')
+      .find((node) => node.text() === 'Your Results');
+  
+    expect(resultsHeading).toBeDefined();
+    expect(outcomes).toEqual([]);
   });
 
-  it('leaves the screen up after reporting, for GameFlow to stop it', () => {
+  it('removes the results page when stopped', () => {
     const controller = start();
+  
     seeResults().fire('click');
+  
     expect(drawnNodes()).not.toHaveLength(0);
+  
     controller.stop();
+  
     expect(drawnNodes()).toHaveLength(0);
   });
 

@@ -37,7 +37,7 @@ describe('drawMedalScreen', () => {
     draw({ medal: 'none', points: 12 });
     expect(texts(layers.ui)).toContain('You finished with 12 points and earned no medal.');
   });
-
+  
   it('draws gold, silver and bronze as a circle in that color with two ribbons', () => {
     draw({ medal: 'silver' });
     const circles = layers.sprites.find<Konva.Circle>('Circle');
