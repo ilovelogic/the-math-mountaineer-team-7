@@ -39,7 +39,7 @@ Lists the game's script, which is every step in the order the player meets it, s
    - `shopGame`: The shop's mini-game, the math duel (#55) or the zipline (#61). A supplies `shopGame` must have a Level done step somewhere after it, since winning the duel skips to the step after it, and GameFlow checks this when it starts.
 
 **The current script**\
-Starts with the intro, then the supply shop and its math duel, then the "how crossing works" scene, followed by three levels of five chasms each. Levels 1 and 2 end with a Level done step, while Level 3 goes straight to the medal. Winning the duel and taking the shortcut skips Level 1 (and the crossing scene) for its 50 points, going straight to the start of Level 2. Level 2 opens at the clothing shop, whose zipline challenge pays 50 points for the right answer. As a result of each chasm being its own step, a closed tab loses at most one chasm.
+Starts with the intro, then the "how crossing works" scene, then the supply shop and its math duel, followed by three levels of five chasms each. The crossing scene comes before the shop so every player sees it before their first chasm, even one who skips Level 1 (#192). Levels 1 and 2 end with a Level done step, while Level 3 goes straight to the medal. Winning the duel and taking the shortcut skips Level 1 for its 50 points, going straight to the start of Level 2. Level 2 opens at the clothing shop, whose zipline challenge pays 50 points for the right answer. As a result of each chasm being its own step, a closed tab loses at most one chasm.
 
 ---
 
