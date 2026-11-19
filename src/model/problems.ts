@@ -56,6 +56,17 @@ export const triplesByLevel = [
     ],
 ];
 
+function mixChasmSeed(seed: number, level: number, index: number): number {
+    let mixed = seed >>> 0;
+
+    mixed = Math.imul(mixed ^ level, 0x45d9f3b);
+    mixed = Math.imul(mixed ^ index, 0x45d9f3b);
+
+    mixed ^= mixed >>> 16;
+
+    return mixed >>> 0;
+}
+
 export function makeChasm(seed: number, level: number, index: number): Chasm {
     if (!Number.isInteger(level) || level < 1 || level > 3) {
         throw new Error("Level must be a positive integer");
@@ -64,34 +75,34 @@ export function makeChasm(seed: number, level: number, index: number): Chasm {
     if (!Number.isInteger(seed) || seed < 0) {
         throw new Error("Seed must be 0 or a positive integer")
     }
-    const rng = makeRng(seed);
     
-
     const levelTriples = triplesByLevel[level - 1];
     if (index < 0 || index >= levelTriples.length || !Number.isInteger(index)) {
         throw new Error("Invalid chasm index");
     }
+    const tripleRng = makeRng(mixChasmSeed(seed, level, 0));
+    const logRng = makeRng(mixChasmSeed(seed, level, index));
     const shuffledTriples = [...levelTriples];
 
     // Shuffle the triples in a given level
     for (let i = shuffledTriples.length - 1; i > 0; i--) {
-        const j = Math.floor(rng() * (i+1));
+        const j = Math.floor(tripleRng() * (i+1));
         [shuffledTriples[i], shuffledTriples[j]] = [shuffledTriples[j], shuffledTriples[i]];
     }
 
     const [a,b,c] = shuffledTriples[index];
 
-    const wrong1 = makeWrongLog(c, rng);
-    let wrong2  = makeWrongLog(c, rng);
+    const wrong1 = makeWrongLog(c, logRng);
+    let wrong2  = makeWrongLog(c, logRng);
 
     while (wrong2 === wrong1) {
-        wrong2 = makeWrongLog(c, rng);
+        wrong2 = makeWrongLog(c, logRng);
     }
     const logs = [wrong1, c, wrong2];
 
     // Shuffle correct answer and too short/long answers randomly each time
     for (let i = logs.length - 1; i > 0; i--) {
-        const j = Math.floor(rng() * (i+1));
+        const j = Math.floor(logRng() * (i+1));
         [logs[i], logs[j]] = [logs[j], logs[i]];
     }
 
