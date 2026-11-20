@@ -20,6 +20,7 @@ May import Konva, other `view/` files, and `model/` or `content/` to read what t
   - [ChasmScreen](#chasmscreen)
   - [ChasmSolutionScreen](#chasmsolutionscreen)
   - [DialogueBox](#dialoguebox)
+  - [DialogueScenery](#dialoguescenery)
   - [MedalScreen](#medalscreen)
   - [ShopOfferScreen](#shopofferscreen)
   - [DuelScreen](#duelscreen)
@@ -145,6 +146,14 @@ Shows one dialogue line at a time in the shared dialog box. A line with no choic
 
 **What it reports**\
 Either way, a click reports the button's position, and the DialogueController decides what it means. **`destroy`** removes the box. The speaker's name isn't drawn yet, since every line so far is the Narrator's.
+
+### DialogueScenery
+
+**Purpose**\
+Draws what a dialogue scene shows above its dialog box (#201): a background image and the characters from the scene's mockup. It draws only on the background and sprites layers, so the dialog box on the ui layer always stays on top and readable. The backgrounds are Figma's level backgrounds, exported at 4x so they stay sharp when the stage scales up.
+
+**How it's used**\
+**`sceneryForScript`** gives the scenery for a scene in `content/dialogueScripts`: the intro shows the mountaineer and the friend on Level 1's mountains, and "how crossing works" shows the mountaineer. A scene with no scenery of its own gets the mountains alone. **`levelDoneScenery`** takes the same numbers as `levelDoneLines`: with every point, the mountaineer celebrates in front of the next level's background, and otherwise stands in front of the level they may restart. The screen factory passes the result to DialogueController, which draws a **`DialogueScenery`** when the scene starts and **`destroy`**s it with the box.
 
 ### MedalScreen
 
