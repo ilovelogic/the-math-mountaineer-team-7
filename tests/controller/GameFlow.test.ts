@@ -1,6 +1,6 @@
 import { SaveStore } from '../../src/model/SaveStore';
 import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
-import { steps, type Step } from '../../src/content/levels';
+import { steps, TOPIC_3D, type Step } from '../../src/content/levels';
 import { settings } from '../../src/content/settings';
 import { ACCEPT, DECLINE } from '../../src/content/shopText';
 import { DUEL_RESULT } from '../../src/controller/DuelShopController';
@@ -699,6 +699,64 @@ describe('controller/GameFlow math duel (#55, #134)', () => {
   it('throws a clear error for a script where the duel has no Level done after it', () => {
     const script: Step[] = SHOP_SCRIPT.slice(0, 4);
     expect(() => play(script)).toThrow("The supply shop's duel at step 2 needs a Level done step after it");
+  });
+});
+
+// Issue #196: each shop shows the level of the chasms after it, so the Hud never shows a
+// level the player skipped.
+const CLOTHING_OFFER = steps.findIndex((step) => step.kind === 'shopOffer' && step.shop === 'clothing');
+const ZIPLINE_GAME = CLOTHING_OFFER + 1;
+/** The level and topic the Hud was last given. */
+const hudPlace = () => {
+  const [shown] = hud.update.mock.lastCall!;
+  return { level: shown.level, topic: shown.topic };
+};
+
+describe('controller/GameFlow Hud level at the shops (#196)', () => {
+  it('shows Level 2 at the clothing shop after a duel win skips Level 1', () => {
+    play(steps, REAL_DUEL);
+    last().report({ kind: 'choice', index: DUEL_RESULT.skipLevel });
+    expect(last().request.kind).toBe('shopOffer');
+    expect(hudPlace()).toEqual({ level: 2, topic: TOPIC });
+    expect(saves.at(-1)).toMatchObject({ step: CLOTHING_OFFER, level: 2 });
+  });
+
+  it('shows Level 2 and the zipline’s topic in the zipline game after a duel win', () => {
+    play(steps, REAL_DUEL);
+    last().report({ kind: 'choice', index: DUEL_RESULT.skipLevel });
+    last().report({ kind: 'choice', index: ACCEPT });
+    expect(last().request.kind).toBe('shopGame');
+    expect(hudPlace()).toEqual({ level: 2, topic: TOPIC_3D });
+  });
+
+  it('shows Level 2 at the clothing shop on the normal path, after Level 1’s chasms', () => {
+    play();
+    while (last().request.kind !== 'shopOffer' || (last().request as { shop: string }).shop !== 'clothing') {
+      const request = last().request;
+      if (request.kind === 'chasm') pickRight();
+      else if (request.kind === 'shopOffer') pickOffer(DECLINE);
+      else done();
+    }
+    expect(hudPlace()).toEqual({ level: 2, topic: TOPIC });
+    pickOffer(ACCEPT);
+    expect(hudPlace()).toEqual({ level: 2, topic: TOPIC_3D });
+  });
+
+  it('shows Level 1 at the supply shop, before Level 1’s chasms', () => {
+    play(steps, REAL_DUEL - 1);
+    expect(hudPlace()).toEqual({ level: 1, topic: TOPIC });
+  });
+
+  it('shows Level 2 when a save at the zipline game is loaded', () => {
+    progress = PlayerProgress.fromJSON({ version: 2, seed: SEED, level: 1, step: ZIPLINE_GAME, points: 50, topic: TOPIC, answers: [] });
+    play(steps, ZIPLINE_GAME);
+    expect(hudPlace()).toEqual({ level: 2, topic: TOPIC_3D });
+  });
+
+  it('keeps the current level at a shop with no chasms after it', () => {
+    const before = { level: progress.level, topic: progress.topic };
+    play(ZIPLINE_SCRIPT, ZIPLINE);
+    expect(hudPlace()).toEqual(before);
   });
 });
 
