@@ -39,9 +39,9 @@ export const ziplineText: Record<ZiplinePage, ZiplinePageText> = {
   },
   tutorial: {
     text:
-      'The Pythagorean theorem works in 3D too! The floor’s diagonal makes a right triangle with the length ' +
-      'and width, so floor² = length² + width². The zip line makes one with the floor’s diagonal and the ' +
-      'height, so x² = length² + width² + height².',
+      'The Pythagorean theorem works in 3D too, in two steps. First, the floor diagonal makes a right triangle ' +
+      'with the length and width, so floor² = length² + width². Then the zip line makes a right triangle with ' +
+      'the floor diagonal and the height, so x² = floor² + height².',
     choices: ['Back to the store owner’s problem'],
   },
   answer: {
@@ -60,8 +60,8 @@ export const ziplineText: Record<ZiplinePage, ZiplinePageText> = {
   },
   solution: {
     text:
-      'First, the floor’s diagonal: floor² = {length}² + {width}² = {floor}. The zip line makes a right ' +
-      'triangle with it and the {height}\u00a0m height, so x² = {floor} + {height}² = {squared}, and x = √{squared} = {diagonal}\u00a0m.',
+      'First, the floor diagonal: floor² = {length}² + {width}² = {floor}. Then the zip line makes a right ' +
+      'triangle with the floor diagonal and the {height}\u00a0m height, so x² = {floor} + {height}² = {squared}, and x = √{squared} = {diagonal}\u00a0m.',
     choices: ['Now continue along the trail'],
   },
   onwardDressed: {
