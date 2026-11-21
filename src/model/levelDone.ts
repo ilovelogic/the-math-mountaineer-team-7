@@ -10,7 +10,7 @@ import type { DialogueLine } from './Dialogue';
  * and choice 1 moves on.
  */
 export function levelDoneLines(level: number, points: number, possiblePoints: number): DialogueLine[] {
-  const scene = points >= possiblePoints ? dialogueScripts.levelDoneAllPoints : dialogueScripts.levelDoneUnder100;
+  const scene = earnedAllPoints(points, possiblePoints) ? dialogueScripts.levelDoneAllPoints : dialogueScripts.levelDoneUnder100;
   return scene.map((line) => ({
     ...line,
     text: fillLevel(line.text, level),
@@ -22,6 +22,11 @@ export function levelDoneLines(level: number, points: number, possiblePoints: nu
 // - condition ? a : b: gives a when the condition is true and b otherwise.
 // - scene.map((line) => ...): makes a new array by running the function on each line, so the content's own lines are never changed.
 // - { ...line, text: ... }: copies every property of line into a new object; the properties after it replace the copied ones.
+
+/** Whether the player earned every point on a level, which decides both the Level done message and its scenery. */
+export function earnedAllPoints(points: number, possiblePoints: number): boolean {
+  return points >= possiblePoints;
+}
 
 // Content marks where the level number goes with {level}.
 function fillLevel(text: string, level: number): string {

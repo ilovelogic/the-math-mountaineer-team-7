@@ -5,13 +5,16 @@ import { settings } from '../../src/content/settings';
 import { DialogueController } from '../../src/controller/DialogueController';
 import type { Outcome } from '../../src/controller/Screen';
 import type { DialogueLine } from '../../src/model/Dialogue';
+import { sceneryForScript } from '../../src/view/DialogueScenery';
 import type { Layers } from '../../src/view/stage';
+import { standInLoadedImages } from '../standInImage';
 
 /**
  * Checks issue #18: the controller plays a scene one box per click, ignores clicks
  * during the change between boxes, and tells GameFlow once when the scene ends. The
  * screen is drawn into three bare layers, clicks are faked with `fire('click')`, and
- * the controller gets a fake clock, so no browser or real waiting is needed.
+ * the controller gets a fake clock, so no browser or real waiting is needed. It also
+ * checks that the scene's scenery (#201) is drawn behind the box and removed with it.
  */
 
 const script: DialogueLine[] = [
@@ -24,6 +27,7 @@ let time: number;
 let outcomes: Outcome[];
 
 beforeEach(() => {
+  standInLoadedImages();
   layers = { background: new Konva.Layer(), sprites: new Konva.Layer(), ui: new Konva.Layer() };
   time = 0;
   outcomes = [];
@@ -31,7 +35,7 @@ beforeEach(() => {
 
 /** Starts a controller for `lines` that reads the fake clock. */
 function play(lines: readonly DialogueLine[]): DialogueController {
-  const controller = new DialogueController(layers, lines, () => time);
+  const controller = new DialogueController(layers, lines, sceneryForScript('intro'), () => time);
   controller.start((outcome) => outcomes.push(outcome));
   return controller;
 }
@@ -121,6 +125,12 @@ describe('controller/DialogueController', () => {
     expect(outcomes).toEqual([]);
   });
 
+  it('draws its scenery behind the box: a background and the scene’s characters', () => {
+    play(script);
+    expect(layers.background.getChildren()).toHaveLength(1);
+    expect(layers.sprites.getChildren()).toHaveLength(sceneryForScript('intro').sprites.length);
+  });
+
   it('removes everything it drew when stopped', () => {
     const controller = play(script);
     controller.stop();
@@ -129,8 +139,10 @@ describe('controller/DialogueController', () => {
 });
 
 // Optional documentation
+// - standInLoadedImages(): Node has no browser Image, so this gives the scenery an already-loaded 1 × 1 picture to draw (see tests/standInImage.ts).
 // - () => time: the fake clock; each test moves `time` forward itself instead of waiting.
 // - outcomes.push(outcome): records every report, so a test can check it came exactly once.
 // - layer.find<Konva.Text>('Text')[0]: the first text in the box, which is the line; the button labels come after it.
 // - node.fire('click'): runs the node's click handlers as if it had been clicked, without a real mouse.
+// - layer.getChildren(): the nodes added straight to the layer; toHaveLength(n) passes if there are exactly n.
 // - Object.values(layers): the three layers as an array, so one loop checks them all.

@@ -1,6 +1,7 @@
 import { settings } from '../content/settings';
 import { Dialogue, type DialogueLine } from '../model/Dialogue';
 import { DialogueBox } from '../view/DialogueBox';
+import { DialogueScenery, type Scenery } from '../view/DialogueScenery';
 import type { Layers } from '../view/stage';
 import type { Outcome, Screen } from './Screen';
 
@@ -13,21 +14,25 @@ import type { Outcome, Screen } from './Screen';
 export class DialogueController implements Screen {
   private dialogue: Dialogue | null = null;
   private box: DialogueBox | null = null;
+  private drawnScenery: DialogueScenery | null = null;
   private onDone: ((outcome: Outcome) => void) | null = null;
 
   /**
-   * `lines` is the scene to play, from content/dialogueScripts or model/levelDone.
+   * `lines` is the scene to play, from content/dialogueScripts or model/levelDone, and
+   * `scenery` is what to show above the box, from view/DialogueScenery.
    * `now` gives the click time in ms; tests pass a fake clock instead.
    */
   constructor(
     private readonly layers: Layers,
     private readonly lines: readonly DialogueLine[],
+    private readonly scenery: Scenery,
     private readonly now: () => number = () => performance.now(),
   ) {}
 
   start(onDone: (outcome: Outcome) => void): void {
     this.onDone = onDone;
     this.dialogue = new Dialogue(this.lines, settings.dialogueTransitionMs);
+    this.drawnScenery = new DialogueScenery(this.layers, this.scenery);
     this.box = new DialogueBox(this.layers, (index) => this.pick(index));
     this.box.show(this.dialogue.current());
   }
@@ -36,6 +41,8 @@ export class DialogueController implements Screen {
     this.onDone = null;
     this.box?.destroy();
     this.box = null;
+    this.drawnScenery?.destroy();
+    this.drawnScenery = null;
   }
 
   /**
