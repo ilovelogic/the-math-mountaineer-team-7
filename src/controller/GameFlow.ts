@@ -240,7 +240,9 @@ export class GameFlow {
    * next step updates the Hud's total, so only the "+ points" tag is shown here.
    */
   private scoreZipline(problem: ZiplineProblem, guess: number): void {
-    const points = ziplinePoints(checkZiplineAnswer(problem, guess), settings);
+    const isCorrect = checkZiplineAnswer(problem, guess);
+    const points = ziplinePoints(isCorrect, settings);
+    this.progress.recordAnswer(isCorrect ? 'fits' : 'tooShort');
     this.progress.addPoints(points);
     this.options.hud?.showPointsGained(points);
   }
@@ -256,7 +258,7 @@ export class GameFlow {
     this.progress.addPoints(points);
     this.progress.skipLevel(levelDone.level);
     this.options.hud?.showPointsGained(points);
-    
+
     return levelDoneAfter(this.steps, duelIndex).position + 1;
   }
 

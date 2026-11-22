@@ -4,7 +4,6 @@ import type { Layers } from './stage';
 import { STAGE_WIDTH, STAGE_HEIGHT } from './stage';
 import { colors, text } from './theme';
 import { createButton } from './components/button';
-import type { LevelResult, TopicResult } from '../model/PlayerProgress';
 
 /** Every medal the end screen can show, best first, with 'none' for a score below bronze. */
 export type MedalType =
@@ -20,15 +19,6 @@ export interface MedalScreenData {
   points: number;
   /** Called when the player presses See Results. */
   onSeeResults: () => void;
-}
-
-export interface ResultsScreenData {
-  medal: MedalType;
-  points: number;
-  results: TopicResult[];
-  levelResults: LevelResult[];
-  /** The weakest level and topic, or null for a perfect score. */
-  worthReviewing?: { level: number; topic: string } | null;
 }
 
 /**
@@ -220,128 +210,6 @@ export function drawMedalScreen(
   return () => {
     scenery.destroy();
     medal.destroy();
-    panel.destroy();
-  };
-}
-
-export function drawResultsScreen(
-  layers: Layers,
-  data: ResultsScreenData,
-): () => void {
-  const scenery = new Konva.Group();
-  const panel = new Konva.Group();
-
-  // Same sky background as the medal screen
-  scenery.add(
-    new Konva.Rect({
-      x: 0,
-      y: 0,
-      width: STAGE_WIDTH,
-      height: STAGE_HEIGHT,
-      fill: colors.skyDay,
-    }),
-  );
-  // Pixel-style mountain background
-  const mountainPeaks = [
-    250, 250, 210, 210, 170, 170,
-    130, 130, 200, 200, 90, 90,
-    160, 160, 200, 200, 160, 160,
-    230, 230, 270, 270, 250, 250,
-  ];
-
-  mountainPeaks.forEach((top, i) => {
-    scenery.add(
-      new Konva.Rect({
-        x: i * 40,
-        y: top,
-        width: 40,
-        height: 370 - top,
-        fill: colors.ice,
-      }),
-    );
-  });
-
-  // Snow caps on mountain peaks
-  [3, 6, 10, 13, 17].forEach((i) => {
-    scenery.add(
-      new Konva.Rect({
-        x: i * 40,
-        y: mountainPeaks[i],
-        width: 40,
-        height: 12,
-        fill: colors.white,
-      }),
-    );
-  });
-
-  // White results box
-  panel.add(
-    new Konva.Rect({
-      x: 80,
-      y: 110,
-      width: 800,
-      height: 300,
-      fill: colors.white,
-      stroke: colors.ink,
-    }),
-  );
-  // Results heading
-  panel.add(
-    new Konva.Text({
-      ...text.heading,
-      x: 60,
-      y: 125,
-      width: 840,
-      align: 'center',
-      text: 'Your Results',
-    }),
-  );
-
-  // Results by topic
-  data.results.forEach((result, index) => {
-    panel.add(
-      new Konva.Text({
-        ...text.body,
-        x: 80,
-        y: 225 + index * 35,
-        width: 800,
-        text: `${result.topic}: ${result.correct} of ${result.correct + result.incorrect}`,
-      }),
-    );
-  });
-
-  // Show the weakest level and topic
-  const reviewText = data.worthReviewing
-  ? `Worth reviewing: Level ${data.worthReviewing.level} — ${data.worthReviewing.topic}`
-  : 'Nothing to review: every pick was right!';
-
-  panel.add(
-    new Konva.Text({
-      ...text.body,
-      x: 80,
-      y: 310,
-      width: 800,
-      align: 'center',
-      text: reviewText,
-    }),
-  );
-  // Points and medal earned
-  panel.add(
-    new Konva.Text({
-      ...text.body,
-      x: 60,
-      y: 175,
-      width: 840,
-      align: 'center',
-      text: `Your points: ${data.points} out of 350 points — ${data.medal} medal`,
-    }),
-  );
-
-  layers.background.add(scenery);
-  layers.ui.add(panel);
-
-  return () => {
-    scenery.destroy();
     panel.destroy();
   };
 }

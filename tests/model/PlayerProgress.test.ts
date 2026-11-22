@@ -182,6 +182,10 @@ describe('PlayerProgress saving', () => {
       { ...good, answers: [{ step: 0, result: 'fits' }] },
       { ...good, answers: [{ step: 0, level: 0, topic: level1.topic, result: 'fits' }] },
       { ...good, answers: [{ step: 0, level: 1, topic: 7, result: 'fits' }] },
+      { ...good, skippedLevels: '1' },
+      { ...good, skippedLevels: [0] },
+      { ...good, skippedLevels: [-1] },
+      { ...good, skippedLevels: [1.5] },
     ];
 
     for (const saved of bad) {
