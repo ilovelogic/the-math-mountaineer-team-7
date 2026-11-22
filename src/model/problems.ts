@@ -56,6 +56,7 @@ export const triplesByLevel = [
     ],
 ];
 
+/* Changes the seed from chasm to chasm so that log options are always shuffled with new RNG on each chasm. */
 function mixChasmSeed(seed: number, level: number, index: number): number {
     let mixed = seed >>> 0;
 
