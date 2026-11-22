@@ -27,6 +27,7 @@ export interface LevelResult {
   level: number;
   correct: number;
   total: number;
+  skipped?: boolean;
 }
 
 /** Where the player is in the game's script: the level and topic of the current step. */
@@ -49,6 +50,7 @@ export interface SavedProgress {
   topic: string;
   answers: Answer[];
   levelAttempts?: LevelAttempt[];
+  skippedLevels?: number[];
 }
 
 /**
@@ -77,6 +79,7 @@ export class PlayerProgress {
   private _topic: string;
   private _answers: Answer[];
   private _levelAttempts: LevelAttempt[] = [];
+  private _skippedLevels: number[] = [];
 
 
   /** A new game: level 1, step 0, no points and no answers yet. */
@@ -119,51 +122,68 @@ export class PlayerProgress {
   }
 
   getResults(): TopicResult[] {
-  const results = new Map<string, TopicResult>();
+    const results = new Map<string, TopicResult>();
 
-  for (const answer of this._answers) {
-    if (!results.has(answer.topic)) {
-      results.set(answer.topic, {
-        topic: answer.topic,
-        correct: 0,
-        incorrect: 0,
-      });
+    for (const answer of this._answers) {
+      if (!results.has(answer.topic)) {
+        results.set(answer.topic, {
+          topic: answer.topic,
+          correct: 0,
+          incorrect: 0,
+        });
+      }
+
+      const topicResult = results.get(answer.topic)!;
+
+      if (answer.result === 'fits') {
+        topicResult.correct++;
+      } else {
+        topicResult.incorrect++;
+      }
     }
 
-    const topicResult = results.get(answer.topic)!;
-
-    if (answer.result === 'fits') {
-      topicResult.correct++;
-    } else {
-      topicResult.incorrect++;
-    }
+    return Array.from(results.values());
   }
 
-  return Array.from(results.values());
-}
-
-getLevelResults(): LevelResult[] {
-  const results = new Map<number, LevelResult>();
-
-  for (const answer of this._answers) {
-    if (!results.has(answer.level)) {
-      results.set(answer.level, {
-        level: answer.level,
+  getLevelResults(): LevelResult[] {
+    const results = new Map<number, LevelResult>();
+  
+    for (const answer of this._answers) {
+      if (!results.has(answer.level)) {
+        results.set(answer.level, {
+          level: answer.level,
+          correct: 0,
+          total: 0,
+        });
+      }
+  
+      const levelResult = results.get(answer.level)!;
+      levelResult.total++;
+  
+      if (answer.result === 'fits') {
+        levelResult.correct++;
+      }
+    }
+  
+    for (const level of this._skippedLevels) {
+      results.set(level, {
+        level,
         correct: 0,
         total: 0,
+        skipped: true,
       });
     }
+  
+    return Array.from(results.values()).sort((a, b) => a.level - b.level);
+  }
+  /** Records a level skipped by winning the supplies duel. */
+  skipLevel(level: number): void {
+    checkWholeNumber('level', level, 1);
 
-    const levelResult = results.get(answer.level)!;
-    levelResult.total++;
-
-    if (answer.result === 'fits') {
-      levelResult.correct++;
+    if (!this._skippedLevels.includes(level)) {
+      this._skippedLevels.push(level);
     }
   }
-
-  return Array.from(results.values());
-}
 
   /** Keeps this attempt's score without replacing earlier attempts. */
   recordLevelAttempt(level: number, points: number): void {
@@ -236,6 +256,7 @@ getLevelResults(): LevelResult[] {
       topic: this._topic,
       answers: this._answers.map((answer) => ({ ...answer })),
       levelAttempts: this._levelAttempts.map((attempt) => ({ ...attempt })),
+      skippedLevels: [...this._skippedLevels],
     };
   }
 
@@ -277,6 +298,17 @@ getLevelResults(): LevelResult[] {
           throw new Error('Saved level attempt is not valid');
         }
         progress.recordLevelAttempt(attempt.level, attempt.points);
+      }
+    }
+
+    if (saved.skippedLevels !== undefined) {
+      if (!Array.isArray(saved.skippedLevels)) {
+        throw new Error('skippedLevels must be a list');
+      }
+    
+      for (const level of saved.skippedLevels) {
+        checkWholeNumber('skipped level', level, 1);
+        progress.skipLevel(level);
       }
     }
 

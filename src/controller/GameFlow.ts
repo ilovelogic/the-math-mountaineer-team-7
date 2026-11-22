@@ -251,8 +251,12 @@ export class GameFlow {
    * the start of the next level. No answers are recorded, since no chasm was played.
    */
   private skipLevel(duelIndex: number, points: number): number {
+    const levelDone = levelDoneAfter(this.steps, duelIndex);
+
     this.progress.addPoints(points);
+    this.progress.skipLevel(levelDone.level);
     this.options.hud?.showPointsGained(points);
+    
     return levelDoneAfter(this.steps, duelIndex).position + 1;
   }
 

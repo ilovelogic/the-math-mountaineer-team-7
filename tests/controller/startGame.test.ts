@@ -54,7 +54,7 @@ describe('startGame', () => {
   it('plays the saved game on Continue', () => {
     const { pick, played } = start(SAVE);
     pick(CONTINUE);
-    expect(played.map((progress) => progress.toJSON())).toEqual([{ ...SAVE, levelAttempts: [] }]);
+    expect(played.map((progress) => progress.toJSON())).toEqual([{ ...SAVE, levelAttempts: [], skippedLevels: [], }]);
 
   });
 

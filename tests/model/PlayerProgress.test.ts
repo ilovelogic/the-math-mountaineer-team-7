@@ -279,3 +279,55 @@ describe('PlayerProgress results', () => {
     ]);
   });
 });
+
+describe('PlayerProgress skipped levels', () => {
+  it('includes skipped levels in level results', () => {
+    const progress = new PlayerProgress(42, level1);
+
+    progress.skipLevel(1);
+
+    expect(progress.getLevelResults()).toEqual([
+      {
+        level: 1,
+        correct: 0,
+        total: 0,
+        skipped: true,
+      },
+    ]);
+  });
+
+  it('includes skipped and played levels in order', () => {
+    const progress = new PlayerProgress(42, level1);
+  
+    progress.skipLevel(1);
+    progress.moveTo(5, level2);
+    progress.recordAnswer('fits');
+    progress.recordAnswer('tooShort');
+
+    progress.moveTo(10, { level: 3, topic: 'Review' });
+    progress.recordAnswer('fits');
+    progress.recordAnswer('fits');
+    progress.recordAnswer('tooLong');
+
+  
+    expect(progress.getLevelResults()).toEqual([
+      { level: 1, correct: 0, total: 0, skipped: true },
+      { level: 2, correct: 1, total: 2 },
+      { level: 3, correct: 2, total: 3 },
+    ]);
+  });
+
+  it('preserves skipped levels when saving and loading', () => {
+    const progress = new PlayerProgress(42, level1);
+  
+    progress.skipLevel(1);
+  
+    const loaded = PlayerProgress.fromJSON(
+      JSON.parse(JSON.stringify(progress)),
+    );
+  
+    expect(loaded.getLevelResults()).toEqual([
+      { level: 1, correct: 0, total: 0, skipped: true },
+    ]);
+  });
+});
