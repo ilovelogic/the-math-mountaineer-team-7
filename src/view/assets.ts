@@ -19,8 +19,14 @@ export const IMAGE_FILES: Record<string, string> = {
   shopOwnerCelebrating: 'images/shopowner-celebrating.png',
   shopSuppliesOutside: 'images/shop-supplies-outside.png',
   shopClothingOutside: 'images/shop-clothing-outside.png',
-  /** The sky, peaks and snow field from Figma's `Background/Mountains - day`, for any screen set on the mountains (#138). */
+  /**
+   * The level backgrounds from Figma's `Background/` components, exported at 4x (3840 × 2160)
+   * so they stay sharp when the stage scales up. `Mountains - day` is Level 1's and serves any
+   * screen set on the mountains (#138); the other two are Levels 2 and 3's.
+   */
   mountainsDay: 'images/mountains-day.png',
+  level2BareTrees: 'images/level2-bare-trees.png',
+  level3Glacier: 'images/level3-glacier.png',
 };
 
 /**

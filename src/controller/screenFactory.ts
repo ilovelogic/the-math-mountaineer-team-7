@@ -5,6 +5,7 @@ import { levelDoneLines } from '../model/levelDone';
 import type { ProgressView } from '../model/PlayerProgress';
 import type { PickResult } from '../model/rules';
 import { ChasmScreen } from '../view/ChasmScreen';
+import { levelDoneScenery, sceneryForScript } from '../view/DialogueScenery';
 import { DuelScreen } from '../view/DuelScreen';
 import { OwnerProgress } from '../view/OwnerProgress';
 import { ShopOfferScreen } from '../view/ShopOfferScreen';
@@ -36,7 +37,7 @@ export function createScreenFactory(
   return (request) => {
     switch (request.kind) {
       case 'dialogue':
-        return new DialogueController(layers, sceneNamed(request.script));
+        return new DialogueController(layers, sceneNamed(request.script), sceneryForScript(request.script));
       case 'chasm':
         return new ChasmController(
           new ChasmScreen(layers, request.chasm),
@@ -49,7 +50,11 @@ export function createScreenFactory(
           playCue,
         );
       case 'levelDone':
-        return new DialogueController(layers, levelDoneLines(request.level, request.points, request.possiblePoints));
+        return new DialogueController(
+          layers,
+          levelDoneLines(request.level, request.points, request.possiblePoints),
+          levelDoneScenery(request.level, request.points, request.possiblePoints),
+        );
       case 'medal':
         return new MedalController(layers, progress);
       case 'shopOffer':

@@ -34,6 +34,7 @@ let layers: Layers;
 let makeScreen: (request: ScreenRequest) => Screen;
 
 beforeEach(() => {
+  standInLoadedImages();
   layers = { background: new Konva.Layer(), sprites: new Konva.Layer(), ui: new Konva.Layer() };
   makeScreen = createScreenFactory(layers, new PlayerProgress(1));
 });
@@ -61,7 +62,6 @@ describe('createScreenFactory', () => {
   });
 
   it('draws the chasm it was given, with a button for each of its logs', () => {
-    standInLoadedImages();
   
     const chasm = makeChasm(1, 1, 0);
     const screen = makeScreen({ kind: 'chasm', chasm });
@@ -74,7 +74,6 @@ describe('createScreenFactory', () => {
   });
 
   it('passes the sound player to the chasm, so picking a log plays its sound', () => {
-    standInLoadedImages();
     const cues: PickResult[] = [];
     const chasm = makeChasm(1, 1, 0);
     const screen = createScreenFactory(layers, new PlayerProgress(1), (cue) => cues.push(cue))({ kind: 'chasm', chasm });
@@ -87,6 +86,18 @@ describe('createScreenFactory', () => {
     const screen = makeScreen({ kind: 'levelDone', level: 2, points: 50, possiblePoints: 50 });
     expect(screen).toBeInstanceOf(DialogueController);
     expect(startAndRead(screen)).toContain('Congratulations! You earned all the points on Level 2.');
+  });
+
+  it('draws scenery behind dialogue and Level done scenes, with each scene’s own characters', () => {
+    makeScreen({ kind: 'dialogue', script: 'intro' }).start(() => {});
+    expect(layers.background.getChildren()).toHaveLength(1);
+    expect(layers.sprites.getChildren(), 'the mountaineer and the friend').toHaveLength(2);
+    layers.background.destroyChildren();
+    layers.sprites.destroyChildren();
+
+    makeScreen({ kind: 'levelDone', level: 1, points: 50, possiblePoints: 50 }).start(() => {});
+    expect(layers.background.getChildren()).toHaveLength(1);
+    expect(layers.sprites.getChildren(), 'the celebrating mountaineer').toHaveLength(1);
   });
 
   it('offers a restart, with both buttons, when the player missed points on the level', () => {
@@ -107,7 +118,6 @@ describe('createScreenFactory', () => {
   });
 
   it('shows the shop’s offer, from content, for a shop offer step', () => {
-    standInLoadedImages();
     const screen = makeScreen({ kind: 'shopOffer', shop: 'clothing' });
     expect(screen).toBeInstanceOf(ShopOfferController);
     const { text, accept, decline } = shopOffers.clothing;
@@ -115,14 +125,12 @@ describe('createScreenFactory', () => {
   });
 
   it('builds the zipline shop for the clothing shop’s mini-game, opening on the store owner’s deal', () => {
-    standInLoadedImages();
     const screen = makeScreen({ kind: 'shopGame', shop: 'clothing', problem: makeZiplineProblem(1) });
     expect(screen).toBeInstanceOf(ZiplineShopController);
     expect(startAndRead(screen)).toContain(ziplineText.deal.text);
   });
 
   it('builds the math duel for the supply shop’s mini-game, opening on the store owner’s challenge', () => {
-    standInLoadedImages();
     const screen = makeScreen({ kind: 'shopGame', shop: 'supplies', question: makeDuelQuestion(1) });
     expect(screen).toBeInstanceOf(DuelShopController);
     expect(startAndRead(screen)).toContain(duelText.challenge.text);
@@ -138,6 +146,7 @@ describe('createScreenFactory', () => {
 // - describe(name, fn): groups related tests under a heading in the test output; Vitest calls fn right away to find the it(...) calls inside.
 // - it(name, fn): registers one test; Vitest runs fn after collecting every test, and the test fails if anything inside fn throws.
 // - beforeEach(fn): runs fn before every test, so each one starts with fresh layers and a fresh factory.
+// - standInLoadedImages(): Node has no browser Image, so this gives every screen's backgrounds and characters an already-loaded 1 × 1 picture to draw (see tests/standInImage.ts).
 // - new Konva.Layer(): a layer that isn't on any stage, which is enough for screens to draw into and for tests to read back.
 // - allLayers.flatMap(...): runs the function on each of the three layers and joins their lists into one, so text drawn on any layer is found.
 // - layer.find<Konva.Text>('Text'): every Text node inside the layer, at any depth; `<Konva.Text>` tells TypeScript what kind of node they are.
@@ -151,6 +160,7 @@ describe('createScreenFactory', () => {
 // - createScreenFactory(...)({ kind: 'chasm', chasm }): calls the function the factory returns straight away, here with a sound player that records instead of playing.
 // - (cue) => cues.push(cue): stands in for the sound player, writing down each sound's name instead of playing it.
 // - layers.ui.find('.log-button')[chasm.correct].fire('click'): finds the log buttons by name, takes the right log's button, and clicks it as a player would.
+// - layer.getChildren(): the nodes added straight to the layer; toHaveLength(n) passes if there are exactly n.
+// - layer.destroyChildren(): removes and deletes everything on the layer, so the second scene's count starts from zero.
 // - expect(a).not.toBe(b): passes if a and b are not the very same object.
-// - standInLoadedImages(): Node has no browser Image, so this gives the shop offer an already-loaded 1 × 1 picture to draw (see tests/standInImage.ts).
 // - const { text, accept, decline } = shopOffers.clothing: destructuring, which unpacks the offer's three fields into variables with the same names.
