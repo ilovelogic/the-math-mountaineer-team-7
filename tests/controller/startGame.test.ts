@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Outcome, Screen } from '../../src/controller/Screen';
-import { startGame } from '../../src/controller/startGame';
+import { startGame, startNewGame } from '../../src/controller/startGame';
 import { CONTINUE, NEW_GAME } from '../../src/controller/TitleController';
 import type { PlayerProgress, SavedProgress } from '../../src/model/PlayerProgress';
 
@@ -72,6 +72,22 @@ describe('startGame', () => {
   });
 });
 
+
+// Issue #194: Play again clears the finished game's save, then starts a new game at the intro.
+describe('startNewGame', () => {
+  it('clears the save before the new game starts', () => {
+    const events: string[] = [];
+    startNewGame(() => events.push('cleared'), () => events.push('played'));
+    expect(events).toEqual(['cleared', 'played']);
+  });
+
+  it('plays a brand-new game at the intro, never the finished one', () => {
+    const played: PlayerProgress[] = [];
+    startNewGame(() => {}, (progress) => played.push(progress));
+    expect(played).toHaveLength(1);
+    expect([played[0].step, played[0].points, played[0].answers]).toEqual([0, 0, []]);
+  });
+});
 // Optional documentation
 // - Screen & { stopped: boolean }: a type that has everything Screen has plus a `stopped` field, so the test can check it.
 // - start: (onDone) => (report = onDone): saves the function startGame passes in, so the test can call it later to "click" a button.

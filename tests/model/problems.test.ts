@@ -39,16 +39,20 @@ describe('makeChasm', () => {
     })
 
     it('should not repeat triples in the same level', () => {
-        const seed = 42
-        const level = 1
-        const seen = new Set<string>();
+        const seeds = Array.from({ length: 2000 }, (_, i) => i);
+        
+        for (const seed of seeds) {
+            for (let level = 1; level <= 3; level++) {
+                const seen = new Set<string>();
 
-        for (let index = 0; index < triplesByLevel[level - 1].length; index++) {
-            const chasm = makeChasm(seed, level, index);
-            const tripleKey =  `${chasm.a},${chasm.b},${chasm.c}`; 
+                for (let index = 0; index < triplesByLevel[level - 1].length; index++) {
+                    const chasm = makeChasm(seed, level, index);
+                    const tripleKey = `${chasm.a},${chasm.b},${chasm.c}`;
 
-            expect(seen.has(tripleKey)).toBe(false);
-            seen.add(tripleKey);
+                    expect(seen.has(tripleKey)).toBe(false);
+                    seen.add(tripleKey);
+                }
+            }
         }
     });
 
@@ -65,6 +69,26 @@ describe('makeChasm', () => {
         for(const log of chasm.logs) {
             expect(log).toBeGreaterThan(0);
         }
+    });
+
+    it('should vary the correct log position across chasms and seeds', () => {
+        let samePositionCount = 0;
+    
+        for (let seed = 0; seed < 200; seed++) {
+            for (let level = 1; level <= 3; level++) {
+                const positions = new Set<number>();
+
+                for (let index = 0; index < triplesByLevel[level - 1].length; index++) {
+                    const chasm = makeChasm(seed, level, index);
+                    positions.add(chasm.correct);
+                }
+
+                if (positions.size === 1) {
+                    samePositionCount++;
+                }
+            }
+        }
+        expect(samePositionCount).toBeLessThan(30);
     });
 
 });

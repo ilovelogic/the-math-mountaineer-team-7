@@ -4,7 +4,7 @@ import { steps, type Step } from '../../src/content/levels';
 import { settings } from '../../src/content/settings';
 import { ACCEPT, DECLINE } from '../../src/content/shopText';
 import { DUEL_RESULT } from '../../src/controller/DuelShopController';
-import { GameFlow, newSeed, type ScreenRequest } from '../../src/controller/GameFlow';
+import { GameFlow, newSeed, PLAY_AGAIN, type ScreenRequest } from '../../src/controller/GameFlow';
 import type { Outcome, Screen } from '../../src/controller/Screen';
 import { PlayerProgress, type SavedProgress } from '../../src/model/PlayerProgress';
 import { makeChasm, makeDuelQuestion, type Chasm } from '../../src/model/problems';
@@ -305,12 +305,12 @@ describe('controller/GameFlow', () => {
   it('plays the steps in order, one screen at a time', () => {
     play();
     done();
-    last().report({ kind: 'choice', index: DECLINE });
     done();
+    last().report({ kind: 'choice', index: DECLINE });
     expect(screens.map((screen) => screen.request)).toEqual([
       { kind: 'dialogue', script: 'intro' },
-      { kind: 'shopOffer', shop: 'supplies' },
       { kind: 'dialogue', script: 'howCrossingWorks' },
+      { kind: 'shopOffer', shop: 'supplies' },
       { kind: 'chasm', chasm: makeChasm(SEED, 1, 0) },
     ]);
   });
@@ -364,10 +364,11 @@ describe('controller/GameFlow', () => {
   it('saves a checkpoint after every step, pointing at the step to play next', () => {
     play();
     done();
-    last().report({ kind: 'choice', index: DECLINE });
     done();
+    last().report({ kind: 'choice', index: DECLINE });
     pickRight();
-    expect(saves.map((saved) => saved.step)).toEqual([1, FIRST_CHASM - 1, FIRST_CHASM, FIRST_CHASM + 1]);
+    // Declining the supply shop skips its duel, so the save after it points at the first chasm.
+    expect(saves.map((saved) => saved.step)).toEqual([1, 2, FIRST_CHASM, FIRST_CHASM + 1]);
     expect(saves.at(-1)).toEqual(progress.toJSON());
     expect(saves.at(-1)?.points).toBe(10);
   });
@@ -394,9 +395,10 @@ it('saves checkpoints to actual storage after every step', () => {
   done();
   expect(store.load()?.step).toBe(1);
 
-  // Turn down the supply shop, then finish the crossing scene.
-  screens[screens.length - 1].report({ kind: 'choice', index: DECLINE });
+  // Finish the crossing scene, then turn down the supply shop.
   done();
+  expect(store.load()?.step).toBe(2);
+  screens[screens.length - 1].report({ kind: 'choice', index: DECLINE });
   expect(store.load()?.step).toBe(FIRST_CHASM);
 
   pickRight();
@@ -514,8 +516,8 @@ it('saves checkpoints to actual storage after every step', () => {
   });
 });
 
-// A short script with the supply shop between the intro and the crossing tutorial, as in
-// the real one. It ends with a Level done step, since a duel needs one to skip to.
+// A short script with the supply shop between two scenes, so these tests can see what
+// comes after the shop. It ends with a Level done step, since a duel needs one to skip to.
 const SHOP_SCRIPT: Step[] = [
   { kind: 'dialogue', script: 'intro' },
   { kind: 'shopOffer', shop: 'supplies' },
@@ -636,10 +638,10 @@ describe('controller/GameFlow math duel (#55, #134)', () => {
   it.each([
     ['turning down the gear', DUEL_RESULT.normalPath],
     ['losing or leaving', DUEL_RESULT.notWon],
-  ])('goes on to the crossing scene with no points after %s', (_, result) => {
+  ])('goes on to Level 1’s first chasm with no points after %s', (_, result) => {
     play(steps, REAL_DUEL);
     last().report({ kind: 'choice', index: result });
-    expect(last().request).toEqual({ kind: 'dialogue', script: 'howCrossingWorks' });
+    expect(last().request).toEqual({ kind: 'chasm', chasm: makeChasm(SEED, 1, 0) });
     expect(progress.points).toBe(0);
     expect(hud.showPointsGained).not.toHaveBeenCalled();
   });
@@ -690,7 +692,8 @@ describe('controller/GameFlow math duel (#55, #134)', () => {
     play(steps, REAL_DUEL);
     const before = progress.toJSON();
     last().report({ kind: 'choice', index: DUEL_RESULT.notWon });
-    expect(progress.toJSON()).toEqual({ ...before, step: REAL_DUEL + 1 });
+    // The next step is Level 1's first chasm, which sets the topic, so only the step and topic change.
+    expect(progress.toJSON()).toEqual({ ...before, step: REAL_DUEL + 1, topic: TOPIC });
   });
 
   it('saves the skip, so a reload continues at the start of Level 2 with the points', () => {
@@ -711,6 +714,41 @@ describe('controller/GameFlow math duel (#55, #134)', () => {
   it('throws a clear error for a script where the duel has no Level done after it', () => {
     const script: Step[] = SHOP_SCRIPT.slice(0, 4);
     expect(() => play(script)).toThrow("The supply shop's duel at step 2 needs a Level done step after it");
+  });
+});
+
+// Issue #192: winning the duel skips Level 1, so the crossing scene has to come before the
+// supply shop for every player to see it before their first chasm.
+describe('controller/GameFlow crossing scene before the duel (#192)', () => {
+  it.each([
+    // [how the opening goes, how the duel ends (null: the offer is declined), the first chasm's level]
+    ['declines the supply shop', null, 1],
+    ['leaves or loses the duel', DUEL_RESULT.notWon, 1],
+    ['wins but turns down the gear', DUEL_RESULT.normalPath, 1],
+    ['wins and climbs past Level 1', DUEL_RESULT.skipLevel, 2],
+  ])('shows how crossing works before the first chasm when the player %s', (_, duel, firstLevel) => {
+    play();
+    // A limit on the screens, so a wrong script fails the test instead of looping forever.
+    while (last().request.kind !== 'chasm' && screens.length < 50) {
+      const request = last().request;
+      if (request.kind === 'shopOffer') {
+        const declined = duel === null && request.shop === 'supplies';
+        last().report({ kind: 'choice', index: declined ? DECLINE : ACCEPT });
+      } else if (request.kind === 'shopGame' && request.shop === 'supplies') {
+        last().report({ kind: 'choice', index: duel! });
+      } else if (request.kind === 'shopGame') {
+        guessZipline(true);
+      } else {
+        done();
+      }
+    }
+
+    expect(last().request).toEqual({ kind: 'chasm', chasm: makeChasm(SEED, firstLevel, 0) });
+    const crossing = screens.filter(
+      (screen) => screen.request.kind === 'dialogue' && screen.request.script === 'howCrossingWorks',
+    );
+    expect(crossing).toHaveLength(1);
+    expect(screens.indexOf(crossing[0])).toBeLessThan(screens.length - 1);
   });
 });
 
@@ -781,5 +819,41 @@ describe('level attempt history (#87)', () => {
 
     expect(progress.levelAttempts).toEqual(expected);
     expect(saves.at(-1)?.levelAttempts).toEqual(expected);
+  });
+});
+
+// Issue #194: Play again on the results screen after the medal starts a new game. The results
+// screen (#78) isn't merged yet, so a stand-in medal screen reports the choice instead.
+describe('controller/GameFlow Play again (#194)', () => {
+  let playAgain: Mock<() => void>;
+
+  /** Plays just the medal step, with a stand-in for starting a new game. */
+  function playMedal(): void {
+    playAgain = vi.fn<() => void>();
+    const flow = new GameFlow([{ kind: 'medal' }], progress, makeScreen, { playAgain });
+    flow.run();
+  }
+
+  it('stops the last screen and starts a new game on Play again', () => {
+    playMedal();
+    last().report({ kind: 'choice', index: PLAY_AGAIN });
+    expect(last().stopped).toBe(true);
+    expect(playAgain).toHaveBeenCalledTimes(1);
+  });
+
+  it('starts only one new game when Play again is clicked twice', () => {
+    playMedal();
+    last().report({ kind: 'choice', index: PLAY_AGAIN });
+    last().report({ kind: 'choice', index: PLAY_AGAIN });
+    expect(playAgain).toHaveBeenCalledTimes(1);
+  });
+
+  it('treats choice 0 as Play again only on the last screen', () => {
+    playAgain = vi.fn<() => void>();
+    const flow = new GameFlow([{ kind: 'dialogue', script: 'intro' }, { kind: 'medal' }], progress, makeScreen, { playAgain });
+    flow.run();
+    last().report({ kind: 'choice', index: 0 });
+    expect(playAgain).not.toHaveBeenCalled();
+    expect(kinds()).toEqual(['dialogue', 'medal']);
   });
 });
