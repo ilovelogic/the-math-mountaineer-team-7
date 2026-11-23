@@ -421,7 +421,26 @@ it('saves checkpoints to actual storage after every step', () => {
   it('plays the Level done and medal sounds as those steps start, and no others', () => {
     play();
     playToMedal(DUEL_RESULT.notWon);
-    expect(cues).toEqual(['levelDone', 'levelDone', 'medal']);
+    expect(cues).toEqual(['levelDone', 'levelDone', 'medal-diamond']);
+  });
+
+  it('plays the sound for the medal earned, on both sides of each medal limit (#203)', () => {
+    const { diamond, gold, silver, bronze } = settings.medalLimits;
+    const heard = (points: number) => {
+      progress = new PlayerProgress(SEED);
+      progress.addPoints(points);
+      cues = [];
+      play([{ kind: 'medal' }]);
+      return cues;
+    };
+    expect(heard(diamond)).toEqual(['medal-diamond']);
+    expect(heard(diamond - 1)).toEqual(['medal-gold']);
+    expect(heard(gold)).toEqual(['medal-gold']);
+    expect(heard(gold - 1)).toEqual(['medal-silver']);
+    expect(heard(silver)).toEqual(['medal-silver']);
+    expect(heard(silver - 1)).toEqual(['medal-bronze']);
+    expect(heard(bronze)).toEqual(['medal-bronze']);
+    expect(heard(bronze - 1)).toEqual(['medal-none']);
   });
 
   it('plays the Level done sound again when a save resumes on that step', () => {
@@ -759,6 +778,7 @@ function requestAt(index: number): ScreenRequest {
 // - it.each([...] as [string, Step[]][])(name, fn): runs the same test once per row, passing the row's items to fn; %s in the name is filled in from the row, and the `as` tells TypeScript each row is a label and a script.
 // - (_, script) =>: `_` names a parameter the test doesn't use, here the row's label.
 // - expect(() => ...).toThrow(text): passes only if calling the function throws an error whose message contains `text`.
+// - const { diamond, gold, silver, bronze } = settings.medalLimits: makes four constants from the properties with those names, so each limit reads as its medal.
 describe('level attempt history (#87)', () => {
   it('keeps both scores after restarting a level and loading a save', () => {
     play(steps, steps.findIndex((step) => step.kind === 'chasm'));

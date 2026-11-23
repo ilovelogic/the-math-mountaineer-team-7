@@ -74,7 +74,7 @@ describe('view/assets', () => {
     const { loadAssets, sound } = await freshAssets();
     await loadAssets();
     const medalCues = ['medal-none', 'medal-bronze', 'medal-silver', 'medal-gold', 'medal-diamond'];
-    for (const cue of ['fits', 'tooShort', 'tooLong', 'levelDone', 'medal', ...medalCues]) {
+    for (const cue of ['fits', 'tooShort', 'tooLong', 'levelDone', ...medalCues]) {
       expect(sound(cue).src).toMatch(/assets\/sounds\/[a-z-]+\.mp3$/);
     }
     expect(console.warn).not.toHaveBeenCalled();

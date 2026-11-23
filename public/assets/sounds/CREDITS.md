@@ -8,7 +8,6 @@ Every sound here is by [Kenney](https://kenney.nl) and released under [CC0 1.0](
 | `too-short.mp3` | The log is too short and falls | `phaserDown3.ogg`, then `impactSoft_heavy_003.ogg` 0.42 s later | [Digital Audio](https://kenney.nl/assets/digital-audio), [Impact Sounds](https://kenney.nl/assets/impact-sounds) |
 | `too-long.mp3` | The log is too long | `impactPlank_medium_001.ogg` | [Impact Sounds](https://kenney.nl/assets/impact-sounds) |
 | `level-done.mp3` | A level is done | `jingles_STEEL02.ogg` | [Music Jingles](https://kenney.nl/assets/music-jingles) |
-| `medal.mp3` | The medal screen opens | `jingles_SAX07.ogg` | [Music Jingles](https://kenney.nl/assets/music-jingles) |
 | `medal-none.mp3` | The game ends without a medal | `jingles_STEEL05.ogg` | [Music Jingles](https://kenney.nl/assets/music-jingles) |
 | `medal-bronze.mp3` | The player earns bronze | `jingles_STEEL06.ogg` | [Music Jingles](https://kenney.nl/assets/music-jingles) |
 | `medal-silver.mp3` | The player earns silver | `jingles_STEEL10.ogg` | [Music Jingles](https://kenney.nl/assets/music-jingles) |

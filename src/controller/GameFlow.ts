@@ -2,6 +2,7 @@ import type { Shop, Step } from '../content/levels';
 import { settings } from '../content/settings';
 import { DECLINE } from '../content/shopText';
 import type { Place, PlayerProgress, SavedProgress } from '../model/PlayerProgress';
+import { medalFor } from '../model/medals';
 import { checkPick, makeChasm, makeDuelQuestion, type Chasm, type DuelQuestion } from '../model/problems';
 import { pointsFor, skippedLevelPoints, ziplinePoints } from '../model/rules';
 import { checkZiplineAnswer, makeZiplineProblem, type ZiplineProblem } from '../model/zipline';
@@ -33,7 +34,7 @@ export interface GameFlowOptions {
   save?: (saved: SavedProgress) => void;
   /** Loads the latest checkpoint for recovery after a screen failure. */
   load?: () => SavedProgress | null;
-  /** Plays a sound, such as view/audio's `play`. GameFlow plays the Level done and medal sounds as those steps start. */
+  /** Plays a sound, such as view/audio's `play`. GameFlow plays the Level done sound and the earned medal's sound as those steps start. */
   playCue?: (cue: Cue) => void;
   /** Starts a new game when the player picks Play again on the last screen (#194). */
   playAgain?: () => void;
@@ -103,7 +104,12 @@ export class GameFlow {
         this.progress,
         step.kind === 'chasm' ? step.index + 1 : undefined,
       );
-      if (step.kind === 'levelDone' || step.kind === 'medal') this.options.playCue?.(step.kind);
+      if (step.kind === 'levelDone') this.options.playCue?.('levelDone');
+      if (step.kind === 'medal') {
+        // Each medal has its own sound, picked by the same rule MedalController uses to draw it.
+        const medal = medalFor(this.progress.points, settings.medalLimits);
+        this.options.playCue?.(`medal-${medal}`);
+      }
 
       const screen = this.makeScreen(request);
       const id = ++this.current;

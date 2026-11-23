@@ -40,7 +40,6 @@ export const SOUND_FILES: Record<string, string> = {
   tooShort: 'sounds/too-short.mp3',
   tooLong: 'sounds/too-long.mp3',
   levelDone: 'sounds/level-done.mp3',
-  medal: 'sounds/medal.mp3',
   // One for each medal, plus none, rising from a single note to a long run so a better
   // medal sounds bigger (#203).
   'medal-none': 'sounds/medal-none.mp3',
