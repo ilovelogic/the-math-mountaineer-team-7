@@ -45,5 +45,13 @@ export const dialogueScripts = {
           text: "Do you want to restart Level {level} so you can get closer to earning your desired medal?",
           choices: ["Begin level {level} again", "Continue on to next level"]
         }
-    ]
+    ],
+    // Results screen dialogue
+    results: [
+      {
+        speaker: "Narrator",
+        text: "Here is how you did. Use it to see what to practice next.",
+        choices: ["Play again"],
+      },
+    ],
 }; 

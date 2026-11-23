@@ -182,6 +182,10 @@ describe('PlayerProgress saving', () => {
       { ...good, answers: [{ step: 0, result: 'fits' }] },
       { ...good, answers: [{ step: 0, level: 0, topic: level1.topic, result: 'fits' }] },
       { ...good, answers: [{ step: 0, level: 1, topic: 7, result: 'fits' }] },
+      { ...good, skippedLevels: '1' },
+      { ...good, skippedLevels: [0] },
+      { ...good, skippedLevels: [-1] },
+      { ...good, skippedLevels: [1.5] },
     ];
 
     for (const saved of bad) {
@@ -225,6 +229,58 @@ describe('level attempt saving (#87)', () => {
     expect(loaded.levelAttempts).toEqual([
       { level: 1, points: 0 },
       { level: 1, points: 30 },
+    ]);
+  });
+});
+
+describe('PlayerProgress skipped levels', () => {
+  it('includes skipped levels in level results', () => {
+    const progress = new PlayerProgress(42, level1);
+
+    progress.skipLevel(1);
+
+    expect(progress.getLevelResults()).toEqual([
+      {
+        level: 1,
+        correct: 0,
+        total: 0,
+        skipped: true,
+      },
+    ]);
+  });
+
+  it('includes skipped and played levels in order', () => {
+    const progress = new PlayerProgress(42, level1);
+  
+    progress.skipLevel(1);
+    progress.moveTo(5, level2);
+    progress.recordAnswer('fits');
+    progress.recordAnswer('tooShort');
+
+    progress.moveTo(10, { level: 3, topic: 'Review' });
+    progress.recordAnswer('fits');
+    progress.recordAnswer('fits');
+    progress.recordAnswer('tooLong');
+
+  
+    expect(progress.getLevelResults()).toEqual([
+      { level: 1, correct: 0, total: 0, skipped: true },
+      { level: 2, correct: 1, total: 2 },
+      { level: 3, correct: 2, total: 3 },
+    ]);
+  });
+
+  it('preserves skipped levels when saving and loading', () => {
+    const progress = new PlayerProgress(42, level1);
+  
+    progress.skipLevel(1);
+  
+    const loaded = PlayerProgress.fromJSON(
+      JSON.parse(JSON.stringify(progress)),
+    );
+  
+    expect(loaded.getLevelResults()).toEqual([
+      { level: 1, correct: 0, total: 0, skipped: true },
     ]);
   });
 });

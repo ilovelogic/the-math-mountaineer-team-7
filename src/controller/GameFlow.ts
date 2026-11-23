@@ -255,7 +255,9 @@ export class GameFlow {
    * next step updates the Hud's total, so only the "+ points" tag is shown here.
    */
   private scoreZipline(problem: ZiplineProblem, guess: number): void {
-    const points = ziplinePoints(checkZiplineAnswer(problem, guess), settings);
+    const isCorrect = checkZiplineAnswer(problem, guess);
+    const points = ziplinePoints(isCorrect, settings);
+    
     this.progress.addPoints(points);
     this.options.hud?.showPointsGained(points);
   }
@@ -266,8 +268,12 @@ export class GameFlow {
    * the start of the next level. No answers are recorded, since no chasm was played.
    */
   private skipLevel(duelIndex: number, points: number): number {
+    const levelDone = levelDoneAfter(this.steps, duelIndex);
+
     this.progress.addPoints(points);
+    this.progress.skipLevel(levelDone.level);
     this.options.hud?.showPointsGained(points);
+
     return levelDoneAfter(this.steps, duelIndex).position + 1;
   }
 
