@@ -86,6 +86,7 @@ These are grouped by what they're for. Each links to its section in the folder d
    - [dialogueScripts](src/content/README.md#dialoguescripts): The intro, the "how crossing works" scene, and the two Level done messages.
    - [Dialogue](src/model/README.md#dialogue): Tracks which dialogue box is showing, one box per click, and ignores fast double clicks.
    - [DialogueBox](src/view/README.md#dialoguebox): Shows each dialogue line in the shared dialog box, with a Continue button or the line's own choices.
+   - [DialogueScenery](src/view/README.md#dialoguescenery): Draws each dialogue scene's background and characters behind the dialog box, like the mockups, with the next level's background after a level with every point.
    - [levels](src/content/README.md#levels): The game's steps in order after the title screen: the intro, the "how crossing works" scene, the supply shop, 15 chasms over 3 levels, the clothing shop before Level 2, a Level done step after Levels 1 and 2, and the medal.
    - [PlayerProgress](src/model/README.md#playerprogress): The player's level, step, points, topic, every answer and the score of every attempt at each level, in a form that can be saved.
    - [SaveStore](src/model/README.md#savestore): Saves one checkpoint in the browser's storage and loads it back, refusing anything that isn't a valid save.

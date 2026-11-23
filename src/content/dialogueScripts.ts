@@ -22,6 +22,10 @@ export const dialogueScripts = {
         {
           speaker: "Narrator",
           text: "Too short and it falls into the chasm. Too long and it smashes the item your friend left on the other side."
+        },
+        {
+          speaker: "Narrator",
+          text: "You may use a calculator, handheld or online. What matters is knowing how to find each log’s length."
         }
     ],
     // These are the Level done messages shown after Levels 1 and 2. GameFlow picks one from the
