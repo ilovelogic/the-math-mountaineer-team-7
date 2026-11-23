@@ -136,8 +136,8 @@ GameFlow, the screen factory and the Hud all share one `PlayerProgress`. Choosin
 ## Crossing one chasm, start to finish
 
 A single answer moves through the game as follows:
-   1. GameFlow asks `problems` for this step's chasm, using the game's seed, the level, and the chasm's position.
-   2. GameFlow starts ChasmController with that chasm, and ChasmController has ChasmScreen draw it.
+   1. GameFlow asks `problems` for this step's chasm, using the game's seed, the level, and the chasm's position, and picks the friend's item for that chasm from `content/friendItems`.
+   2. GameFlow starts ChasmController with that chasm, and ChasmController has ChasmScreen draw it, with the friend's item on the far cliff.
    3. The player clicks a log. ChasmController takes that first pick (since each chasm allows only one) and checks it with `problems`, and ChasmScreen shows what happened: the log fits, or it's too short or too long and here's the log that fits.
    4. After a wrong log, the player crosses with the right one, first seeing how to find it on the solution page if they choose to.
    5. Once the player clicks Continue, ChasmController locks the logs and reports the picked log's position to GameFlow via `onDone`.

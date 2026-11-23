@@ -11,6 +11,7 @@ Imports nothing. Change a number here instead of in code.
 - [Overview](#overview)
 - [levels](#levels)
 - [dialogueScripts](#dialoguescripts)
+- [friendItems](#frienditems)
 - [shopText](#shoptext)
 - [duelText](#dueltext)
 - [ziplineText](#ziplinetext)
@@ -46,10 +47,20 @@ Starts with the intro, then the "how crossing works" scene, then the supply shop
 ## dialogueScripts
 
 **Purpose**\
-Stores the story text, with one scene per key. Each scene is a list of boxes, and each box has a speaker and a line of text. Today, there are four scenes, which are `intro` (the avalanche and the missing friend), `howCrossingWorks` (how to pick a log), and the two Level done messages, `levelDoneAllPoints` and `levelDoneUnder100`. The Level done scenes mark where the level number goes with `{level}`, which `model/levelDone` fills in, so the same words serve every level.
+Stores the story text, with one scene per key. Each scene is a list of boxes, and each box has a speaker and a line of text. Today, there are four scenes, which are `intro` (the avalanche and the missing friend), `howCrossingWorks` (the trail of the friend's items, and how to pick a log), and the two Level done messages, `levelDoneAllPoints` and `levelDoneUnder100`. The Level done scenes mark where the level number goes with `{level}`, which `model/levelDone` fills in, so the same words serve every level.
 
 **Adding a scene**\
 Add a new key with its boxes, and then add a `dialogue` step naming that key in `levels`.
+
+---
+
+## friendItems
+
+**Purpose**\
+Lists the items the friend left on the trail, one per chasm, so each chasm shows a different item on its far side and the feedback can name it. Each level has its own theme: candy on Level 1, foreign coins on Level 2, and jewelry on Level 3. Each item has the `name` the feedback uses after "your friend's" and the `image` name of its picture in `view/assets`. GameFlow hands each chasm the item at its level and position.
+
+**Adding or changing an item**\
+Draw it with the other items on the Items section of the Figma Resources page, export it at 4x (160 × 160) into `public/assets/images/`, add its name to `view/assets`, and change its entry here. The tests check that every chasm has an item, no two chasms share one, and every picture is listed in `view/assets`.
 
 ---
 
