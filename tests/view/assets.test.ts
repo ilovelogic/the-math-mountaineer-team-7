@@ -73,7 +73,8 @@ describe('view/assets', () => {
   it('has a loaded sound for every cue the game plays', async () => {
     const { loadAssets, sound } = await freshAssets();
     await loadAssets();
-    for (const cue of ['fits', 'tooShort', 'tooLong', 'levelDone', 'medal']) {
+    const medalCues = ['medal-none', 'medal-bronze', 'medal-silver', 'medal-gold', 'medal-diamond'];
+    for (const cue of ['fits', 'tooShort', 'tooLong', 'levelDone', 'medal', ...medalCues]) {
       expect(sound(cue).src).toMatch(/assets\/sounds\/[a-z-]+\.mp3$/);
     }
     expect(console.warn).not.toHaveBeenCalled();
