@@ -31,7 +31,7 @@ export const steps: Step[] = [
   // Comes before the supply shop, so a player who wins the duel and skips Level 1
   // still learns how to cross a chasm before the first one (#192).
   { kind: 'dialogue', script: 'howCrossingWorks' },
-  // The supply shop, right after the avalanche: winning its duel skips Level 1 (#134).
+  // The supply shop: winning its duel skips Level 1 (#134).
   { kind: 'shopOffer', shop: 'supplies' },
   { kind: 'shopGame', shop: 'supplies' },
 
