@@ -652,6 +652,18 @@ describe('controller/GameFlow math duel (#55, #134)', () => {
     expect(kinds()).not.toContain('levelDone');
   });
 
+  it('records Level 1 as skipped when the player wins the duel', () => {
+    play(steps, REAL_DUEL);
+    last().report({ kind: 'choice', index: DUEL_RESULT.skipLevel });
+  
+    expect(progress.getLevelResults()).toContainEqual({
+      level: 1,
+      correct: 0,
+      total: 0,
+      skipped: true,
+    });
+  });
+
   it('gives Level 1’s 50 points for skipping it, and shows them on the Hud', () => {
     play(steps, REAL_DUEL);
     last().report({ kind: 'choice', index: DUEL_RESULT.skipLevel });

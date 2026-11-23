@@ -233,57 +233,6 @@ describe('level attempt saving (#87)', () => {
   });
 });
 
-describe('PlayerProgress results', () => {
-  it('returns an empty array when there are no answers', () => {
-    const progress = new PlayerProgress(42, level1);
-
-    expect(progress.getResults()).toEqual([]);
-  });
-
-  it('counts correct and incorrect answers for one topic', () => {
-    const progress = new PlayerProgress(42, level1);
-
-    progress.recordAnswer('fits');
-    progress.recordAnswer('tooShort');
-    progress.recordAnswer('fits');
-    progress.recordAnswer('tooLong');
-
-    expect(progress.getResults()).toEqual([
-      {
-        topic: level1.topic,
-        correct: 2,
-        incorrect: 2,
-      },
-    ]);
-  });
-
-  it('keeps results separate for different topics', () => {
-    const progress = new PlayerProgress(42, level1);
-
-    progress.recordAnswer('fits');
-    progress.recordAnswer('tooShort');
-
-    progress.moveTo(1, level2);
-
-    progress.recordAnswer('fits');
-    progress.recordAnswer('fits');
-    progress.recordAnswer('tooLong');
-
-    expect(progress.getResults()).toEqual([
-      {
-        topic: level1.topic,
-        correct: 1,
-        incorrect: 1,
-      },
-      {
-        topic: level2.topic,
-        correct: 2,
-        incorrect: 1,
-      },
-    ]);
-  });
-});
-
 describe('PlayerProgress skipped levels', () => {
   it('includes skipped levels in level results', () => {
     const progress = new PlayerProgress(42, level1);

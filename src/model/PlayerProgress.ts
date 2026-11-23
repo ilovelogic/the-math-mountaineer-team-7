@@ -12,11 +12,6 @@ export interface Answer {
   result: PickResult;
 }
 
-export interface TopicResult {
-  topic: string;
-  correct: number;
-  incorrect: number;
-}
 /** Score earned in one completed attempt at a level. */
 export interface LevelAttempt {
   readonly level: number;
@@ -59,7 +54,7 @@ export interface SavedProgress {
  */
 export type ProgressView = Pick<
   PlayerProgress,
-  'seed' | 'level' | 'step' | 'points' | 'topic' | 'answers' | 'getResults' | 'getLevelResults'
+  'seed' | 'level' | 'step' | 'points' | 'topic' | 'answers' | 'getLevelResults'
 >;
 
 const FITS: readonly PickResult[] = ['fits', 'tooShort', 'tooLong'];
@@ -119,30 +114,6 @@ export class PlayerProgress {
   /** Completed level attempts, oldest first. */
   get levelAttempts(): readonly LevelAttempt[] {
     return this._levelAttempts.map((attempt) => ({ ...attempt }));
-  }
-
-  getResults(): TopicResult[] {
-    const results = new Map<string, TopicResult>();
-
-    for (const answer of this._answers) {
-      if (!results.has(answer.topic)) {
-        results.set(answer.topic, {
-          topic: answer.topic,
-          correct: 0,
-          incorrect: 0,
-        });
-      }
-
-      const topicResult = results.get(answer.topic)!;
-
-      if (answer.result === 'fits') {
-        topicResult.correct++;
-      } else {
-        topicResult.incorrect++;
-      }
-    }
-
-    return Array.from(results.values());
   }
 
   getLevelResults(): LevelResult[] {

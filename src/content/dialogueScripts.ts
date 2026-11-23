@@ -51,7 +51,7 @@ export const dialogueScripts = {
       {
         speaker: "Narrator",
         text: "Here is how you did. Use it to see what to practice next.",
-        choices: ["Play again", "Finish"],
+        choices: ["Play again"],
       },
     ],
 }; 

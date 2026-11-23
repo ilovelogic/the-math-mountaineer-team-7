@@ -25,7 +25,7 @@ export class MedalController implements Screen {
     private readonly limits: MedalLimits = settings.medalLimits,
   ) {}
 
-  start(_onDone: (outcome: Outcome) => void): void {
+  start(onDone: (outcome: Outcome) => void): void {
     this.active = true;
     this.showingResults = false;
 
@@ -48,8 +48,9 @@ export class MedalController implements Screen {
         });
         this.dialogueBox = new DialogueBox(
           this.layers,
-          (_index) => {
-            // We'll implement Replay a level later.
+          (index) => {
+            // Play again functionality.
+            onDone({ kind: 'choice', index })
           },
         );
         this.dialogueBox.show(dialogueScripts.results[0]);
