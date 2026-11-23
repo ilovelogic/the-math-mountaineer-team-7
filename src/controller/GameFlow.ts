@@ -242,7 +242,7 @@ export class GameFlow {
   private scoreZipline(problem: ZiplineProblem, guess: number): void {
     const isCorrect = checkZiplineAnswer(problem, guess);
     const points = ziplinePoints(isCorrect, settings);
-    this.progress.recordAnswer(isCorrect ? 'fits' : 'tooShort');
+    
     this.progress.addPoints(points);
     this.options.hud?.showPointsGained(points);
   }
