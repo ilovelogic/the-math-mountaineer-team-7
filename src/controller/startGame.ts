@@ -26,6 +26,14 @@ export function startGame(
     play(continuing ? PlayerProgress.fromJSON(resumable) : new PlayerProgress(newSeed()));
   });
 }
+/**
+ * Play again (#194): clears the finished game's save, then starts a brand-new game at the
+ * intro. Clearing first means a reload can never bring the finished game back.
+ */
+export function startNewGame(clearSave: () => void, play: (progress: PlayerProgress) => void): void {
+  clearSave();
+  play(new PlayerProgress(newSeed()));
+}
 // Optional documentation
 // - makeTitle: (canContinue: boolean) => Screen: a function passed in that builds the title screen, so tests can hand back a stand-in instead of drawing one.
 // - play: (progress: PlayerProgress) => void: what to do with the chosen game; main.ts starts GameFlow with it, and tests just record it.
