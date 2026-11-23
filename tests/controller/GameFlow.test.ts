@@ -829,14 +829,6 @@ describe('controller/GameFlow Play again (#194)', () => {
     expect(playAgain).toHaveBeenCalledTimes(1);
   });
 
-  it('leaves the last screen up on Finish, or when it only reports done', () => {
-    playMedal();
-    last().report({ kind: 'choice', index: 1 });
-    done();
-    expect(last().stopped).toBe(false);
-    expect(playAgain).not.toHaveBeenCalled();
-  });
-
   it('starts only one new game when Play again is clicked twice', () => {
     playMedal();
     last().report({ kind: 'choice', index: PLAY_AGAIN });

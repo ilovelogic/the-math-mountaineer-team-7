@@ -43,8 +43,8 @@ export interface GameFlowOptions {
 const RESTART = 0;
 
 /**
- * On the results screen after the medal, Play again is the first button, so it reports
- * choice 0 (#194, #78). Finish, or any other report, leaves the last screen up.
+ * On the results screen after the medal, Play again is the only button, so it reports
+ * choice 0 (#194, #78). Any other report leaves the last screen up.
  */
 export const PLAY_AGAIN = 0;
 
