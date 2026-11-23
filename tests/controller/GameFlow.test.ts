@@ -4,7 +4,7 @@ import { steps, type Step } from '../../src/content/levels';
 import { settings } from '../../src/content/settings';
 import { ACCEPT, DECLINE } from '../../src/content/shopText';
 import { DUEL_RESULT } from '../../src/controller/DuelShopController';
-import { GameFlow, newSeed, type ScreenRequest } from '../../src/controller/GameFlow';
+import { GameFlow, newSeed, PLAY_AGAIN, type ScreenRequest } from '../../src/controller/GameFlow';
 import type { Outcome, Screen } from '../../src/controller/Screen';
 import { PlayerProgress, type SavedProgress } from '../../src/model/PlayerProgress';
 import { makeChasm, makeDuelQuestion, type Chasm } from '../../src/model/problems';
@@ -807,5 +807,49 @@ describe('level attempt history (#87)', () => {
 
     expect(progress.levelAttempts).toEqual(expected);
     expect(saves.at(-1)?.levelAttempts).toEqual(expected);
+  });
+});
+
+// Issue #194: Play again on the results screen after the medal starts a new game. The results
+// screen (#78) isn't merged yet, so a stand-in medal screen reports the choice instead.
+describe('controller/GameFlow Play again (#194)', () => {
+  let playAgain: Mock<() => void>;
+
+  /** Plays just the medal step, with a stand-in for starting a new game. */
+  function playMedal(): void {
+    playAgain = vi.fn<() => void>();
+    const flow = new GameFlow([{ kind: 'medal' }], progress, makeScreen, { playAgain });
+    flow.run();
+  }
+
+  it('stops the last screen and starts a new game on Play again', () => {
+    playMedal();
+    last().report({ kind: 'choice', index: PLAY_AGAIN });
+    expect(last().stopped).toBe(true);
+    expect(playAgain).toHaveBeenCalledTimes(1);
+  });
+
+  it('leaves the last screen up on Finish, or when it only reports done', () => {
+    playMedal();
+    last().report({ kind: 'choice', index: 1 });
+    done();
+    expect(last().stopped).toBe(false);
+    expect(playAgain).not.toHaveBeenCalled();
+  });
+
+  it('starts only one new game when Play again is clicked twice', () => {
+    playMedal();
+    last().report({ kind: 'choice', index: PLAY_AGAIN });
+    last().report({ kind: 'choice', index: PLAY_AGAIN });
+    expect(playAgain).toHaveBeenCalledTimes(1);
+  });
+
+  it('treats choice 0 as Play again only on the last screen', () => {
+    playAgain = vi.fn<() => void>();
+    const flow = new GameFlow([{ kind: 'dialogue', script: 'intro' }, { kind: 'medal' }], progress, makeScreen, { playAgain });
+    flow.run();
+    last().report({ kind: 'choice', index: 0 });
+    expect(playAgain).not.toHaveBeenCalled();
+    expect(kinds()).toEqual(['dialogue', 'medal']);
   });
 });
