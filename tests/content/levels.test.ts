@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { steps, TOPIC_3D, type Step } from '../../src/content/levels';
+import { settings } from '../../src/content/settings';
+import { medalFor } from '../../src/model/medals';
 import { makeChasm, triplesByLevel } from '../../src/model/problems';
 
 type ChasmStep = Extract<Step, { kind: 'chasm' }>;
@@ -24,12 +26,27 @@ describe('content/levels', () => {
     expect(steps.at(-1)).toEqual({ kind: 'medal' });
   });
 
-  it('has one step per chasm, in order, for every triangle in each level', () => {
-    triplesByLevel.forEach((triples, i) => {
-      const level = i + 1;
+  // #193: a game plays 3 of each level's 5 triangles, so a full game is 9 chasms.
+  it('has 3 chasm steps per level, numbered 0 to 2', () => {
+    for (let level = 1; level <= triplesByLevel.length; level++) {
       const indices = chasmSteps.filter((step) => step.level === level).map((step) => step.index);
-      expect(indices).toEqual(triples.map((_, index) => index));
-    });
+      expect(indices).toEqual([0, 1, 2]);
+    }
+  });
+
+  it('plays 9 chasms in a full game', () => {
+    expect(chasmSteps).toHaveLength(9);
+  });
+
+  it('gives diamond for getting every chasm right', () => {
+    const perfectPoints = chasmSteps.length * settings.pointsPerChasm;
+    expect(perfectPoints).toBe(settings.medalLimits.diamond);
+    expect(medalFor(perfectPoints, settings.medalLimits)).toBe('diamond');
+  });
+
+  it('makes skipping Level 1 worth a perfect Level 1', () => {
+    const levelOneChasms = chasmSteps.filter((step) => step.level === 1).length;
+    expect(settings.pointsPerSkippedLevel).toBe(levelOneChasms * settings.pointsPerChasm);
   });
 
   it('follows every level but the last with its Level done step', () => {
