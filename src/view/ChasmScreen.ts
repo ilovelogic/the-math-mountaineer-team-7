@@ -1,4 +1,5 @@
 import Konva from 'konva';
+import type { FriendItem } from '../content/friendItems';
 import { hintText } from '../content/hintText';
 import { createButton } from './components/button';
 import { createDialogBox } from './components/dialogBox';
@@ -33,6 +34,14 @@ const FORMULA_CARD = { x: 232, y: 96 } as const;
 const GAP = { left: 300, right: 650, near: 300, far: 180 } as const;
 
 /**
+ * Where the friend's item rests on the far cliff's snow, 40 × 40 like the Figma items. It sits
+ * right of where the mountaineer lands after crossing, and under the end of a log that's too long.
+ */
+const ITEM = { x: 720, y: GAP.far - 40, size: 40 } as const;
+/** How flat a too-long log leaves the item, as a share of its height. */
+const SMASHED_HEIGHT = 0.35;
+
+/**
  * Pixel tops of the background mountains, one per 40 px column across the stage.
  * Far columns marked in `SNOWY` get a snow cap.
  */
@@ -64,6 +73,7 @@ export class ChasmScreen {
   private picked: number | null = null;
   private locked = false;
   private player!: Konva.Image;
+  private item!: Konva.Image;
   private logHeading!: Konva.Text;
   private hintCallback: (() => void) | null = null;
   private readonly hintButton = createButton(hintText.button, () => this.hintCallback?.(), 'secondary');
@@ -72,6 +82,7 @@ export class ChasmScreen {
   constructor(
     private readonly layers: Layers,
     private readonly chasm: DrawnChasm,
+    private readonly friendItem: FriendItem,
   ) {}
 
   /** Draws the whole screen. Call it once. */
@@ -79,6 +90,7 @@ export class ChasmScreen {
     this.drawScenery();
     this.drawTriangle();
     this.drawPlayer();
+    this.drawItem();
     this.drawLogPile();
 
     this.props.add(this.logPile);
@@ -152,7 +164,7 @@ export class ChasmScreen {
     }
 
     this.prompt.show(
-      `The ${correctLength} m log fits. You cross the gap and find one of your friend's items.`,
+      `The ${correctLength} m log fits. You cross the gap and find your friend's ${this.friendItem.name}.`,
       ['Continue']
     );
     this.positionLogButtons();
@@ -169,11 +181,12 @@ export class ChasmScreen {
     }
     else {
       this.drawOverhangingLog();
+      this.smashItem();
     }
   
     const message = result === 'tooShort'
         ? `The ${selectedLength} m log is too short. It falls into the chasm. The right log was the ${correctLength} m log.`
-        : `The ${selectedLength} m log is too long. It smashes your friend's item on the other side, and you lose the points it was worth. The right log was the ${correctLength} m log.`;
+        : `The ${selectedLength} m log is too long. It smashes your friend's ${this.friendItem.name} on the other side, and you lose the points it was worth. The right log was the ${correctLength} m log.`;
 
     this.prompt.show(message, ['Cross the chasm using the correct log',
       'First, see how to derive the correct answer'
@@ -325,6 +338,26 @@ export class ChasmScreen {
     });
   
     this.props.add(this.player);
+  }
+
+  private drawItem(): void {
+    this.item = new Konva.Image({
+      image: image(this.friendItem.image),
+      name: 'friend-item',
+      x: ITEM.x,
+      y: ITEM.y,
+      width: ITEM.size,
+      height: ITEM.size,
+    });
+
+    this.props.add(this.item);
+  }
+
+  /** Squashes the item flat where it stands and tips it a little, so it still looks like the same item. */
+  private smashItem(): void {
+    this.item.scaleY(SMASHED_HEIGHT);
+    this.item.y(GAP.far - ITEM.size * SMASHED_HEIGHT);
+    this.item.rotation(-6);
   }
 
   private drawBridgeLog(type: 'correct' | 'tooShort' | 'tooLong'): void {

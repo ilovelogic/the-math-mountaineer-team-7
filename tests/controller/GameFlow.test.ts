@@ -1,5 +1,6 @@
 import { SaveStore } from '../../src/model/SaveStore';
 import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
+import { friendItems } from '../../src/content/friendItems';
 import { steps, type Step } from '../../src/content/levels';
 import { settings } from '../../src/content/settings';
 import { ACCEPT, DECLINE } from '../../src/content/shopText';
@@ -311,7 +312,7 @@ describe('controller/GameFlow', () => {
       { kind: 'dialogue', script: 'intro' },
       { kind: 'shopOffer', shop: 'supplies' },
       { kind: 'dialogue', script: 'howCrossingWorks' },
-      { kind: 'chasm', chasm: makeChasm(SEED, 1, 0) },
+      { kind: 'chasm', chasm: makeChasm(SEED, 1, 0), item: friendItems[0].items[0] },
     ]);
   });
 
@@ -321,10 +322,10 @@ describe('controller/GameFlow', () => {
     expect(screens.map((screen) => screen.stopped)).toEqual([true, false]);
   });
 
-  it('makes each chasm from the game’s seed, level and index', () => {
+  it('makes each chasm from the game’s seed, level and index, with that chasm’s item', () => {
     play(steps, FIRST_CHASM);
     last().report({ kind: 'choice', index: 0 });
-    expect(last().request).toEqual({ kind: 'chasm', chasm: makeChasm(SEED, 1, 1) });
+    expect(last().request).toEqual({ kind: 'chasm', chasm: makeChasm(SEED, 1, 1), item: friendItems[0].items[1] });
   });
 
   it('moves to the next level with its level and topic, and tells the Hud the chasm number', () => {
@@ -448,7 +449,7 @@ it('saves checkpoints to actual storage after every step', () => {
     playLevel1(2);
     last().report({ kind: 'choice', index: 0 });
     expect([progress.step, progress.points]).toEqual([FIRST_CHASM, 5]);
-    expect(last().request).toEqual({ kind: 'chasm', chasm: makeChasm(SEED, 1, 0) });
+    expect(last().request).toEqual({ kind: 'chasm', chasm: makeChasm(SEED, 1, 0), item: friendItems[0].items[0] });
 
     playLevel1(4);
     expect(last().request).toEqual({ kind: 'levelDone', level: 1, points: 40, possiblePoints: 50 });
@@ -486,7 +487,7 @@ it('saves checkpoints to actual storage after every step', () => {
     progress = PlayerProgress.fromJSON({ version: 2, seed: SEED, level: 1, step: FIRST_CHASM + 2, points: 20, topic: TOPIC, answers: [] });
     play();
     expect(kinds()).toEqual(['chasm']);
-    expect(last().request).toEqual({ kind: 'chasm', chasm: makeChasm(SEED, 1, 2) });
+    expect(last().request).toEqual({ kind: 'chasm', chasm: makeChasm(SEED, 1, 2), item: friendItems[0].items[2] });
   });
 
   it('ignores a report from a screen after it is stopped', () => {
