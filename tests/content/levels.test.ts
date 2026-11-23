@@ -8,12 +8,12 @@ type ChasmStep = Extract<Step, { kind: 'chasm' }>;
 const chasmSteps = steps.filter((step): step is ChasmStep => step.kind === 'chasm');
 
 describe('content/levels', () => {
-  it('opens with the intro, the supply shop and its duel, then the crossing tutorial (#134)', () => {
+  it('opens with the intro, the crossing tutorial, then the supply shop and its duel (#134, #192)', () => {
     expect(steps.slice(0, 4)).toEqual([
       { kind: 'dialogue', script: 'intro' },
+      { kind: 'dialogue', script: 'howCrossingWorks' },
       { kind: 'shopOffer', shop: 'supplies' },
       { kind: 'shopGame', shop: 'supplies' },
-      { kind: 'dialogue', script: 'howCrossingWorks' },
     ]);
   });
 
