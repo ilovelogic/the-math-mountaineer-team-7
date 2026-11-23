@@ -26,4 +26,13 @@ export class SaveStore {
       return null;
     }
   };
+
+  /** Removes the save, so Continue is no longer offered. Play again uses it (#194). */
+  clear = (): void => {
+    try {
+      this.storage.removeItem(SAVE_KEY);
+    } catch {
+      // Don't crash if storage is unavailable.
+    }
+  };
 }
