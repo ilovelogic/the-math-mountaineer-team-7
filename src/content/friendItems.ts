@@ -25,8 +25,6 @@ export const friendItems: LevelItems[] = [
       { name: 'peppermint swirl', image: 'itemPeppermintSwirl' },
       { name: 'lollipop', image: 'itemLollipop' },
       { name: 'candy cane', image: 'itemCandyCane' },
-      { name: 'gumdrop', image: 'itemGumdrop' },
-      { name: 'wrapped caramel', image: 'itemWrappedCaramel' },
     ],
   },
   {
@@ -35,8 +33,6 @@ export const friendItems: LevelItems[] = [
       { name: 'Japanese 5-yen coin', image: 'item5YenCoin' },
       { name: 'Chinese cash coin', image: 'itemCashCoin' },
       { name: 'British 50p coin', image: 'item50pCoin' },
-      { name: 'euro coin', image: 'itemEuroCoin' },
-      { name: 'Mexican peso', image: 'itemPesoCoin' },
     ],
   },
   {
@@ -44,9 +40,7 @@ export const friendItems: LevelItems[] = [
     items: [
       { name: 'silver ring', image: 'itemSilverRing' },
       { name: 'pearl necklace', image: 'itemPearlNecklace' },
-      { name: 'gold bracelet', image: 'itemGoldBracelet' },
       { name: 'heart locket', image: 'itemHeartLocket' },
-      { name: 'ruby earrings', image: 'itemRubyEarrings' },
     ],
   },
 ];

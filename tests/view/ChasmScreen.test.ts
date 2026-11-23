@@ -21,13 +21,13 @@ const QUESTION = 'Which log fits across this gap?';
  * `fire('click')`, so no browser is needed. The chasm is the 5-12-13 one from
  * the "Pick a log" mockup. The hint tests check only what the screen shows and
  * reports; whether the hint opens, and that it never changes points, is
- * ChasmController's job and is tested there. The friend's item is a gumdrop,
+ * ChasmController's job and is tested there. The friend's item is a lollipop,
  * and since the image loader is mocked, the item tests check which picture is
  * asked for and where it's drawn, not how it looks.
  */
 
 const chasm = { a: 5, b: 12, c: 13, logs: [5, 13, 17], correct: 1 };
-const item = { name: 'gumdrop', image: 'itemGumdrop' };
+const item = { name: 'lollipop', image: 'itemLollipop' };
 
 let layers: Layers;
 let screen: ChasmScreen;
@@ -276,18 +276,18 @@ describe('view/ChasmScreen', () => {
     expect(logPile!.getChildren()).toHaveLength(2);
   });
   it('shows the chasm’s item standing on the far cliff’s snow, past where the mountaineer lands', () => {
-    expect(image).toHaveBeenCalledWith('itemGumdrop');
+    expect(image).toHaveBeenCalledWith('itemLollipop');
     expect(friendItem().x()).toBeGreaterThan(650 + 45);
     expect(friendItem().y() + friendItem().height()).toBe(180);
   });
   it('names the item the player finds after a right pick, and leaves it whole', () => {
     screen.showCorrectFeedback(13);
-    expect(texts(layers.ui)).toContain("The 13 m log fits. You cross the gap and find your friend's gumdrop.");
+    expect(texts(layers.ui)).toContain("The 13 m log fits. You cross the gap and find your friend's lollipop.");
     expect(friendItem().scaleY()).toBe(1);
   });
   it('names the item a too-long log smashes, and squashes it flat on the snow', () => {
     screen.showFeedback('tooLong', 17, 13);
-    expect(texts(layers.ui).join(' ')).toContain("It smashes your friend's gumdrop on the other side");
+    expect(texts(layers.ui).join(' ')).toContain("It smashes your friend's lollipop on the other side");
     expect(friendItem().scaleY()).toBeLessThan(1);
     expect(friendItem().y() + friendItem().height() * friendItem().scaleY()).toBeCloseTo(180);
   });
@@ -322,7 +322,7 @@ describe('view/ChasmScreen', () => {
 // - .find((node) => ...) on an array, then getParent()!: the first text with that label, then the button group that holds it.
 // - node.visible(): with no argument, whether the node is shown.
 // - expect(list).toContain(item) / .not.toContain(item): passes when the array does, or doesn't, hold that item.
-// - expect(image).toHaveBeenCalledWith('itemGumdrop'): passes when the mocked image loader was asked for that picture at least once.
+// - expect(image).toHaveBeenCalledWith('itemLollipop'): passes when the mocked image loader was asked for that picture at least once.
 // - scaleY(): with no argument, how much the node is stretched up and down, where 1 is its drawn height.
 // - toBeCloseTo(n, digits): passes when the number equals n to that many decimal places (two if left out), which allows for tiny floating-point errors.
 // - vi.spyOn(obj, 'name').mockReturnValue(x): replaces obj.name with a stand-in that returns x; vi.restoreAllMocks() puts the real one back.
