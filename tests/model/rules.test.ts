@@ -36,11 +36,11 @@ describe('ziplinePoints', () => {
   });
 });
 
-// Issue #58: as with pointsFor, made-up settings catch a hard-coded 50.
+// Issue #58: as with pointsFor, made-up settings catch a hard-coded 30.
 describe('skippedLevelPoints', () => {
   it('awards the points in settings for skipping the level', () => {
     expect(skippedLevelPoints(true, { ...settings, pointsPerSkippedLevel: 7 })).toBe(7);
-    expect(skippedLevelPoints(true, settings)).toBe(50);
+    expect(skippedLevelPoints(true, settings)).toBe(30);
   });
 
   it('gives no points when the level isn’t skipped, after a loss or turning down the gear', () => {
@@ -49,7 +49,8 @@ describe('skippedLevelPoints', () => {
   });
 
   it('matches a perfect Level 1, so skipping it never changes which medal is reachable', () => {
-    expect(settings.pointsPerSkippedLevel).toBe(5 * settings.pointsPerChasm);
+    // Level 1 has 3 chasms (#193).
+    expect(settings.pointsPerSkippedLevel).toBe(3 * settings.pointsPerChasm);
   });
 });
 
