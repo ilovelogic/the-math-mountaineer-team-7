@@ -112,18 +112,18 @@ Each matches a component on the Resources page of the mockups, and each is a fun
 *The "Pick a log" mockup that ChasmScreen follows.*
 
 **Purpose**\
-Draws one chasm, which is made up of the sky and mountains, the two cliffs and the gap, the right triangle with its side lengths (such as `12 m`, `5 m` and `c = ?`), the pile of logs, one log button per log, and the question "Which log fits across this gap?" in a dialog box.
+Draws one chasm, which is made up of the sky and mountains, the two cliffs and the gap, the right triangle with its side lengths (such as `12 m`, `5 m` and `c = ?`), the pile of logs, the friend's item for this chasm on the far cliff, one log button per log, and the question "Which log fits across this gap?" in a dialog box.
 
 **What it's given**\
-The stage's layers and a chasm to draw: its two sides and the log lengths, in the order the buttons show them.
+The stage's layers, a chasm to draw (its two sides and the log lengths, in the order the buttons show them), and the friend's item from `content/friendItems` to show on the far cliff.
 
 **What it reports**\
 Each click on a log button reports that log's position in the list, and **`onChoiceSelected`** reports which button in the dialog box was clicked. Once its controller **`lock`**s it, it stops reporting log clicks and shows the picked log as used. **`destroy`** removes everything it drew.
 
 **After a pick**\
 ChasmController tells it what to show, and it never decides whether a log fits itself:
-   - **`showCorrectFeedback`**: Says the log fits, with a Continue button, and moves the mountaineer to the far cliff in the celebrating pose, with the log across the gap.
-   - **`showFeedback`**: Says the log was too short (it falls into the chasm) or too long (it reaches past the far edge), names the log that fits, and offers two buttons: "Cross the chasm using the correct log" and "First, see how to derive the correct answer".
+   - **`showCorrectFeedback`**: Says the log fits and names the friend's item the player finds, with a Continue button, and moves the mountaineer to the far cliff in the celebrating pose, with the log across the gap.
+   - **`showFeedback`**: Says the log was too short (it falls into the chasm) or too long (it reaches past the far edge and smashes the friend's item, which it names and squashes flat), names the log that fits, and offers two buttons: "Cross the chasm using the correct log" and "First, see how to derive the correct answer".
    - **`showCrossing`**: Says the player lays down the right log and crosses, with the right log across the gap and the mountaineer on the far cliff.
 
 Once a pick's message shows, the logs are locked and the picked one is faded, so a second click can't change the pick. The picked log also leaves the pile on the near cliff, and once the right log is across the gap, the `c = ?` tag changes to its length, such as `c = 13 m`. The log buttons move with the top of the dialog box, so they stay above it when a longer message makes it taller.
