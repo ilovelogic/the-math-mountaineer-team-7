@@ -50,11 +50,12 @@ export const steps: Step[] = [
   { kind: 'chasm', level: 2, topic: TOPIC_2D, index: 4 },
   { kind: 'levelDone', level: 2 },
 
-  // The last level goes straight to the medal, with no Level done message.
+  // The last level has no Level done message. The player finds their friend (#204), then gets the medal.
   { kind: 'chasm', level: 3, topic: TOPIC_2D, index: 0 },
   { kind: 'chasm', level: 3, topic: TOPIC_2D, index: 1 },
   { kind: 'chasm', level: 3, topic: TOPIC_2D, index: 2 },
   { kind: 'chasm', level: 3, topic: TOPIC_2D, index: 3 },
   { kind: 'chasm', level: 3, topic: TOPIC_2D, index: 4 },
+  { kind: 'dialogue', script: 'reunion' },
   { kind: 'medal' },
 ];

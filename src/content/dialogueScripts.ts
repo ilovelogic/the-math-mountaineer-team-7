@@ -28,6 +28,14 @@ export const dialogueScripts = {
           text: "You may use a calculator, handheld or online. What matters is knowing how to find each log’s length."
         }
     ],
+    // The ending (#204): one box, after the last chasm and before the medal, where the player
+    // finds their friend. view/DialogueScenery shows it as a close-up with the friend hopping.
+    reunion: [
+        {
+          speaker: "Narrator",
+          text: "You found your friend! After everything, the two of you are together again."
+        }
+    ],
     // These are the Level done messages shown after Levels 1 and 2. GameFlow picks one from the
     // level's points through model/levelDone, which also fills in {level}, since the same words
     // serve every level.

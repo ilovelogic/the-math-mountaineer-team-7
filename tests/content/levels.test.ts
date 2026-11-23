@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { dialogueScripts } from '../../src/content/dialogueScripts';
 import { steps, TOPIC_3D, type Step } from '../../src/content/levels';
 import { makeChasm, triplesByLevel } from '../../src/model/problems';
 
@@ -32,12 +33,12 @@ describe('content/levels', () => {
     });
   });
 
-  it('follows every level but the last with its Level done step', () => {
+  it('follows every level but the last with its Level done step, and the last with the reunion (#204)', () => {
     const lastLevel = triplesByLevel.length;
     for (let level = 1; level <= lastLevel; level++) {
       const lastChasm = steps.lastIndexOf(chasmSteps.filter((step) => step.level === level).at(-1)!);
       const next = steps[lastChasm + 1];
-      expect(next).toEqual(level === lastLevel ? { kind: 'medal' } : { kind: 'levelDone', level });
+      expect(next).toEqual(level === lastLevel ? { kind: 'dialogue', script: 'reunion' } : { kind: 'levelDone', level });
     }
   });
 
@@ -52,6 +53,12 @@ describe('content/levels', () => {
     expect(clothingSteps).toHaveLength(2);
   });
 
+  it('reunites the player with their friend in a single box, right before the medal (#204)', () => {
+    expect(steps.slice(-2)).toEqual([{ kind: 'dialogue', script: 'reunion' }, { kind: 'medal' }]);
+    expect(dialogueScripts.reunion).toHaveLength(1);
+    expect(dialogueScripts.reunion[0]).not.toHaveProperty('choices');
+  });
+
   it('gives every chasm step a topic and a problem makeChasm can build', () => {
     for (const step of chasmSteps) {
       expect(step.topic).not.toBe('');
@@ -59,3 +66,7 @@ describe('content/levels', () => {
     }
   });
 });
+
+// Optional documentation
+// - steps.slice(-2): the last two steps; a negative start counts back from the end.
+// - expect(object).not.toHaveProperty('choices'): passes if the box has no choices, so it gets the plain Continue button.
