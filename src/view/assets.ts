@@ -14,6 +14,12 @@ export const IMAGE_FILES: Record<string, string> = {
   friend: 'images/friend.png',
   friendWaving: 'images/friend-waving.png',
   friendSitting: 'images/friend-sitting.png',
+  /**
+   * The same two poses exported at 4x (200 × 260 and 180 × 260) for the reunion's close-up (#204),
+   * which draws the characters at twice their usual size, so they stay sharp where the 1x files would blur.
+   */
+  playerCelebrating4x: 'images/player-celebrating-4x.png',
+  friendWaving4x: 'images/friend-waving-4x.png',
   shopOwnerSupplies: 'images/shopowner-supplies.png',
   shopOwnerClothing: 'images/shopowner-clothing.png',
   shopOwnerCelebrating: 'images/shopowner-celebrating.png',
