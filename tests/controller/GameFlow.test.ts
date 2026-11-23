@@ -412,8 +412,9 @@ it('saves checkpoints to actual storage after every step', () => {
   it('plays the whole game through to the medal', () => {
     play();
     playToMedal(DUEL_RESULT.notWon);
-    expect(last().request).toEqual({ kind: 'medal', points: 200 });
-    expect(kinds().filter((kind) => kind === 'chasm')).toHaveLength(15);
+    // 90 for the 9 chasms and 50 for the zipline.
+    expect(last().request).toEqual({ kind: 'medal', points: 140 });
+    expect(kinds().filter((kind) => kind === 'chasm')).toHaveLength(9);
     expect(kinds().filter((kind) => kind === 'levelDone')).toHaveLength(2);
     expect(kinds().filter((kind) => kind === 'shopGame')).toHaveLength(2);
   });
@@ -429,9 +430,9 @@ it('saves checkpoints to actual storage after every step', () => {
     expect(cues).toEqual(['levelDone']);
   });
 
-  /** Plays Level 1's five chasms from its first one, getting the first `right` of them right. */
+  /** Plays Level 1's three chasms from its first one, getting the first `right` of them right. */
   function playLevel1(right: number): void {
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 3; i++) {
       if (i < right) pickRight();
       else pickWrong();
     }
@@ -439,9 +440,9 @@ it('saves checkpoints to actual storage after every step', () => {
 
   it('gives Level done the points earned on that level alone', () => {
     play(steps, FIRST_CHASM);
-    playLevel1(3);
-    expect(last().request).toEqual({ kind: 'levelDone', level: 1, points: 30, possiblePoints: 50 });
-    expect(progress.points).toBe(30);
+    playLevel1(2);
+    expect(last().request).toEqual({ kind: 'levelDone', level: 1, points: 20, possiblePoints: 30 });
+    expect(progress.points).toBe(20);
   });
 
   it('restarts the level and takes back its points when the player picks Begin again', () => {
@@ -452,9 +453,9 @@ it('saves checkpoints to actual storage after every step', () => {
     expect([progress.step, progress.points]).toEqual([FIRST_CHASM, 5]);
     expect(last().request).toEqual({ kind: 'chasm', chasm: makeChasm(SEED, 1, 0) });
 
-    playLevel1(4);
-    expect(last().request).toEqual({ kind: 'levelDone', level: 1, points: 40, possiblePoints: 50 });
-    expect(progress.points).toBe(45);
+    playLevel1(2);
+    expect(last().request).toEqual({ kind: 'levelDone', level: 1, points: 20, possiblePoints: 30 });
+    expect(progress.points).toBe(25);
   });
 
   it('moves on when the player picks Continue on to next level', () => {
@@ -467,21 +468,21 @@ it('saves checkpoints to actual storage after every step', () => {
 
   it('moves on from Level done after every point, where choice 0 means continue', () => {
     play(steps, FIRST_CHASM);
-    playLevel1(5);
+    playLevel1(3);
     last().report({ kind: 'choice', index: 0 });
     expect(last().request).toEqual({ kind: 'shopOffer', shop: 'clothing' });
-    expect(progress.points).toBe(50);
+    expect(progress.points).toBe(30);
   });
 
   it('counts a level’s points from a save after a restart', () => {
     play(steps, FIRST_CHASM);
     playLevel1(1);
     last().report({ kind: 'choice', index: 0 });
-    playLevel1(5);
+    playLevel1(3);
     progress = PlayerProgress.fromJSON(saves.at(-1)!);
     screens = [];
     play();
-    expect(last().request).toEqual({ kind: 'levelDone', level: 1, points: 50, possiblePoints: 50 });
+    expect(last().request).toEqual({ kind: 'levelDone', level: 1, points: 30, possiblePoints: 30 });
   });
 
   it('resumes from the step a save points at', () => {
@@ -654,6 +655,7 @@ describe('controller/GameFlow math duel (#55, #134)', () => {
     expect(kinds()).not.toContain('levelDone');
   });
 
+
   it('records Level 1 as skipped when the player wins the duel', () => {
     play(steps, REAL_DUEL);
     last().report({ kind: 'choice', index: DUEL_RESULT.skipLevel });
@@ -666,15 +668,15 @@ describe('controller/GameFlow math duel (#55, #134)', () => {
     });
   });
 
-  it('gives Level 1’s 50 points for skipping it, and shows them on the Hud', () => {
+  it('gives Level 1’s 30 points for skipping it, and shows them on the Hud', () => {
     play(steps, REAL_DUEL);
     last().report({ kind: 'choice', index: DUEL_RESULT.skipLevel });
-    expect(progress.points).toBe(50);
-    expect(hud.showPointsGained).toHaveBeenCalledWith(50);
+    expect(progress.points).toBe(30);
+    expect(hud.showPointsGained).toHaveBeenCalledWith(30);
     expect(hud.update).toHaveBeenLastCalledWith(progress, undefined);
   });
 
-  // Issue #58: changing the setting changes the points, so they can't be a hard-coded 50.
+  // Issue #58: changing the setting changes the points, so they can't be a hard-coded 30.
   it('takes the points for skipping from settings', () => {
     const before = settings.pointsPerSkippedLevel;
     settings.pointsPerSkippedLevel = 7;
@@ -699,15 +701,15 @@ describe('controller/GameFlow math duel (#55, #134)', () => {
   it('saves the skip, so a reload continues at the start of Level 2 with the points', () => {
     play(steps, REAL_DUEL);
     last().report({ kind: 'choice', index: DUEL_RESULT.skipLevel });
-    expect(saves.at(-1)).toMatchObject({ step: LEVEL_2_START, points: 50 });
+    expect(saves.at(-1)).toMatchObject({ step: LEVEL_2_START, points: 30 });
   });
 
   it('counts the skipped level’s points in the medal at the end', () => {
     play();
     playToMedal(DUEL_RESULT.skipLevel);
-    // 50 for skipping Level 1, 100 for Levels 2 and 3, and 50 for the zipline.
-    expect(last().request).toEqual({ kind: 'medal', points: 200 });
-    expect(kinds().filter((kind) => kind === 'chasm')).toHaveLength(10);
+    // 30 for skipping Level 1, 60 for Levels 2 and 3, and 50 for the zipline.
+    expect(last().request).toEqual({ kind: 'medal', points: 140 });
+    expect(kinds().filter((kind) => kind === 'chasm')).toHaveLength(6);
     expect(kinds().filter((kind) => kind === 'levelDone')).toHaveLength(1);
   });
 
@@ -775,21 +777,21 @@ describe('level attempt history (#87)', () => {
   it('keeps both scores after restarting a level and loading a save', () => {
     play(steps, steps.findIndex((step) => step.kind === 'chasm'));
 
-    // First attempt: one correct answer, four wrong.
+    // First attempt: one correct answer, two wrong.
     pickRight();
-    for (let i = 0; i < 4; i++) pickWrong();
+    for (let i = 0; i < 2; i++) pickWrong();
 
     expect(progress.levelAttempts).toEqual([
       { level: 1, points: 10 },
     ]);
 
-    // Restart, then answer all five correctly.
+    // Restart, then answer all three correctly.
     last().report({ kind: 'choice', index: 0 });
-    for (let i = 0; i < 5; i++) pickRight();
+    for (let i = 0; i < 3; i++) pickRight();
 
     const expected = [
       { level: 1, points: 10 },
-      { level: 1, points: 50 },
+      { level: 1, points: 30 },
     ];
 
     expect(progress.levelAttempts).toEqual(expected);
@@ -812,9 +814,9 @@ describe('level attempt history (#87)', () => {
     }
 
     const expected = [
-      { level: 1, points: 50 },
-      { level: 2, points: 50 },
-      { level: 3, points: 50 },
+      { level: 1, points: 30 },
+      { level: 2, points: 30 },
+      { level: 3, points: 30 },
     ];
 
     expect(progress.levelAttempts).toEqual(expected);

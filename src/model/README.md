@@ -74,7 +74,7 @@ A controller creates one per scene from that scene's lines and the transition le
 Makes the chasms and checks the player's pick.
 
 **Where the numbers come from**\
-Each level has a list of five whole-number right triangles (`triplesByLevel`), such as 3-4-5 and 5-12-13 in Level 1, with larger numbers in later levels. **`makeChasm`** takes the game's seed, the level and the chasm's position in that level. It shuffles the level's triangles using the seed, so every game meets them in a different order, then picks the one at that position.
+Each level has a list of five whole-number right triangles (`triplesByLevel`), such as 3-4-5 and 5-12-13 in Level 1, with larger numbers in later levels. **`makeChasm`** takes the game's seed, the level and the chasm's position in that level. It shuffles the level's triangles using the seed, so every game meets them in a different order, then picks the one at that position. A game has 3 chasms per level (#193), so it uses 3 of the level's 5 triangles.
 
 **The logs**\
 Every chasm offers three logs: the one that fits (the hypotenuse, `c`) and two wrong lengths, shuffled. The wrong logs are always different from `c` and from each other. Each could be too short or too long, so a chasm can have two logs that are both shorter than the correct one.
@@ -121,7 +121,7 @@ Small, pure rules that turn outcomes into points and, later, into decisions abou
 **`pointsFor`** gives the points for a pick: only the log that fits earns any, and how many comes from `content/settings` (10 per chasm today). A log that's too short falls into the chasm, and one that's too long smashes the item waiting on the other side, so neither earns points.
 
 **Skipping a level**\
-**`skippedLevelPoints`** gives the points for the math duel (#58): winning and taking the shortcut skips the level and earns `pointsPerSkippedLevel` from `content/settings` (50 today, a perfect Level 1). Every other ending earns nothing, whether that's turning down the gear, a wrong answer, the store owner finishing first, or leaving. GameFlow does the jump past the level.
+**`skippedLevelPoints`** gives the points for the math duel (#58): winning and taking the shortcut skips the level and earns `pointsPerSkippedLevel` from `content/settings` (30 today, a perfect Level 1). Every other ending earns nothing, whether that's turning down the gear, a wrong answer, the store owner finishing first, or leaving. GameFlow does the jump past the level.
 
 **Results by topic**\
 **`isRight`** says whether a pick was right, which only the log that fits is. **`resultsByTopic`** takes the progress's `answers` and gives, for each topic in the order it was first played, its level, how many picks were right and how many were made. Every pick counts, including ones made again after a level restart. The end screen will show these counts (#78).
@@ -147,7 +147,7 @@ On the restart offer, choice 0 restarts the level and choice 1 moves on. GameFlo
 Turns the final points into a medal, which is diamond, gold, silver, bronze, or none.
 
 **How it works**\
-**`medalFor`** takes the points and the medal limits from `content/settings` (150, 135, 105 and 75 today), and gives the best medal whose limit the points reach. It refuses negative points, and limits that don't strictly decrease from diamond down to bronze, since either one means a mistake somewhere else.
+**`medalFor`** takes the points and the medal limits from `content/settings` (90, 81, 63 and 45 today), and gives the best medal whose limit the points reach. It refuses negative points, and limits that don't strictly decrease from diamond down to bronze, since either one means a mistake somewhere else.
 
 ---
 

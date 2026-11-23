@@ -71,11 +71,11 @@ export class ZiplineScreen {
         break;
       case 'tutorial':
         this.drawGraphPaper();
-        this.drawOnGraphPaper(floor, { ...words, diagonal: 'x' });
+        this.drawOnGraphPaper(floor, { ...words, diagonal: 'x', floorDiagonal: 'floor diagonal' });
         break;
       case 'solution':
         this.drawGraphPaper();
-        this.drawOnGraphPaper(floor, { ...numbers, diagonal: 'x' });
+        this.drawOnGraphPaper(floor, { ...numbers, diagonal: 'x', floorDiagonal: 'floor diagonal' });
         break;
       case 'wrong':
         this.drawWoodWall();
@@ -94,7 +94,8 @@ export class ZiplineScreen {
   }
   // Optional documentation
   // - destroyChildren(): deletes everything inside the group but keeps the group, so the next page draws into the same place.
-  // - { ...numbers, diagonal: 'x' }: copies numbers' three labels and adds a fourth for the zip line.
+  // - { ...numbers, diagonal: 'x' }: copies numbers' three labels and adds a fourth for the zip line. Only the
+  //   tutorial and solution add `floorDiagonal`, so the answer page's drawing gives away no step of the method.
   // - case 'onwardDressed': with no break, falls through to the next case, so both pages run the same lines.
 
   /** Calls `cb` with the clicked button's position each time one is clicked, until `destroy()`. */

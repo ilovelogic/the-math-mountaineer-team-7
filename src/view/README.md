@@ -221,7 +221,7 @@ Draws the title screen like its mockup: the mountains, the mountaineer and the f
 ### Hud
 
 **Purpose**\
-Everything the player always sees while playing, including the top bar, a progress line such as "Level 1 of 3 · Chasm 2 of 5", and a "+10 points" tag that floats up and fades after a correct pick.
+Everything the player always sees while playing, including the top bar, a progress line such as "Level 1 of 3 · Chasm 2 of 3", and a "+10 points" tag that floats up and fades after a correct pick.
 
 **How it's used**\
 GameFlow calls **`update`** with the latest progress whenever it changes, and **`showPointsGained`** after a pick that earned points. The Hud receives a read-only `ProgressView` (see [model/](../model/README.md#playerprogress)), so it can show progress but never change it.
