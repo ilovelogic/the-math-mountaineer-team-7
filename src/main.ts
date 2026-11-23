@@ -7,7 +7,7 @@ import { settings } from './content/settings';
 import { GameFlow } from './controller/GameFlow';
 import { showWhileSlow } from './controller/loading';
 import { createScreenFactory } from './controller/screenFactory';
-import { startGame } from './controller/startGame';
+import { startGame, startNewGame } from './controller/startGame';
 import { TitleController } from './controller/TitleController';
 import type { PlayerProgress } from './model/PlayerProgress';
 import { SaveStore } from './model/SaveStore';
@@ -40,6 +40,11 @@ function play(progress: PlayerProgress): void {
     save: (saved) => store.save(saved),
     load: () => store.load(),
     playCue: playSound,
+    // Play again: remove this game's Hud, since the new game makes its own (#194).
+    playAgain: () => {
+      hud.destroy();
+      startNewGame(() => store.clear(), play);
+    },
   });
   flow.run();
 }
