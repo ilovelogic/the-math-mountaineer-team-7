@@ -22,9 +22,10 @@ export type Step =
 const TOPIC_2D = 'Pythagorean theorem in 2D';
 export const TOPIC_3D = 'Pythagorean theorem in 3D';
 /**
- * The game's script: every step in the order it happens. Each chasm is its own step,
- * so a closed tab loses at most one chasm. Its problem comes from the game's seed plus
- * `level` and `index`, so every game gets different problems.
+ * The game's script: every step in the order it happens. Each level has 3 chasms (#193),
+ * and each chasm is its own step, so a closed tab loses at most one chasm. Its problem
+ * comes from the game's seed plus `level` and `index`, so every game gets different
+ * problems: 3 of the level's 5 triangles, in a different order each game.
  */
 export const steps: Step[] = [
   { kind: 'dialogue', script: 'intro' },
@@ -36,8 +37,6 @@ export const steps: Step[] = [
   { kind: 'chasm', level: 1, topic: TOPIC_2D, index: 0 },
   { kind: 'chasm', level: 1, topic: TOPIC_2D, index: 1 },
   { kind: 'chasm', level: 1, topic: TOPIC_2D, index: 2 },
-  { kind: 'chasm', level: 1, topic: TOPIC_2D, index: 3 },
-  { kind: 'chasm', level: 1, topic: TOPIC_2D, index: 4 },
   { kind: 'levelDone', level: 1 },
 
   // Level 2 opens at the clothing shop, where the zipline challenge can earn extra points.
@@ -46,15 +45,11 @@ export const steps: Step[] = [
 { kind: 'chasm', level: 2, topic: TOPIC_2D, index: 0 },
   { kind: 'chasm', level: 2, topic: TOPIC_2D, index: 1 },
   { kind: 'chasm', level: 2, topic: TOPIC_2D, index: 2 },
-  { kind: 'chasm', level: 2, topic: TOPIC_2D, index: 3 },
-  { kind: 'chasm', level: 2, topic: TOPIC_2D, index: 4 },
   { kind: 'levelDone', level: 2 },
 
   // The last level goes straight to the medal, with no Level done message.
   { kind: 'chasm', level: 3, topic: TOPIC_2D, index: 0 },
   { kind: 'chasm', level: 3, topic: TOPIC_2D, index: 1 },
   { kind: 'chasm', level: 3, topic: TOPIC_2D, index: 2 },
-  { kind: 'chasm', level: 3, topic: TOPIC_2D, index: 3 },
-  { kind: 'chasm', level: 3, topic: TOPIC_2D, index: 4 },
   { kind: 'medal' },
 ];
