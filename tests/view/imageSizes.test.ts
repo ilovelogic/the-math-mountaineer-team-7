@@ -1,4 +1,3 @@
-import { readFileSync } from 'node:fs';
 import { Image } from 'canvas';
 import Konva from 'konva';
 import { describe, expect, it, vi } from 'vitest';
@@ -37,7 +36,8 @@ vi.mock('../../src/view/assets', async (importOriginal) => {
   const realImage = (name: string) => {
     if (!loaded.has(name)) {
       const picture = new Image();
-      picture.src = readFileSync(new URL(`../../public/assets/${assets.IMAGE_FILES[name]}`, import.meta.url));
+      const file = new URL(`../../public/assets/${assets.IMAGE_FILES[name]}`, import.meta.url);
+      picture.src = decodeURIComponent(file.pathname);
       loaded.set(name, picture);
     }
     return loaded.get(name);
@@ -123,11 +123,11 @@ describe('image sizes', () => {
 });
 
 // Optional documentation
-// - readFileSync(url): reads a whole file into memory as bytes, waiting until it's done; fine for a few small test files.
-// - new Image() from 'canvas': node-canvas's version of the browser's Image; setting `src` to a file's bytes loads it right away, so `width` and `height` are the PNG's real size.
+// - new Image() from 'canvas': node-canvas's version of the browser's Image; setting `src` to a file's path loads it from disk right away, so `width` and `height` are the PNG's real size.
 // - vi.mock(path, factory): replaces that module for every file in this test, including the screens, with what `factory` returns. Vitest moves the call above the imports, so it takes effect first.
 // - importOriginal<typeof import(...)>(): loads the real module, so the mock can keep everything and swap out only `image`.
 // - new URL(path, import.meta.url): a path worked out from this test file's own folder, so it works wherever the tests are run from.
+// - decodeURIComponent(file.pathname): the URL's path as a plain file path, turning escapes like %20 back into spaces.
 // - { ...assets, image: realImage }: copies every export of the real module, then replaces `image`.
 // - ['background', 'sprites', 'ui'] as const: `as const` tells TypeScript these are exactly those three names, so layers[layerName] is known to be a Konva.Layer.
 // - new Map(pairs): a lookup table built from [key, value] pairs, here from each loaded picture back to its name.
