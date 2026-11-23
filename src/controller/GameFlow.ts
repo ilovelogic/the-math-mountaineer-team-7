@@ -35,10 +35,18 @@ export interface GameFlowOptions {
   load?: () => SavedProgress | null;
   /** Plays a sound, such as view/audio's `play`. GameFlow plays the Level done and medal sounds as those steps start. */
   playCue?: (cue: Cue) => void;
+  /** Starts a new game when the player picks Play again on the last screen (#194). */
+  playAgain?: () => void;
 }
 
 /** On the "under 100%" Level done message, the first choice restarts the level (see model/levelDone). */
 const RESTART = 0;
+
+/**
+ * On the results screen after the medal, Play again is the only button, so it reports
+ * choice 0 (#194, #78). Any other report leaves the last screen up.
+ */
+export const PLAY_AGAIN = 0;
 
 /** A seed for a new game. `random` is passed in so tests can get a fixed one. */
 export function newSeed(random: () => number = Math.random): number {
@@ -104,6 +112,13 @@ export class GameFlow {
       screen.start((outcome) => {
         callbackRan = true;
         if (id !== this.current) return;
+
+        // Play again on the medal/results screen ends this game and starts a new one (#194).
+        if (request.kind === 'medal' && outcome.kind === 'choice' && outcome.index === PLAY_AGAIN) {
+          this.stop();
+          this.options.playAgain?.();
+          return;
+        }
 
         let next: number;
 
