@@ -27,6 +27,26 @@ export const IMAGE_FILES: Record<string, string> = {
   mountainsDay: 'images/mountains-day.png',
   level2BareTrees: 'images/level2-bare-trees.png',
   level3Glacier: 'images/level3-glacier.png',
+  /**
+   * The friend's items, one per chasm, listed by level in content/friendItems. Like the
+   * backgrounds, they're Figma's `Item/` components exported at 4x (160 × 160), and the chasm
+   * screen draws them at 40 × 40.
+   */
+  itemPeppermintSwirl: 'images/item-peppermint-swirl.png',
+  itemLollipop: 'images/item-lollipop.png',
+  itemCandyCane: 'images/item-candy-cane.png',
+  itemGumdrop: 'images/item-gumdrop.png',
+  itemWrappedCaramel: 'images/item-wrapped-caramel.png',
+  item5YenCoin: 'images/item-5-yen-coin.png',
+  itemCashCoin: 'images/item-cash-coin.png',
+  item50pCoin: 'images/item-50p-coin.png',
+  itemEuroCoin: 'images/item-euro-coin.png',
+  itemPesoCoin: 'images/item-peso-coin.png',
+  itemSilverRing: 'images/item-silver-ring.png',
+  itemPearlNecklace: 'images/item-pearl-necklace.png',
+  itemGoldBracelet: 'images/item-gold-bracelet.png',
+  itemHeartLocket: 'images/item-heart-locket.png',
+  itemRubyEarrings: 'images/item-ruby-earrings.png',
 };
 
 /**
