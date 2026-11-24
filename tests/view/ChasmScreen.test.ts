@@ -83,6 +83,20 @@ describe('view/ChasmScreen', () => {
     expect(player!.x()).toBeGreaterThan(650);
   });
   // Shouldn't show the celebrating pose
+  it('keeps the normal mountaineer image on the crossing screen', () => {
+    const player = layers.sprites.findOne<Konva.Image>('Image')!;
+    const normalImage = player.image();
+
+    expect(normalImage).toBeDefined();
+    vi.mocked(image).mockClear();
+
+    screen.showCrossing(13);
+
+    expect(image).not.toHaveBeenCalledWith('playerCelebrating');
+    expect(player.image()).toBe(normalImage);
+    expect(player.x()).toBeGreaterThan(650);
+  });
+
   it('moves the mountaineer across the gap when showing the crossing screen', () => {
     screen.showCrossing(13);
 
@@ -157,6 +171,24 @@ describe('view/ChasmScreen', () => {
         }
       }
     }
+  });
+
+  it('moves log buttons up for the hint and restores them after hiding it', () => {
+    const originalY = buttons().map((button) => button.y());
+
+    screen.showHint();
+    const hintY = buttons().map((button) => button.y());
+
+    hintY.forEach((y, index) => {
+      expect(y).toBeLessThan(originalY[index]);
+    });
+
+    screen.hideHint();
+    const restoredY = buttons().map((button) => button.y());
+
+    restoredY.forEach((y, index) => {
+      expect(y).toBeCloseTo(originalY[index]);
+    });
   });
 
   it('shows a Hint button and keeps the formula card hidden until it is asked for', () => {
