@@ -21,10 +21,13 @@ const QUESTION = 'Which log fits across this gap?';
  * `fire('click')`, so no browser is needed. The chasm is the 5-12-13 one from
  * the "Pick a log" mockup. The hint tests check only what the screen shows and
  * reports; whether the hint opens, and that it never changes points, is
- * ChasmController's job and is tested there.
+ * ChasmController's job and is tested there. The friend's item is a lollipop,
+ * and since the image loader is mocked, the item tests check which picture is
+ * asked for and where it's drawn, not how it looks.
  */
 
 const chasm = { a: 5, b: 12, c: 13, logs: [5, 13, 17], correct: 1 };
+const item = { name: 'lollipop', image: 'itemLollipop' };
 
 let layers: Layers;
 let screen: ChasmScreen;
@@ -32,7 +35,7 @@ let picks: number[];
 
 beforeEach(() => {
   layers = { background: new Konva.Layer(), sprites: new Konva.Layer(), ui: new Konva.Layer() };
-  screen = new ChasmScreen(layers, chasm);
+  screen = new ChasmScreen(layers, chasm, item);
   picks = [];
   screen.onLogClicked((index) => picks.push(index));
   screen.draw();
@@ -46,6 +49,8 @@ const logButtonY = () => buttons()[0].y();
 const hintButton = () => layers.ui.findOne<Konva.Group>('.hint-button')!;
 const formulaCard = () => layers.ui.findOne<Konva.Group>('.formula-card')!;
 /** The dialog button showing `label`, which is the group holding that text. */
+/** The friend's item, which the screen names so tests can tell it apart from the mountaineer. */
+const friendItem = () => layers.sprites.findOne<Konva.Image>('.friend-item')!;
 const buttonLabelled = (label: string) => layers.ui.find<Konva.Text>('Text').find((node) => node.text() === label)!.getParent()!;
 
 describe('view/ChasmScreen', () => {
@@ -78,6 +83,20 @@ describe('view/ChasmScreen', () => {
     expect(player!.x()).toBeGreaterThan(650);
   });
   // Shouldn't show the celebrating pose
+  it('keeps the normal mountaineer image on the crossing screen', () => {
+    const player = layers.sprites.findOne<Konva.Image>('Image')!;
+    const normalImage = player.image();
+
+    expect(normalImage).toBeDefined();
+    vi.mocked(image).mockClear();
+
+    screen.showCrossing(13);
+
+    expect(image).not.toHaveBeenCalledWith('playerCelebrating');
+    expect(player.image()).toBe(normalImage);
+    expect(player.x()).toBeGreaterThan(650);
+  });
+
   it('moves the mountaineer across the gap when showing the crossing screen', () => {
     screen.showCrossing(13);
 
@@ -90,7 +109,7 @@ describe('view/ChasmScreen', () => {
   });
   it('shows a button for each log in the chasm’s order, and piles them shortest on top', () => {
     screen.destroy();
-    screen = new ChasmScreen(layers, { a: 7, b: 24,logs: [31, 20, 25], correct: 0 });
+    screen = new ChasmScreen(layers, { a: 7, b: 24,logs: [31, 20, 25], correct: 0 }, item);
     screen.draw();
     expect(buttons().map((button) => button.findOne<Konva.Text>('Text')?.text())).toEqual(['31 m', '20 m', '25 m']);
     expect(texts(layers.sprites).filter((t) => ['20 m', '25 m', '31 m'].includes(t))).toEqual(['20 m', '25 m', '31 m']);
@@ -105,7 +124,7 @@ describe('view/ChasmScreen', () => {
   it('logs clicks to the console until a handler is registered', () => {
     const log = vi.spyOn(console, 'log').mockImplementation(() => {});
     screen.destroy();
-    screen = new ChasmScreen(layers, chasm);
+    screen = new ChasmScreen(layers, chasm, item);
     screen.draw();
     buttons()[1].fire('click');
     expect(log).toHaveBeenCalledWith('Log 1 (13 m) was clicked');
@@ -141,7 +160,7 @@ describe('view/ChasmScreen', () => {
       for (const level of [1, 2, 3]) {
         for (let index = 0; index < 5; index++) {
           screen.destroy();
-          screen = new ChasmScreen(layers, makeChasm(seed, level, index));
+          screen = new ChasmScreen(layers, makeChasm(seed, level, index), item);
           screen.draw();
           const row = buttons().map((button) => button.getClientRect({ relativeTo: layers.ui }));
           const question = layers.ui.findOne((node: Konva.Node) => node instanceof Konva.Text && node.text() === QUESTION);
@@ -152,6 +171,24 @@ describe('view/ChasmScreen', () => {
         }
       }
     }
+  });
+
+  it('moves log buttons up for the hint and restores them after hiding it', () => {
+    const originalY = buttons().map((button) => button.y());
+
+    screen.showHint();
+    const hintY = buttons().map((button) => button.y());
+
+    hintY.forEach((y, index) => {
+      expect(y).toBeLessThan(originalY[index]);
+    });
+
+    screen.hideHint();
+    const restoredY = buttons().map((button) => button.y());
+
+    restoredY.forEach((y, index) => {
+      expect(y).toBeCloseTo(originalY[index]);
+    });
   });
 
   it('shows a Hint button and keeps the formula card hidden until it is asked for', () => {
@@ -270,6 +307,26 @@ describe('view/ChasmScreen', () => {
     // One log should be left in the pile after showCrossing
     expect(logPile!.getChildren()).toHaveLength(2);
   });
+  it('shows the chasm’s item standing on the far cliff’s snow, past where the mountaineer lands', () => {
+    expect(image).toHaveBeenCalledWith('itemLollipop');
+    expect(friendItem().x()).toBeGreaterThan(650 + 45);
+    expect(friendItem().y() + friendItem().height()).toBe(180);
+  });
+  it('names the item the player finds after a right pick, and leaves it whole', () => {
+    screen.showCorrectFeedback(13);
+    expect(texts(layers.ui)).toContain("The 13 m log fits. You cross the gap and find your friend's lollipop.");
+    expect(friendItem().scaleY()).toBe(1);
+  });
+  it('names the item a too-long log smashes, and squashes it flat on the snow', () => {
+    screen.showFeedback('tooLong', 17, 13);
+    expect(texts(layers.ui).join(' ')).toContain("It smashes your friend's lollipop on the other side");
+    expect(friendItem().scaleY()).toBeLessThan(1);
+    expect(friendItem().y() + friendItem().height() * friendItem().scaleY()).toBeCloseTo(180);
+  });
+  it('leaves the item whole when a log is too short', () => {
+    screen.showFeedback('tooShort', 5, 13);
+    expect(friendItem().scaleY()).toBe(1);
+  });
   it('positions the long log starting at the left cliff', () => {
     screen.showFeedback('tooLong', 17, 13);
 
@@ -297,6 +354,9 @@ describe('view/ChasmScreen', () => {
 // - .find((node) => ...) on an array, then getParent()!: the first text with that label, then the button group that holds it.
 // - node.visible(): with no argument, whether the node is shown.
 // - expect(list).toContain(item) / .not.toContain(item): passes when the array does, or doesn't, hold that item.
+// - expect(image).toHaveBeenCalledWith('itemLollipop'): passes when the mocked image loader was asked for that picture at least once.
+// - scaleY(): with no argument, how much the node is stretched up and down, where 1 is its drawn height.
+// - toBeCloseTo(n, digits): passes when the number equals n to that many decimal places (two if left out), which allows for tiny floating-point errors.
 // - vi.spyOn(obj, 'name').mockReturnValue(x): replaces obj.name with a stand-in that returns x; vi.restoreAllMocks() puts the real one back.
 // - mockImplementation(() => {}): the stand-in does nothing, so console.log prints nothing during the test but still records its calls.
 // - container as never: tells TypeScript to accept the stand-in where a <div> is expected; it only has the `style.cursor` the screen sets.

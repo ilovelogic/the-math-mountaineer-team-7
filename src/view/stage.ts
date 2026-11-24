@@ -18,19 +18,35 @@ export interface Layers {
 /** Creates the game's only stage, which `main.ts` calls once at startup. */
 export function createStage(containerId: string): { stage: Konva.Stage; layers: Layers } {
   const stage = new Konva.Stage({ container: containerId, width: STAGE_WIDTH, height: STAGE_HEIGHT });
-  const layers: Layers = {
-    background: new Konva.Layer({ listening: false }),
-    sprites: new Konva.Layer(),
-    ui: new Konva.Layer(),
-  };
+  const layers = createLayers();
   stage.add(layers.background, layers.sprites, layers.ui);
   fitToWindow(stage);
   window.addEventListener('resize', () => fitToWindow(stage));
   return { stage, layers };
 }
 // Optional documentation
-// - new Konva.Layer({ listening: false }): Konva skips this layer when working out what was clicked or hovered; its shapes still draw.
 // - stage.add(a, b, c): adds several layers in one call; later arguments draw on top of earlier ones.
+
+/**
+ * The three layers, kept apart from `createStage` so tests can check them without a browser.
+ *
+ * The character sprites are pixel art, so the sprites layer turns image smoothing off.
+ * Otherwise the browser blends neighboring pixels when the stage scales a 40 × 65 sprite
+ * up to fit a big window, and its hard edges turn blurry. Smoothing only affects images,
+ * so the shapes and text on this layer still draw smooth. The background and ui layers
+ * keep smoothing on, since the backgrounds have text and slanted edges that would look
+ * jagged without it; they stay sharp because they're exported at 4x instead.
+ */
+export function createLayers(): Layers {
+  return {
+    background: new Konva.Layer({ listening: false }),
+    sprites: new Konva.Layer({ imageSmoothingEnabled: false }),
+    ui: new Konva.Layer(),
+  };
+}
+// Optional documentation
+// - new Konva.Layer({ listening: false }): Konva skips this layer when working out what was clicked or hovered; its shapes still draw.
+// - imageSmoothingEnabled: false: images on this layer are scaled by repeating whole pixels (nearest neighbor) instead of blending them. Konva keeps the setting when the canvas is resized.
 // - window.addEventListener('resize', handler): runs the handler every time the browser window changes size, for as long as the page is open.
 // - { stage, layers }: shorthand for { stage: stage, layers: layers }.
 

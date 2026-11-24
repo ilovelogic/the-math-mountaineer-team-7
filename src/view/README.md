@@ -47,14 +47,21 @@ Everything is drawn in a fixed **960 × 540** space, the size of the Figma mocku
 **Purpose**\
 Creates the game's one Konva stage, inside the page's `game` element, with three layers listed back to front:
    - `background`: Scenery that rarely changes and ignores clicks. With each layer being its own canvas, changing the others doesn't redraw it.
-   - `sprites`: Characters and props.
+   - `sprites`: Characters and props. Its images are drawn without smoothing, so the pixel art stays crisp (see below).
    - `ui`: Buttons, boxes and the Hud.
 
 **Fitting the window**\
 The stage is scaled to the largest 16:9 box that fits the browser window, and rescaled whenever the window changes size. Views keep using 960 × 540 coordinates, and Konva maps clicks back through the scale. The scale itself comes from **`fitScale`**, a small function kept apart from the resizing so its tests can check many window sizes without a browser.
 
+**Keeping images sharp (#202)**\
+On a 1920 × 1080 window with a high-density screen, each stage pixel covers 4 × 4 screen pixels, so every image is enlarged a lot. Two kinds of image handle that differently:
+   - **Pixel art** (the characters) goes on the sprites layer, which turns image smoothing off, so each art pixel becomes a solid block instead of a blur. The files can stay at 1x, since each is built from whole-pixel rectangles in Figma and a bigger export holds no more detail. Draw each at a whole or half multiple of its file's size, the same across and down. Shapes and text on this layer are unaffected, since smoothing only applies to images.
+   - **Anything that fills the stage** (backgrounds, the shop scenes) goes on the background layer, which keeps smoothing on for its text and slanted edges, and is exported from Figma at 4x (3840 × 2160).
+
+`tests/view/imageSizes.test.ts` checks both rules on every screen. One small limit: when a window size puts a sprite's edge partway through a screen pixel, the browser still softens that one outer row of pixels. The inside of the sprite stays exact.
+
 **How it's used**\
-`main.ts` calls **`createStage`** once at startup. Views receive its layers instead of making their own, and only this file creates a stage (a test checks that).
+`main.ts` calls **`createStage`** once at startup. Views receive its layers instead of making their own, and only this file creates a stage (a test checks that). **`createLayers`** builds the three layers for `createStage`, and is exported so tests can check the real layers.
 
 ### theme
 
@@ -85,10 +92,10 @@ Shows players that the game is working while images and sounds load, instead of 
 ### audio
 
 **Purpose**\
-Plays the sound for one outcome (#25): **`play(cue)`**, where the cue is `'fits'`, `'tooShort'`, `'tooLong'`, `'levelDone'` or `'medal'`. The first three match `PickResult`, so a pick's result can be passed straight in. It starts the sound over if it's already playing, so quick repeat picks are each heard, and if the browser refuses to play it (for example before the player has clicked anything), the sound is skipped and the game carries on.
+Plays the sound for one outcome (#25): **`play(cue)`**, where the cue is `'fits'`, `'tooShort'`, `'tooLong'`, `'levelDone'`, or one of the medal sounds from `'medal-diamond'` down to `'medal-none'` (#203), one for each `Medal` in `model/medals`. The first three match `PickResult`, so a pick's result can be passed straight in. It starts the sound over if it's already playing, so quick repeat picks are each heard, and if the browser refuses to play it (for example before the player has clicked anything), the sound is skipped and the game carries on.
 
-**Not heard in the game yet**\
-GameFlow plays a pick's sound through its `playCue` option, but `main.ts` doesn't pass `play` in yet, and nothing plays `'levelDone'` or `'medal'`. So the sounds are loaded and ready, but the game is silent for now.
+**Where each sound plays**\
+ChasmController plays a pick's sound as soon as the log is picked, through a `playCue` the screen factory passes in. GameFlow plays the Level done sound, and the earned medal's sound, worked out with `medalFor`, as those steps start. `main.ts` gives both of them `play`.
 
 ---
 
@@ -112,18 +119,18 @@ Each matches a component on the Resources page of the mockups, and each is a fun
 *The "Pick a log" mockup that ChasmScreen follows.*
 
 **Purpose**\
-Draws one chasm, which is made up of the sky and mountains, the two cliffs and the gap, the right triangle with its side lengths (such as `12 m`, `5 m` and `c = ?`), the pile of logs, one log button per log, and the question "Which log fits across this gap?" in a dialog box.
+Draws one chasm, which is made up of the sky and mountains, the two cliffs and the gap, the right triangle with its side lengths (such as `12 m`, `5 m` and `c = ?`), the pile of logs, the friend's item for this chasm on the far cliff, one log button per log, and the question "Which log fits across this gap?" in a dialog box.
 
 **What it's given**\
-The stage's layers and a chasm to draw: its two sides and the log lengths, in the order the buttons show them.
+The stage's layers, a chasm to draw (its two sides and the log lengths, in the order the buttons show them), and the friend's item from `content/friendItems` to show on the far cliff.
 
 **What it reports**\
 Each click on a log button reports that log's position in the list, and **`onChoiceSelected`** reports which button in the dialog box was clicked. Once its controller **`lock`**s it, it stops reporting log clicks and shows the picked log as used. **`destroy`** removes everything it drew.
 
 **After a pick**\
 ChasmController tells it what to show, and it never decides whether a log fits itself:
-   - **`showCorrectFeedback`**: Says the log fits, with a Continue button, and moves the mountaineer to the far cliff in the celebrating pose, with the log across the gap.
-   - **`showFeedback`**: Says the log was too short (it falls into the chasm) or too long (it reaches past the far edge), names the log that fits, and offers two buttons: "Cross the chasm using the correct log" and "First, see how to derive the correct answer".
+   - **`showCorrectFeedback`**: Says the log fits and names the friend's item the player finds, with a Continue button, and moves the mountaineer to the far cliff in the celebrating pose, with the log across the gap.
+   - **`showFeedback`**: Says the log was too short (it falls into the chasm) or too long (it reaches past the far edge and smashes the friend's item, which it names and squashes flat), names the log that fits, and offers two buttons: "Cross the chasm using the correct log" and "First, see how to derive the correct answer".
    - **`showCrossing`**: Says the player lays down the right log and crosses, with the right log across the gap and the mountaineer on the far cliff.
 
 Once a pick's message shows, the logs are locked and the picked one is faded, so a second click can't change the pick. The picked log also leaves the pile on the near cliff, and once the right log is across the gap, the `c = ?` tag changes to its length, such as `c = 13 m`. The log buttons move with the top of the dialog box, so they stay above it when a longer message makes it taller.
@@ -166,7 +173,7 @@ Draws the end screen like the "End: medal" mockup, which is made up of the medal
 ### ShopOfferScreen
 
 **Purpose**\
-Draws the outside of a shop with the player walking up to it, and the shop's offer in the shared Dialog box, like the "Supply shop offer" and "Clothing shop offer" mockups. Each shop's scene is one image exported from Figma (`shopSuppliesOutside` and `shopClothingOutside` in `assets`), following #138's plan.
+Draws the outside of a shop with the player walking up to it, and the shop's offer in the shared Dialog box, like the "Supply shop offer" and "Clothing shop offer" mockups. Each shop's scene is one image exported from Figma at 4x (`shopSuppliesOutside` and `shopClothingOutside` in `assets`), following #138's plan.
 
 **How it's used**\
 `new ShopOfferScreen(layers, shop, offer)` takes the shop's name and its offer from `content/shopText`. **`draw`** draws the scene and the offer once, **`onChoice`** registers the callback for a button click, and **`destroy`** removes everything. A click reports the button's position, accept first and decline second, and ShopOfferController decides what it means.
@@ -221,7 +228,7 @@ Draws the title screen like its mockup: the mountains, the mountaineer and the f
 ### Hud
 
 **Purpose**\
-Everything the player always sees while playing, including the top bar, a progress line such as "Level 1 of 3 · Chasm 2 of 5", and a "+10 points" tag that floats up and fades after a correct pick.
+Everything the player always sees while playing, including the top bar, a progress line such as "Level 1 of 3 · Chasm 2 of 3", and a "+10 points" tag that floats up and fades after a correct pick.
 
 **How it's used**\
 GameFlow calls **`update`** with the latest progress whenever it changes, and **`showPointsGained`** after a pick that earned points. The Hud receives a read-only `ProgressView` (see [model/](../model/README.md#playerprogress)), so it can show progress but never change it.

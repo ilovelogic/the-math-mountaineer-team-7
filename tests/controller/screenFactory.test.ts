@@ -2,6 +2,7 @@ import Konva from 'konva';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { dialogueScripts } from '../../src/content/dialogueScripts';
 import { duelText } from '../../src/content/duelText';
+import { friendItems } from '../../src/content/friendItems';
 import { shopOffers } from '../../src/content/shopText';
 import { ziplineText } from '../../src/content/ziplineText';
 import { ChasmController } from '../../src/controller/ChasmController';
@@ -18,6 +19,7 @@ import { makeChasm, makeDuelQuestion } from '../../src/model/problems';
 import type { PickResult } from '../../src/model/rules';
 import { makeZiplineProblem } from '../../src/model/zipline';
 import type { Layers } from '../../src/view/stage';
+import { OwnerProgress } from '../../src/view/OwnerProgress';
 import { standInLoadedImages } from '../standInImage';
 
 /**
@@ -64,7 +66,7 @@ describe('createScreenFactory', () => {
   it('draws the chasm it was given, with a button for each of its logs', () => {
   
     const chasm = makeChasm(1, 1, 0);
-    const screen = makeScreen({ kind: 'chasm', chasm });
+    const screen = makeScreen({ kind: 'chasm', chasm, item: friendItems[0].items[0] });
     expect(screen).toBeInstanceOf(ChasmController);
     const drawn = startAndRead(screen);
   
@@ -76,7 +78,7 @@ describe('createScreenFactory', () => {
   it('passes the sound player to the chasm, so picking a log plays its sound', () => {
     const cues: PickResult[] = [];
     const chasm = makeChasm(1, 1, 0);
-    const screen = createScreenFactory(layers, new PlayerProgress(1), (cue) => cues.push(cue))({ kind: 'chasm', chasm });
+    const screen = createScreenFactory(layers, new PlayerProgress(1), (cue) => cues.push(cue))({ kind: 'chasm', chasm, item: friendItems[0].items[0] });
     screen.start(() => {});
     layers.ui.find('.log-button')[chasm.correct].fire('click');
     expect(cues).toEqual(['fits']);
@@ -128,6 +130,17 @@ describe('createScreenFactory', () => {
     const screen = makeScreen({ kind: 'shopGame', shop: 'clothing', problem: makeZiplineProblem(1) });
     expect(screen).toBeInstanceOf(ZiplineShopController);
     expect(startAndRead(screen)).toContain(ziplineText.deal.text);
+  });
+
+  it('passes an OwnerProgress timer into the duel controller', () => {
+    const screen = makeScreen({
+      kind: 'shopGame',
+      shop: 'supplies',
+      question: makeDuelQuestion(1),
+    });
+
+    expect(screen).toBeInstanceOf(DuelShopController);
+    expect((screen as DuelShopController)['timer']).toBeInstanceOf(OwnerProgress);
   });
 
   it('builds the math duel for the supply shop’s mini-game, opening on the store owner’s challenge', () => {

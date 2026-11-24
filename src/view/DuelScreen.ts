@@ -23,12 +23,14 @@ const CARD = { x: 470, y: TOP + 34, width: 420 };
 const STEP_HEIGHT = 46;
 const CARD_PADDING = 22;
 // Each character is named after its image, so tests can tell who is drawn.
-// Every character sprite is 40 × 65 (the celebrating ones 50 × 65), and each is drawn at
-// a whole or half multiple of that so it keeps its shape, as in ZiplineScreen.
+// Every character sprite is 40 × 65 (the celebrating ones 50 × 65, the climbing one 45 × 65),
+// and each is drawn at a whole or half multiple of that so it keeps its shape, as in ZiplineScreen.
 /** A character at 1.5 times its size, as in the shop mockups. */
 const BIG = { width: 60, height: 97.5 };
 /** The celebrating store owner, who is wider, at the same 1.5 times. */
 const BIG_CELEBRATING = { width: 75, height: 97.5 };
+/** The climbing mountaineer, whose arm reaches out to the rope, at the same 1.5 times. */
+const BIG_CLIMBING = { width: 67.5, height: 97.5 };
 /** The store owner up close, at three times the sprite's size. */
 const CLOSE_UP = { width: 120, height: 195 };
 /**
@@ -273,7 +275,7 @@ export class DuelScreen {
       new Konva.Rect({ x: cliffX, width: STAGE_WIDTH - cliffX, height: STAGE_HEIGHT, fill: colors.rock }),
       new Konva.Rect({ x: ropeX - 2, width: 4, height: floor, fill: colors.cream }),
     );
-    this.figures.add(new Konva.Image({ image: image('playerClimbing'), name: 'playerClimbing', x: ropeX - BIG.width + 10, y: (TOP + floor) / 2 - BIG.height / 2, ...BIG }));
+    this.figures.add(new Konva.Image({ image: image('playerClimbing'), name: 'playerClimbing', x: ropeX - BIG_CLIMBING.width + 10, y: (TOP + floor) / 2 - BIG_CLIMBING.height / 2, ...BIG_CLIMBING }));
   }
 
   /** The "Duel lost" mockup's Explanation card: a gray panel with the right answer. */

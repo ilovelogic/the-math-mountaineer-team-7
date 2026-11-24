@@ -70,9 +70,9 @@ describe('ZiplineScreen', () => {
 
   it.each([
     ['problem', ['width', 'length', 'height']],
-    ['tutorial', ['width', 'length', 'height', 'x']],
+    ['tutorial', ['width', 'length', 'height', 'x', 'floor diagonal']],
     ['answer', ['3 m', '12 m', '4 m', 'x']],
-    ['solution', ['3 m', '12 m', '4 m', 'x']],
+    ['solution', ['3 m', '12 m', '4 m', 'x', 'floor diagonal']],
   ] as const)('tags the store on the %s page with %j', (page, expected) => {
     showPage(page);
     expect(tags()).toEqual(expected);
@@ -81,6 +81,17 @@ describe('ZiplineScreen', () => {
   it.each(['deal', 'wrong', 'right', 'onwardDressed', 'onwardPacked'] as const)('draws no store diagram on the %s page', (page) => {
     showPage(page);
     expect(diagram()).toBeUndefined();
+  });
+
+  // Issue #206: the floor diagonal teaches the method, so it's only on the pages that explain it.
+  it.each([
+    ['tutorial', true],
+    ['solution', true],
+    ['problem', false],
+    ['answer', false],
+  ] as const)('draws the floor diagonal on the %s page: %s', (page, drawn) => {
+    showPage(page);
+    expect(diagram()!.find('.floor-diagonal')).toHaveLength(drawn ? 1 : 0);
   });
 
   it.each(['problem', 'tutorial', 'answer', 'solution'] as const)('keeps the %s page’s drawing between the top bar and the dialog box', (page) => {

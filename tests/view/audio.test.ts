@@ -40,7 +40,7 @@ describe('play', () => {
 
   it('carries on quietly when the browser refuses to play the sound', async () => {
     fakeSound(() => Promise.reject(new Error('NotAllowedError')));
-    expect(() => play('medal')).not.toThrow();
+    expect(() => play('medal-gold')).not.toThrow();
     // Waiting one timer tick lets the refusal arrive during this test, so Vitest reports it if play() left it unhandled.
     await new Promise((resolve) => setTimeout(resolve, 0));
   });
