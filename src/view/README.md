@@ -47,14 +47,21 @@ Everything is drawn in a fixed **960 × 540** space, the size of the Figma mocku
 **Purpose**\
 Creates the game's one Konva stage, inside the page's `game` element, with three layers listed back to front:
    - `background`: Scenery that rarely changes and ignores clicks. With each layer being its own canvas, changing the others doesn't redraw it.
-   - `sprites`: Characters and props.
+   - `sprites`: Characters and props. Its images are drawn without smoothing, so the pixel art stays crisp (see below).
    - `ui`: Buttons, boxes and the Hud.
 
 **Fitting the window**\
 The stage is scaled to the largest 16:9 box that fits the browser window, and rescaled whenever the window changes size. Views keep using 960 × 540 coordinates, and Konva maps clicks back through the scale. The scale itself comes from **`fitScale`**, a small function kept apart from the resizing so its tests can check many window sizes without a browser.
 
+**Keeping images sharp (#202)**\
+On a 1920 × 1080 window with a high-density screen, each stage pixel covers 4 × 4 screen pixels, so every image is enlarged a lot. Two kinds of image handle that differently:
+   - **Pixel art** (the characters) goes on the sprites layer, which turns image smoothing off, so each art pixel becomes a solid block instead of a blur. The files can stay at 1x, since each is built from whole-pixel rectangles in Figma and a bigger export holds no more detail. Draw each at a whole or half multiple of its file's size, the same across and down. Shapes and text on this layer are unaffected, since smoothing only applies to images.
+   - **Anything that fills the stage** (backgrounds, the shop scenes) goes on the background layer, which keeps smoothing on for its text and slanted edges, and is exported from Figma at 4x (3840 × 2160).
+
+`tests/view/imageSizes.test.ts` checks both rules on every screen. One small limit: when a window size puts a sprite's edge partway through a screen pixel, the browser still softens that one outer row of pixels. The inside of the sprite stays exact.
+
 **How it's used**\
-`main.ts` calls **`createStage`** once at startup. Views receive its layers instead of making their own, and only this file creates a stage (a test checks that).
+`main.ts` calls **`createStage`** once at startup. Views receive its layers instead of making their own, and only this file creates a stage (a test checks that). **`createLayers`** builds the three layers for `createStage`, and is exported so tests can check the real layers.
 
 ### theme
 
@@ -166,7 +173,7 @@ Draws the end screen like the "End: medal" mockup, which is made up of the medal
 ### ShopOfferScreen
 
 **Purpose**\
-Draws the outside of a shop with the player walking up to it, and the shop's offer in the shared Dialog box, like the "Supply shop offer" and "Clothing shop offer" mockups. Each shop's scene is one image exported from Figma (`shopSuppliesOutside` and `shopClothingOutside` in `assets`), following #138's plan.
+Draws the outside of a shop with the player walking up to it, and the shop's offer in the shared Dialog box, like the "Supply shop offer" and "Clothing shop offer" mockups. Each shop's scene is one image exported from Figma at 4x (`shopSuppliesOutside` and `shopClothingOutside` in `assets`), following #138's plan.
 
 **How it's used**\
 `new ShopOfferScreen(layers, shop, offer)` takes the shop's name and its offer from `content/shopText`. **`draw`** draws the scene and the offer once, **`onChoice`** registers the callback for a button click, and **`destroy`** removes everything. A click reports the button's position, accept first and decline second, and ShopOfferController decides what it means.

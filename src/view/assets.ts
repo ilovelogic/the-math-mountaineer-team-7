@@ -3,6 +3,12 @@ import { colors } from './theme';
 /**
  * Every image the game uses, by name, with its file under `public/assets/`.
  * To add one, put the file in `public/assets/images/` and add a line here.
+ *
+ * The characters are pixel art exported from Figma at 1x, since each is made only of
+ * whole-pixel rectangles and a bigger export would hold no more detail. They stay crisp
+ * because the sprites layer draws them without smoothing (see view/stage). Anything that
+ * fills the stage is exported at 4x (3840 × 2160) instead, so its text and slanted edges
+ * stay sharp when the stage scales up.
  */
 export const IMAGE_FILES: Record<string, string> = {
   player: 'images/player.png',
@@ -17,12 +23,16 @@ export const IMAGE_FILES: Record<string, string> = {
   shopOwnerSupplies: 'images/shopowner-supplies.png',
   shopOwnerClothing: 'images/shopowner-clothing.png',
   shopOwnerCelebrating: 'images/shopowner-celebrating.png',
+  /**
+   * Each shop's outside, from its offer mockup without the player, top bar or dialog box:
+   * the level's background with the shop building on it, at 4x.
+   */
   shopSuppliesOutside: 'images/shop-supplies-outside.png',
   shopClothingOutside: 'images/shop-clothing-outside.png',
   /**
-   * The level backgrounds from Figma's `Background/` components, exported at 4x (3840 × 2160)
-   * so they stay sharp when the stage scales up. `Mountains - day` is Level 1's and serves any
-   * screen set on the mountains (#138); the other two are Levels 2 and 3's.
+   * The level backgrounds from Figma's `Background/` components, at 4x. `Mountains - day`
+   * is Level 1's and serves any screen set on the mountains (#138); the other two are
+   * Levels 2 and 3's.
    */
   mountainsDay: 'images/mountains-day.png',
   level2BareTrees: 'images/level2-bare-trees.png',
