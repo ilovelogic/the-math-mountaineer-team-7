@@ -92,10 +92,10 @@ Shows players that the game is working while images and sounds load, instead of 
 ### audio
 
 **Purpose**\
-Plays the sound for one outcome (#25): **`play(cue)`**, where the cue is `'fits'`, `'tooShort'`, `'tooLong'`, `'levelDone'` or `'medal'`. The first three match `PickResult`, so a pick's result can be passed straight in. It starts the sound over if it's already playing, so quick repeat picks are each heard, and if the browser refuses to play it (for example before the player has clicked anything), the sound is skipped and the game carries on.
+Plays the sound for one outcome (#25): **`play(cue)`**, where the cue is `'fits'`, `'tooShort'`, `'tooLong'`, `'levelDone'`, or one of the medal sounds from `'medal-diamond'` down to `'medal-none'` (#203), one for each `Medal` in `model/medals`. The first three match `PickResult`, so a pick's result can be passed straight in. It starts the sound over if it's already playing, so quick repeat picks are each heard, and if the browser refuses to play it (for example before the player has clicked anything), the sound is skipped and the game carries on.
 
-**Not heard in the game yet**\
-GameFlow plays a pick's sound through its `playCue` option, but `main.ts` doesn't pass `play` in yet, and nothing plays `'levelDone'` or `'medal'`. So the sounds are loaded and ready, but the game is silent for now.
+**Where each sound plays**\
+ChasmController plays a pick's sound as soon as the log is picked, through a `playCue` the screen factory passes in. GameFlow plays the Level done sound, and the earned medal's sound, worked out with `medalFor`, as those steps start. `main.ts` gives both of them `play`.
 
 ---
 
