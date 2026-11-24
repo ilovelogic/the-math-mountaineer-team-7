@@ -795,7 +795,7 @@ describe('controller/GameFlow Hud level at the shops (#196)', () => {
     const before = { level: progress.level, topic: progress.topic };
     play(ZIPLINE_SCRIPT, ZIPLINE);
     expect(hudPlace()).toEqual(before);
-=======
+
 // Issue #192: winning the duel skips Level 1, so the crossing scene has to come before the
 // supply shop for every player to see it before their first chasm.
 describe('controller/GameFlow crossing scene before the duel (#192)', () => {
