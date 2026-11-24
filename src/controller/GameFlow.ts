@@ -1,3 +1,4 @@
+import { friendItems, type FriendItem } from '../content/friendItems';
 import type { Shop, Step } from '../content/levels';
 import { settings } from '../content/settings';
 import { DECLINE } from '../content/shopText';
@@ -19,7 +20,8 @@ import type { Outcome, Screen } from './Screen';
  */
 export type ScreenRequest =
   | { kind: 'dialogue'; script: string }
-  | { kind: 'chasm'; chasm: Chasm }
+  /** `item` is the friend's item waiting on the far side of this chasm. */
+  | { kind: 'chasm'; chasm: Chasm; item: FriendItem }
   /** `points` is what the player earned on this level alone, out of `possiblePoints`. */
   | { kind: 'levelDone'; level: number; points: number; possiblePoints: number }
   | { kind: 'medal'; points: number }
@@ -187,7 +189,11 @@ export class GameFlow {
       case 'dialogue':
         return { kind: 'dialogue', script: step.script };
       case 'chasm':
-        return { kind: 'chasm', chasm: makeChasm(this.progress.seed, step.level, step.index) };
+        return {
+          kind: 'chasm',
+          chasm: makeChasm(this.progress.seed, step.level, step.index),
+          item: friendItems[step.level - 1].items[step.index],
+        };
       case 'levelDone':
         return {
           kind: 'levelDone',
@@ -261,7 +267,9 @@ export class GameFlow {
    * next step updates the Hud's total, so only the "+ points" tag is shown here.
    */
   private scoreZipline(problem: ZiplineProblem, guess: number): void {
-    const points = ziplinePoints(checkZiplineAnswer(problem, guess), settings);
+    const isCorrect = checkZiplineAnswer(problem, guess);
+    const points = ziplinePoints(isCorrect, settings);
+    
     this.progress.addPoints(points);
     this.options.hud?.showPointsGained(points);
   }
@@ -272,8 +280,12 @@ export class GameFlow {
    * the start of the next level. No answers are recorded, since no chasm was played.
    */
   private skipLevel(duelIndex: number, points: number): number {
+    const levelDone = levelDoneAfter(this.steps, duelIndex);
+
     this.progress.addPoints(points);
+    this.progress.skipLevel(levelDone.level);
     this.options.hud?.showPointsGained(points);
+
     return levelDoneAfter(this.steps, duelIndex).position + 1;
   }
 

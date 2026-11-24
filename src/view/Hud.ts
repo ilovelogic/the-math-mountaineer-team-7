@@ -1,5 +1,6 @@
 import Konva from 'konva';
 import type { ProgressView } from '../model/PlayerProgress';
+import { steps } from '../content/levels';
 import { triplesByLevel } from '../model/problems';
 import { createTopBar, type TopBar } from './components/topBar';
 import { STAGE_WIDTH, type Layers } from './stage';
@@ -18,7 +19,7 @@ const TAG_RISE = 16;
 
 /**
  * Everything the player always sees while playing: the top bar with topic,
- * level and points, a progress line such as "Level 1 of 3 · Chasm 2 of 5", and
+ * level and points, a progress line such as "Level 1 of 3 · Chasm 2 of 3", and
  * a "+10 points" tag after a correct pick.
  *
  * GameFlow calls `update` with the latest progress whenever it changes. The Hud
@@ -60,7 +61,7 @@ export class Hud {
     const levels = triplesByLevel.length;
     let line = `Level ${progress.level} of ${levels}`;
     if (chasm !== undefined) {
-      const chasms = triplesByLevel[progress.level - 1]?.length ?? 0;
+      const chasms = chasmsInLevel(progress.level);
       line += ` · Chasm ${chasm} of ${chasms}`;
     }
     this.progressText.text(line);
@@ -110,6 +111,19 @@ export class Hud {
   }
 }
 
+/**
+ * How many chasms the level has in the game's script, such as 3 for Level 1. It counts
+ * the chasm steps rather than the level's triangles, since a game uses only 3 of a
+ * level's 5 triangles (#193). A level with no chasm steps gives 0.
+ */
+function chasmsInLevel(level: number): number {
+  let count = 0;
+  for (const step of steps) {
+    if (step.kind === 'chasm' && step.level === level) count++;
+  }
+  return count;
+}
+
 /** Sizes a tag's rounded background to fit its text, with the same padding on each side. */
 function fitBackground(tag: Konva.Group, label: Konva.Text): void {
   const width = label.width() + 2 * TAG_PADDING.x;
@@ -119,7 +133,6 @@ function fitBackground(tag: Konva.Group, label: Konva.Text): void {
 }
 // Optional documentation
 // - ProgressView: PlayerProgress without its methods that change anything, so the compiler stops the Hud from changing progress.
-// - triplesByLevel[progress.level - 1]?.length ?? 0: `?.` gives undefined instead of throwing when that level doesn't exist, and `?? 0` turns undefined into 0.
 // - this.group.moveToTop(): draws the group after everything else in its layer, so it sits in front.
 // - new Konva.Tween({ node, duration, y, opacity }): animates the node from its current values to these over `duration` seconds; play() starts it and onFinish runs at the end.
 // - this.tween?.destroy(): `?.` only calls destroy when there is a tween; stopping the old one first means two picks in a row don't fight over the same tag.

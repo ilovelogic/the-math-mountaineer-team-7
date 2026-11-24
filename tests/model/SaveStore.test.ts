@@ -33,6 +33,7 @@ describe('SaveStore', () => {
     expect(store.load()).toEqual({
       ...checkpoint,
       levelAttempts: [],
+      skippedLevels: [],
     });
 
   });

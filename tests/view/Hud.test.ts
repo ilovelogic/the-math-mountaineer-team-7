@@ -6,7 +6,7 @@ import type { Layers } from '../../src/view/stage';
 
 /**
  * Checks what the Hud shows from the progress GameFlow hands it: the topic,
- * level and points in the top bar, the "Level 1 of 3 · Chasm 2 of 5" line, and
+ * level and points in the top bar, the "Level 1 of 3 · Chasm 2 of 3" line, and
  * the "+ points" tag after a correct pick. Also checks that redrawing never
  * changes the progress. The Hud draws into bare layers, and fake timers let the
  * tag's fade finish without waiting. Limit: it can't tell whether the fade looks
@@ -44,7 +44,14 @@ describe('view/Hud', () => {
 
   it('shows the level and chasm out of their totals', () => {
     hud.update(progress, 2);
-    expect(progressLine()).toBe('Level 1 of 3 · Chasm 2 of 5');
+    expect(progressLine()).toBe('Level 1 of 3 · Chasm 2 of 3');
+  });
+
+  // #193: the total comes from the level's chasm steps, not its 5 triangles.
+  it('counts 0 chasms for a level the script doesn’t have', () => {
+    progress.moveTo(0, { level: 4, topic: TOPIC });
+    hud.update(progress, 1);
+    expect(progressLine()).toBe('Level 4 of 3 · Chasm 1 of 0');
   });
 
   it('shows just the level between chasms', () => {
@@ -58,7 +65,7 @@ describe('view/Hud', () => {
     progress.moveTo(6, { level: 2, topic: 'Pythagorean theorem in 3D' });
     hud.update(progress, 1);
     expect(texts()).toEqual(expect.arrayContaining(['Topic: Pythagorean theorem in 3D', 'Level 2', 'Points: 10']));
-    expect(progressLine()).toBe('Level 2 of 3 · Chasm 1 of 5');
+    expect(progressLine()).toBe('Level 2 of 3 · Chasm 1 of 3');
   });
 
   it('never changes the progress it is given', () => {

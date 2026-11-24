@@ -1,8 +1,9 @@
+import Konva from 'konva';
 import { describe, expect, it } from 'vitest';
-import { fitScale, STAGE_HEIGHT, STAGE_WIDTH } from '../../src/view/stage';
+import { createLayers, fitScale, STAGE_HEIGHT, STAGE_WIDTH } from '../../src/view/stage';
 
 /**
- * Checks two things about view/stage.
+ * Checks three things about view/stage.
  *
  * First, that only `view/stage.ts` creates a Konva stage (issue #7: "nothing
  * else creates a stage"). Konva can't run outside a browser, so instead of
@@ -17,6 +18,13 @@ import { fitScale, STAGE_HEIGHT, STAGE_WIDTH } from '../../src/view/stage';
  * least one edge). Limits: `createStage` and the resize listener need a real
  * DOM, so these tests don't check that `fitToWindow` is called or that the
  * canvas changes size; that still needs a check in the browser.
+ *
+ * Third, that the sprites layer draws its pixel art without smoothing, and the
+ * other two layers keep it (issue #202). It reads the setting from each layer's
+ * canvas, where the browser actually uses it, and resizes the canvas first,
+ * since resizing a canvas resets its settings unless Konva puts them back.
+ * Limit: it can't show that the sprites look crisp, which needs a look in the
+ * browser at a large window.
  */
 
 const sources = import.meta.glob<string>('../../src/**/*.ts', { query: '?raw', import: 'default', eager: true });
@@ -80,6 +88,25 @@ describe('fitScale', () => {
   });
 });
 
+describe('createLayers', () => {
+  // What each layer's canvas would use the next time it draws an image, after the
+  // canvas is resized the way fitToWindow resizes it on a 1920×1080 window.
+  const smoothingAfterResize = (layer: Konva.Layer) => {
+    layer.getCanvas().setSize(STAGE_WIDTH * 2, STAGE_HEIGHT * 2);
+    return layer.getContext()._context.imageSmoothingEnabled;
+  };
+
+  it('draws the pixel-art sprites without smoothing, even after a resize', () => {
+    expect(smoothingAfterResize(createLayers().sprites)).toBe(false);
+  });
+
+  it('keeps smoothing on the background and ui layers, for their text and slanted edges', () => {
+    const layers = createLayers();
+    expect(smoothingAfterResize(layers.background)).toBe(true);
+    expect(smoothingAfterResize(layers.ui)).toBe(true);
+  });
+});
+
 // Optional documentation
 // - import.meta.glob<string>(pattern, { query: '?raw', import: 'default', eager: true }): a Vite feature that returns an object mapping each matching file's path to its contents as a string; `<string>` tells TypeScript the value type.
 // - /.../g: a regular expression (a text pattern). This one matches /* ... */ comments, even across lines, and // comments up to the end of the line; g means every match, not just the first.
@@ -96,3 +123,5 @@ describe('fitScale', () => {
 // - expect(value, message): the message is shown if the check fails, here naming the window size that broke the rule.
 // - `${width}×${height}`: a template string; the values inside ${ } are inserted into the text.
 // - Math.abs(x): x without its sign, so the check works whichever of the two numbers is bigger.
+// - layer.getCanvas().setSize(width, height): resizes the layer's own canvas, as the stage does to every layer when the window changes size.
+// - layer.getContext()._context.imageSmoothingEnabled: the browser canvas's own setting that decides whether scaled images are blended (true) or drawn as whole pixels (false).

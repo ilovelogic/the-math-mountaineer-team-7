@@ -40,7 +40,7 @@ export function createScreenFactory(
         return new DialogueController(layers, sceneNamed(request.script), sceneryForScript(request.script));
       case 'chasm':
         return new ChasmController(
-          new ChasmScreen(layers, request.chasm),
+          new ChasmScreen(layers, request.chasm, request.item),
           new ChasmSolutionScreen(
             layers,
             request.chasm,

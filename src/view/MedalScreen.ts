@@ -17,10 +17,6 @@ export type MedalType =
 export interface MedalScreenData {
   medal: MedalType;
   points: number;
-
-  /** The weakest level and topic, or null for a perfect score. */
-  worthReviewing?: { level: number; topic: string } | null;
-
   /** Called when the player presses See Results. */
   onSeeResults: () => void;
 }
@@ -50,6 +46,7 @@ export function drawMedalScreen(
       fill: colors.skyDay,
     }),
   );
+
 
   // Pixel-style mountain background
   const mountainPeaks = [
@@ -173,21 +170,6 @@ export function drawMedalScreen(
         : `You finished with ${data.points} points and earned a ${data.medal} medal. Points decide the medal: diamond, gold, silver or bronze.`,
     }),
   );
-
-  // Issue #81: Show the weakest level and topic suggested by the model.
-  if (data.worthReviewing) {
-    panel.add(
-      new Konva.Text({
-        ...text.label,
-        x: 175,
-        y: 468,
-        width: 125,
-        height: 65,
-        fontSize: 11,
-        text: `Worth reviewing: Level ${data.worthReviewing.level} — ${data.worthReviewing.topic}`,
-      }),
-    );
-  }
 
   const resultsButton = createButton(
     'See Results',
