@@ -86,7 +86,7 @@ describe('createScreenFactory', () => {
   it('congratulates a player who earned every point on the level', () => {
     const screen = makeScreen({ kind: 'levelDone', level: 2, points: 50, possiblePoints: 50 });
     expect(screen).toBeInstanceOf(DialogueController);
-    expect(startAndRead(screen)).toContain('Congratulations! You earned all the points on Level 2.');
+    expect(startAndRead(screen)).toContain('Congratulations! You earned all the points on Level 2. (100%)');
   });
 
   it('draws scenery behind dialogue and Level done scenes, with each scene’s own characters', () => {
@@ -105,7 +105,7 @@ describe('createScreenFactory', () => {
     const drawn = startAndRead(makeScreen({ kind: 'levelDone', level: 1, points: 40, possiblePoints: 50 }));
     expect(drawn).toEqual(
       expect.arrayContaining([
-        'Do you want to restart Level 1 so you can get closer to earning your desired medal?',
+        'Do you want to restart Level 1 so you can get closer to earning your desired medal? (80%)',
         'Begin level 1 again',
         'Continue on to next level',
       ]),
