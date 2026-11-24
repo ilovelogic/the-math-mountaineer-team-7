@@ -11,10 +11,18 @@ export interface Answer {
   topic: string;
   result: PickResult;
 }
+
 /** Score earned in one completed attempt at a level. */
 export interface LevelAttempt {
   readonly level: number;
   readonly points: number;
+}
+
+export interface LevelResult {
+  level: number;
+  correct: number;
+  total: number;
+  skipped?: boolean;
 }
 
 /** Where the player is in the game's script: the level and topic of the current step. */
@@ -37,6 +45,7 @@ export interface SavedProgress {
   topic: string;
   answers: Answer[];
   levelAttempts?: LevelAttempt[];
+  skippedLevels?: number[];
 }
 
 /**
@@ -45,7 +54,7 @@ export interface SavedProgress {
  */
 export type ProgressView = Pick<
   PlayerProgress,
-  'seed' | 'level' | 'step' | 'points' | 'topic' | 'answers'
+  'seed' | 'level' | 'step' | 'points' | 'topic' | 'answers' | 'getLevelResults'
 >;
 
 const FITS: readonly PickResult[] = ['fits', 'tooShort', 'tooLong'];
@@ -65,6 +74,7 @@ export class PlayerProgress {
   private _topic: string;
   private _answers: Answer[];
   private _levelAttempts: LevelAttempt[] = [];
+  private _skippedLevels: number[] = [];
 
 
   /** A new game: level 1, step 0, no points and no answers yet. */
@@ -104,6 +114,46 @@ export class PlayerProgress {
   /** Completed level attempts, oldest first. */
   get levelAttempts(): readonly LevelAttempt[] {
     return this._levelAttempts.map((attempt) => ({ ...attempt }));
+  }
+
+  getLevelResults(): LevelResult[] {
+    const results = new Map<number, LevelResult>();
+  
+    for (const answer of this._answers) {
+      if (!results.has(answer.level)) {
+        results.set(answer.level, {
+          level: answer.level,
+          correct: 0,
+          total: 0,
+        });
+      }
+  
+      const levelResult = results.get(answer.level)!;
+      levelResult.total++;
+  
+      if (answer.result === 'fits') {
+        levelResult.correct++;
+      }
+    }
+  
+    for (const level of this._skippedLevels) {
+      results.set(level, {
+        level,
+        correct: 0,
+        total: 0,
+        skipped: true,
+      });
+    }
+  
+    return Array.from(results.values()).sort((a, b) => a.level - b.level);
+  }
+  /** Records a level skipped by winning the supplies duel. */
+  skipLevel(level: number): void {
+    checkWholeNumber('level', level, 1);
+
+    if (!this._skippedLevels.includes(level)) {
+      this._skippedLevels.push(level);
+    }
   }
 
   /** Keeps this attempt's score without replacing earlier attempts. */
@@ -177,6 +227,7 @@ export class PlayerProgress {
       topic: this._topic,
       answers: this._answers.map((answer) => ({ ...answer })),
       levelAttempts: this._levelAttempts.map((attempt) => ({ ...attempt })),
+      skippedLevels: [...this._skippedLevels],
     };
   }
 
@@ -218,6 +269,17 @@ export class PlayerProgress {
           throw new Error('Saved level attempt is not valid');
         }
         progress.recordLevelAttempt(attempt.level, attempt.points);
+      }
+    }
+
+    if (saved.skippedLevels !== undefined) {
+      if (!Array.isArray(saved.skippedLevels)) {
+        throw new Error('skippedLevels must be a list');
+      }
+    
+      for (const level of saved.skippedLevels) {
+        checkWholeNumber('skipped level', level, 1);
+        progress.skipLevel(level);
       }
     }
 

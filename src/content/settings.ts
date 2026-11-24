@@ -5,8 +5,8 @@ export interface Settings {
   /** How many points the log that fits is worth, matching the +10 in the mockups. */
   pointsPerChasm: number;
   /**
-   * The fewest points that earn each medal: 100%, 90%, 70% and 50% of the 150 points
-   * the chasms are worth (15 chasms worth 10 each), matching the Medal requirements
+   * The fewest points that earn each medal: 100%, 90%, 70% and 50% of the 90 points
+   * the chasms are worth (9 chasms worth 10 each), matching the Medal requirements
    * card in the mockups. The zipline's points count on top as a bonus, so a player who
    * fell behind can catch up. Change them together with that card.
    */
@@ -15,7 +15,7 @@ export interface Settings {
   pointsPerZipline: number;
   /**
    * How many points the player gets for skipping a level by winning the math duel and
-   * taking the shortcut. It's 50, Level 1's full points (5 chasms worth 10 each), so a
+   * taking the shortcut. It's 30, Level 1's full points (3 chasms worth 10 each), so a
    * skip earns the same as a perfect Level 1 and leaves the medal limits as they are.
    */
   pointsPerSkippedLevel: number;
@@ -38,10 +38,10 @@ export interface Settings {
 
 export const settings: Settings = {
   pointsPerChasm: 10,
-  medalLimits: { diamond: 150, gold: 135, silver: 105, bronze: 75 },
+  medalLimits: { diamond: 90, gold: 81, silver: 63, bronze: 45 },
   dialogueTransitionMs: 250,
   pointsPerZipline: 50,
-  pointsPerSkippedLevel: 50,
+  pointsPerSkippedLevel: 30,
   loadingScreenDelayMs: 1000,
   ownerSolveMs: 30000,
 };

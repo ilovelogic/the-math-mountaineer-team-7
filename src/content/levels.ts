@@ -22,22 +22,23 @@ export type Step =
 const TOPIC_2D = 'Pythagorean theorem in 2D';
 export const TOPIC_3D = 'Pythagorean theorem in 3D';
 /**
- * The game's script: every step in the order it happens. Each chasm is its own step,
- * so a closed tab loses at most one chasm. Its problem comes from the game's seed plus
- * `level` and `index`, so every game gets different problems.
+ * The game's script: every step in the order it happens. Each level has 3 chasms (#193),
+ * and each chasm is its own step, so a closed tab loses at most one chasm. Its problem
+ * comes from the game's seed plus `level` and `index`, so every game gets different
+ * problems: 3 of the level's 5 triangles, in a different order each game.
  */
 export const steps: Step[] = [
   { kind: 'dialogue', script: 'intro' },
-  // The supply shop, right after the avalanche: winning its duel skips Level 1 (#134).
+  // Comes before the supply shop, so a player who wins the duel and skips Level 1
+  // still learns how to cross a chasm before the first one (#192).
+  { kind: 'dialogue', script: 'howCrossingWorks' },
+  // The supply shop: winning its duel skips Level 1 (#134).
   { kind: 'shopOffer', shop: 'supplies' },
   { kind: 'shopGame', shop: 'supplies' },
-  { kind: 'dialogue', script: 'howCrossingWorks' },
 
   { kind: 'chasm', level: 1, topic: TOPIC_2D, index: 0 },
   { kind: 'chasm', level: 1, topic: TOPIC_2D, index: 1 },
   { kind: 'chasm', level: 1, topic: TOPIC_2D, index: 2 },
-  { kind: 'chasm', level: 1, topic: TOPIC_2D, index: 3 },
-  { kind: 'chasm', level: 1, topic: TOPIC_2D, index: 4 },
   { kind: 'levelDone', level: 1 },
 
   // Level 2 opens at the clothing shop, where the zipline challenge can earn extra points.
@@ -46,16 +47,12 @@ export const steps: Step[] = [
 { kind: 'chasm', level: 2, topic: TOPIC_2D, index: 0 },
   { kind: 'chasm', level: 2, topic: TOPIC_2D, index: 1 },
   { kind: 'chasm', level: 2, topic: TOPIC_2D, index: 2 },
-  { kind: 'chasm', level: 2, topic: TOPIC_2D, index: 3 },
-  { kind: 'chasm', level: 2, topic: TOPIC_2D, index: 4 },
   { kind: 'levelDone', level: 2 },
 
   // The last level has no Level done message. The player finds their friend (#204), then gets the medal.
   { kind: 'chasm', level: 3, topic: TOPIC_2D, index: 0 },
   { kind: 'chasm', level: 3, topic: TOPIC_2D, index: 1 },
   { kind: 'chasm', level: 3, topic: TOPIC_2D, index: 2 },
-  { kind: 'chasm', level: 3, topic: TOPIC_2D, index: 3 },
-  { kind: 'chasm', level: 3, topic: TOPIC_2D, index: 4 },
   { kind: 'dialogue', script: 'reunion' },
   { kind: 'medal' },
 ];

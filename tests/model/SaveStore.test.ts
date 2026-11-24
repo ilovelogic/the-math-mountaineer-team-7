@@ -33,6 +33,7 @@ describe('SaveStore', () => {
     expect(store.load()).toEqual({
       ...checkpoint,
       levelAttempts: [],
+      skippedLevels: [],
     });
 
   });
@@ -66,5 +67,18 @@ describe('SaveStore', () => {
     const store = new SaveStore(storage);
 
     expect(store.load()).toBeNull();
+  });
+
+  // Issue #194: Play again clears the finished game's save.
+  it('clears the save, so nothing loads afterwards', () => {
+    const store = new SaveStore(fakeStorage());
+    store.save(checkpoint);
+    store.clear();
+    expect(store.load()).toBeNull();
+  });
+
+  it('does not crash when clearing and storage is unavailable', () => {
+    const broken = { ...fakeStorage(), removeItem: () => { throw new Error('blocked'); } };
+    expect(() => new SaveStore(broken).clear()).not.toThrow();
   });
 });

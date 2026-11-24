@@ -1,3 +1,4 @@
+import { friendItems, type FriendItem } from '../content/friendItems';
 import type { Shop, Step } from '../content/levels';
 import { settings } from '../content/settings';
 import { DECLINE } from '../content/shopText';
@@ -18,7 +19,8 @@ import type { Outcome, Screen } from './Screen';
  */
 export type ScreenRequest =
   | { kind: 'dialogue'; script: string }
-  | { kind: 'chasm'; chasm: Chasm }
+  /** `item` is the friend's item waiting on the far side of this chasm. */
+  | { kind: 'chasm'; chasm: Chasm; item: FriendItem }
   /** `points` is what the player earned on this level alone, out of `possiblePoints`. */
   | { kind: 'levelDone'; level: number; points: number; possiblePoints: number }
   | { kind: 'medal'; points: number }
@@ -35,10 +37,18 @@ export interface GameFlowOptions {
   load?: () => SavedProgress | null;
   /** Plays a sound, such as view/audio's `play`. GameFlow plays the Level done and medal sounds as those steps start. */
   playCue?: (cue: Cue) => void;
+  /** Starts a new game when the player picks Play again on the last screen (#194). */
+  playAgain?: () => void;
 }
 
 /** On the "under 100%" Level done message, the first choice restarts the level (see model/levelDone). */
 const RESTART = 0;
+
+/**
+ * On the results screen after the medal, Play again is the only button, so it reports
+ * choice 0 (#194, #78). Any other report leaves the last screen up.
+ */
+export const PLAY_AGAIN = 0;
 
 /** A seed for a new game. `random` is passed in so tests can get a fixed one. */
 export function newSeed(random: () => number = Math.random): number {
@@ -105,6 +115,13 @@ export class GameFlow {
         callbackRan = true;
         if (id !== this.current) return;
 
+        // Play again on the medal/results screen ends this game and starts a new one (#194).
+        if (request.kind === 'medal' && outcome.kind === 'choice' && outcome.index === PLAY_AGAIN) {
+          this.stop();
+          this.options.playAgain?.();
+          return;
+        }
+
         let next: number;
 
         try {
@@ -166,7 +183,11 @@ export class GameFlow {
       case 'dialogue':
         return { kind: 'dialogue', script: step.script };
       case 'chasm':
-        return { kind: 'chasm', chasm: makeChasm(this.progress.seed, step.level, step.index) };
+        return {
+          kind: 'chasm',
+          chasm: makeChasm(this.progress.seed, step.level, step.index),
+          item: friendItems[step.level - 1].items[step.index],
+        };
       case 'levelDone':
         return {
           kind: 'levelDone',
@@ -240,7 +261,9 @@ export class GameFlow {
    * next step updates the Hud's total, so only the "+ points" tag is shown here.
    */
   private scoreZipline(problem: ZiplineProblem, guess: number): void {
-    const points = ziplinePoints(checkZiplineAnswer(problem, guess), settings);
+    const isCorrect = checkZiplineAnswer(problem, guess);
+    const points = ziplinePoints(isCorrect, settings);
+    
     this.progress.addPoints(points);
     this.options.hud?.showPointsGained(points);
   }
@@ -251,8 +274,12 @@ export class GameFlow {
    * the start of the next level. No answers are recorded, since no chasm was played.
    */
   private skipLevel(duelIndex: number, points: number): number {
+    const levelDone = levelDoneAfter(this.steps, duelIndex);
+
     this.progress.addPoints(points);
+    this.progress.skipLevel(levelDone.level);
     this.options.hud?.showPointsGained(points);
+
     return levelDoneAfter(this.steps, duelIndex).position + 1;
   }
 

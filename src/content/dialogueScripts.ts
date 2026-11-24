@@ -17,15 +17,19 @@ export const dialogueScripts = {
     howCrossingWorks: [
         {
           speaker: "Narrator",
-          text: "You will need to cross deep chasms. At each one there are a few fallen logs. Pick the one that is exactly the right length."
+          text: "Your friend left markers on the trail to help you find them. These are precious items to them that they hope you'll collect and bring to them upon your reuniting!"
         },
         {
           speaker: "Narrator",
-          text: "Too short and it falls into the chasm. Too long and it smashes the item your friend left on the other side."
+          text: "Each item awaits you across a deep chasm. At every chasm there are a few fallen logs. Pick the one that is exactly the right length."
         },
         {
           speaker: "Narrator",
-          text: "You may use a calculator, handheld or online. What matters is knowing how to find each log’s length."
+          text: "If your log choice is too short, the log falls into the chasm. If it's too long, it smashes your friend's item on the other side."
+        },
+        {
+          speaker: "Narrator",
+          text: "You may use a calculator, handheld or online, at each crossing. What matters is knowing how to find each log’s length."
         }
     ],
     // The ending (#204): one box, after the last chasm and before the medal, where the player
@@ -53,5 +57,13 @@ export const dialogueScripts = {
           text: "Do you want to restart Level {level} so you can get closer to earning your desired medal?",
           choices: ["Begin level {level} again", "Continue on to next level"]
         }
-    ]
+    ],
+    // Results screen dialogue
+    results: [
+      {
+        speaker: "Narrator",
+        text: "Here is how you did. Use it to see what to practice next.",
+        choices: ["Play again"],
+      },
+    ],
 }; 

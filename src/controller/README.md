@@ -59,7 +59,7 @@ Runs the whole game by playing the steps in `content/levels` in order, one scree
    - **After the zipline shop**, it checks the player's guess with `model/zipline` and adds `ziplinePoints` from `model/rules`, 50 for the right answer and nothing for a wrong one. Leaving before guessing reports no choice, so it earns nothing.
    - **After a Level done message** where the player missed points and chose to restart, it takes back that attempt's points (so they can be earned again) and goes back to the level's first chasm. Choice 0 means restart, matching the order in `model/levelDone`.
    - **After a shop offer**, it plays the shop's mini-game next if the player accepted, and skips it if they declined, so declining earns no points. When GameFlow is created, it checks that every offer comes right before its own shop's mini-game, so a reordered script fails before anything plays instead of skipping the wrong step.
-   - **After the math duel**, it reads how the duel ended from `DUEL_RESULT`. A win where the player climbs (`skipLevel`) gives the points from `model/rules`' `skippedLevelPoints` (`pointsPerSkippedLevel` in settings, 50 today, #58), shows the "+ points" tag, and jumps to the step after the next Level done, which is the start of Level 2. Turning down the gear (`normalPath`) or not winning (`notWon`) goes on to the next step. When GameFlow is created, it checks that a Level done comes after the duel, so a win always has somewhere to go.
+   - **After the math duel**, it reads how the duel ended from `DUEL_RESULT`. A win where the player climbs (`skipLevel`) gives the points from `model/rules`' `skippedLevelPoints` (`pointsPerSkippedLevel` in settings, 30 today, #58), shows the "+ points" tag, and jumps to the step after the next Level done, which is the start of Level 2. Turning down the gear (`normalPath`) or not winning (`notWon`) goes on to the next step. When GameFlow is created, it checks that a Level done comes after the duel, so a win always has somewhere to go.
    - **After any step**, it saves a checkpoint that points at the step to play next, so a closed tab loses at most that step.
 
 **Reports that arrive late**\
@@ -136,8 +136,8 @@ GameFlow, the screen factory and the Hud all share one `PlayerProgress`. Choosin
 ## Crossing one chasm, start to finish
 
 A single answer moves through the game as follows:
-   1. GameFlow asks `problems` for this step's chasm, using the game's seed, the level, and the chasm's position.
-   2. GameFlow starts ChasmController with that chasm, and ChasmController has ChasmScreen draw it.
+   1. GameFlow asks `problems` for this step's chasm, using the game's seed, the level, and the chasm's position, and picks the friend's item for that chasm from `content/friendItems`.
+   2. GameFlow starts ChasmController with that chasm, and ChasmController has ChasmScreen draw it, with the friend's item on the far cliff.
    3. The player clicks a log. ChasmController takes that first pick (since each chasm allows only one) and checks it with `problems`, and ChasmScreen shows what happened: the log fits, or it's too short or too long and here's the log that fits.
    4. After a wrong log, the player crosses with the right one, first seeing how to find it on the solution page if they choose to.
    5. Once the player clicks Continue, ChasmController locks the logs and reports the picked log's position to GameFlow via `onDone`.
