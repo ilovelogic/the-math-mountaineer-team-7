@@ -1,7 +1,8 @@
 import Konva from 'konva';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ziplineText, type ZiplinePage } from '../../src/content/ziplineText';
 import { fillZiplineText } from '../../src/model/zipline';
+import { image } from '../../src/view/assets';
 import type { Layers } from '../../src/view/stage';
 import { colors } from '../../src/view/theme';
 import { ZiplineScreen } from '../../src/view/ZiplineScreen';
@@ -13,9 +14,16 @@ import { standInLoadedImages } from '../standInImage';
  * drawing has the right tags on each page and stays between the top bar and the dialog
  * box, and destroy() removes everything. It draws real Konva nodes into three bare
  * layers, with already-loaded 1 × 1 pictures standing in for the sprites (see
- * tests/standInImage.ts). Limit: whether each page looks like its mockup still needs a
- * look with `npm run dev`.
+ * tests/standInImage.ts). Since every stand-in looks the same, the outfit tests check
+ * which picture the screen asks view/assets for, by name. Limit: whether each page looks
+ * like its mockup still needs a look with `npm run dev`.
  */
+
+// Keeps the real image loader but records each call, so a test can see which picture was asked for.
+vi.mock('../../src/view/assets', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../../src/view/assets')>();
+  return { ...actual, image: vi.fn(actual.image) };
+});
 
 const problem = { length: 12, width: 3, height: 4, diagonal: 13, options: [11, 13, 15], correct: 1 };
 const TOP_BAR_HEIGHT = 48;
@@ -83,6 +91,16 @@ describe('ZiplineScreen', () => {
     expect(diagram()).toBeUndefined();
   });
 
+  // The Clothing shop mockups dress the player in the disco outfit after "Put them on".
+  it.each([
+    ['onwardDressed', 'playerDiscoOutfit'],
+    ['onwardPacked', 'player'],
+  ] as const)('draws the player outside the shop on the %s page as %s', (page, picture) => {
+    vi.mocked(image).mockClear();
+    showPage(page);
+    expect(image).toHaveBeenCalledWith(picture);
+  });
+
   // Issue #206: the floor diagonal teaches the method, so it's only on the pages that explain it.
   it.each([
     ['tutorial', true],
@@ -130,3 +148,7 @@ describe('ZiplineScreen', () => {
 // - getParent(): the group a node sits in; a button's label sits in the button, which sits in the dialog box's row of buttons.
 // - getClientRect({ relativeTo }): where a node is drawn and how big it is, measured from what's inside it, in that layer's coordinates.
 // - layer.find('Shape'): every drawn shape inside the layer, however deep in groups.
+// - vi.mock(path, async (importOriginal) => ...): replaces that module for this whole test file; importOriginal() loads the real one, so `...actual` keeps everything else as it is.
+// - vi.fn(actual.image): a stand-in that runs the real image() but also records every call and its arguments.
+// - vi.mocked(image).mockClear(): forgets the calls recorded so far, so the test only sees the page it shows; vi.mocked just tells TypeScript that image is a stand-in.
+// - expect(image).toHaveBeenCalledWith(name): passes when image() was called with that name at least once.
