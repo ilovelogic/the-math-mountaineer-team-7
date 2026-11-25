@@ -293,7 +293,9 @@ export class GameFlow {
    * The level and topic to move to at the step at `index`. A chasm has its own. A shop
    * belongs to the level whose chasms come after it, so a duel win that skips Level 1 shows
    * Level 2 at the clothing shop, never the skipped level (#196). A shop game with its own
-   * topic, like the zipline's, shows that topic. Other steps keep the current place.
+   * topic, like the zipline's, shows that topic. Other steps keep the current place, except
+   * before any topic is set: a new game's opening scenes look ahead to the first chasm, so
+   * the Hud never shows a blank topic (#226).
    */
   private placeOf(index: number): Place | undefined {
     const step = this.steps[index];
@@ -307,6 +309,11 @@ export class GameFlow {
       const level = chasm?.level ?? this.progress.level;
       const topic = (step.kind === 'shopGame' ? step.topic : undefined) ?? chasm?.topic ?? this.progress.topic;
       return { level, topic };
+    }
+
+    if (!this.progress.topic) {
+      const chasm = nextChasm(this.steps, index);
+      if (chasm) return { level: chasm.level, topic: chasm.topic };
     }
 
     return undefined;
