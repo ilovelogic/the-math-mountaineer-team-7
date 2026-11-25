@@ -57,7 +57,7 @@ describe('drawResultsScreen', () => {
     draw({});
   
     expect(texts(layers.ui)).toContain(
-      'Worth reviewing: Level 3 — Pythagorean theorem in 2D',
+      'Worth reviewing: Pythagorean theorem in 2D (Level 3)',
     );
   });
 
@@ -67,7 +67,7 @@ describe('drawResultsScreen', () => {
     });
   
     expect(texts(layers.ui)).toContain(
-      'Worth reviewing: Level 2 — Pythagorean theorem in 3D',
+      'Worth reviewing: Pythagorean theorem in 3D (Level 2)',
     );
   });
 
