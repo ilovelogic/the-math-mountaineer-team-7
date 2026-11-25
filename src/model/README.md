@@ -77,7 +77,7 @@ Makes the chasms and checks the player's pick.
 Each level has a list of five whole-number right triangles (`triplesByLevel`), such as 3-4-5 and 5-12-13 in Level 1, with larger numbers in later levels. **`makeChasm`** takes the game's seed, the level and the chasm's position in that level. It shuffles the level's triangles using the seed, so every game meets them in a different order, then picks the one at that position. A game has 3 chasms per level (#193), so it uses 3 of the level's 5 triangles.
 
 **The logs**\
-Every chasm offers three logs: the one that fits (the hypotenuse, `c`) and two wrong lengths, shuffled. The wrong logs are always different from `c` and from each other. Each could be too short or too long, so a chasm can have two logs that are both shorter than the correct one.
+Every chasm offers three logs: the one that fits (the hypotenuse, `c`) and two wrong lengths, shuffled. The wrong logs are always different from `c` and from each other. Each could be too short or too long, so a chasm can have two logs that are both shorter than the correct one. Every wrong log is longer than the longer leg and shorter than the two legs together (**`hypotenuseBounds`**), since any log outside that range could be ruled out without doing the math (#197). When fewer than two whole lengths fit in that range besides `c`, as for 3-4-5 (only 6 fits), a half-meter log like 5.5 m makes up the rest.
 
 **Checking a pick**\
 **`checkPick`** compares the picked log to `c` and reports `'fits'`, `'tooShort'` or `'tooLong'`.
@@ -86,10 +86,10 @@ Every chasm offers three logs: the one that fits (the hypotenuse, `c`) and two w
 **`solutionSteps`** gives the three lines the "How to find the right log" page shows for a chasm, using its own numbers: `c² = a² + b²`, then the squares filled in and added, then the square root and the log that fits (for 5 and 12, `c = √169 = 13 m. The 13 m log fits.`).
 
 **The duel question**\
-**`makeDuelQuestion`** takes the game's seed and gives the supply shop's duel: one of Level 1's triangles (since winning skips Level 1, and small numbers suit a timed race) with three answers, `c` and two wrong ones made by **`answerChoices`**. `correct` is where `c` sits.
+**`makeDuelQuestion`** takes the game's seed and gives the supply shop's duel: one of Level 1's triangles (since winning skips Level 1, and small numbers suit a timed race) with three answers, `c` and two wrong ones made by **`answerChoices`**, kept within `hypotenuseBounds` so that, for example, 6-8-10 never offers 8. `correct` is where `c` sits.
 
 **Answer choices**\
-**`answerChoices`** makes the three answers for the duel and the zipline: the right one and two wrong ones, each 1 to 3 away from it and different from each other, shuffled. The right answer is equally likely to be the smallest, middle or largest of the three, so always picking the middle number doesn't win. The chasm logs don't use it, since their wrong logs are meant to range much further from `c`.
+**`answerChoices`** makes the three answers for the duel and the zipline: the right one and two wrong ones, each 1 to 3 away from it and different from each other, shuffled. The right answer is equally likely to be the smallest, middle or largest of the three, so always picking the middle number doesn't win. Given optional `bounds`, every answer also lies strictly between them; the right answer then takes only the places the bounds leave room for (13 is always the smallest for 5-12-13), and a half answer makes up the rest when fewer than two whole wrong ones fit. The zipline passes no bounds. The chasm logs don't use it, since their wrong logs are meant to range much further from `c`.
 
 **Seeded random numbers**\
 **`makeRng`** turns a seed into a generator of random numbers that repeat exactly for the same seed. That's what makes a saved game and a test both reproducible.

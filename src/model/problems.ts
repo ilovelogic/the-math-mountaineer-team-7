@@ -19,14 +19,58 @@ export function makeRng(seed: number): () => number {
     };
 }
 
-function makeWrongLog(c: number, rng: () => number): number {
-    let value: number;
+/**
+ * The bounds any believable hypotenuse of legs `a` and `b` lies strictly between:
+ * longer than the longer leg, and shorter than the two legs laid end to end.
+ * A wrong answer outside them can be ruled out without doing the math.
+ */
+export function hypotenuseBounds(a: number, b: number): { above: number; below: number } {
+    return { above: Math.max(a, b), below: a + b };
+}
 
-    do {
-        value = 1 + Math.floor(rng() * (2*c));
-    } while (value === c); // make sure our new value is not the same as c
+/** The numbers strictly between `above` and `below` that are multiples of `step`, smallest first. */
+function valuesBetween(above: number, below: number, step: number): number[] {
+    const values: number[] = [];
+    for (let value = (Math.floor(above / step) + 1) * step; value < below; value += step) {
+        values.push(value);
+    }
+    return values;
+}
 
-    return value;
+/** Removes and returns a random item of `pool`. */
+function takeRandom(pool: number[], rng: () => number): number {
+    return pool.splice(Math.floor(rng() * pool.length), 1)[0];
+}
+
+/**
+ * Picks `count` different values: random whole ones while there are enough,
+ * then random half ones (like 5.5) to make up the rest. Halves are a last
+ * resort, since a lone x.5 next to whole numbers stands out.
+ */
+function pickPreferringWholes(rng: () => number, wholes: number[], halves: number[], count: number): number[] {
+    const wholePool = [...wholes];
+    const halfPool = [...halves];
+    const picked: number[] = [];
+    while (picked.length < count && wholePool.length > 0) picked.push(takeRandom(wholePool, rng));
+    while (picked.length < count && halfPool.length > 0) picked.push(takeRandom(halfPool, rng));
+    if (picked.length < count) {
+        throw new Error("Not enough believable wrong answers");
+    }
+    return picked;
+}
+
+/**
+ * The two wrong logs for a chasm with legs `a` and `b` and hypotenuse `c`. Both
+ * are longer than the longer leg and shorter than a + b, so neither can be ruled
+ * out at a glance (#197). Small triangles like 3-4-5 have only one whole number
+ * in that range besides `c`, so the other wrong log is a half meter, like 5.5.
+ */
+function makeWrongLogs(a: number, b: number, c: number, rng: () => number): number[] {
+    const { above, below } = hypotenuseBounds(a, b);
+    const notC = (value: number) => value !== c;
+    const wholes = valuesBetween(above, below, 1).filter(notC);
+    const halves = valuesBetween(above, below, 0.5).filter((value) => !Number.isInteger(value));
+    return pickPreferringWholes(rng, wholes, halves, 2);
 }
 
 export const triplesByLevel = [
@@ -93,12 +137,7 @@ export function makeChasm(seed: number, level: number, index: number): Chasm {
 
     const [a,b,c] = shuffledTriples[index];
 
-    const wrong1 = makeWrongLog(c, logRng);
-    let wrong2  = makeWrongLog(c, logRng);
-
-    while (wrong2 === wrong1) {
-        wrong2 = makeWrongLog(c, logRng);
-    }
+    const [wrong1, wrong2] = makeWrongLogs(a, b, c, logRng);
     const logs = [wrong1, c, wrong2];
 
     // Shuffle correct answer and too short/long answers randomly each time
@@ -129,25 +168,44 @@ export function solutionSteps(chasm: Chasm): string[] {
  * picking the middle one. The wrong answers stay positive as long as `correct`
  * is bigger than `maxMiss`, and `maxMiss` has to be at least 2 so that two
  * different misses exist.
+ *
+ * With `bounds`, every answer also lies strictly between `bounds.above` and
+ * `bounds.below` (for a hypotenuse, see `hypotenuseBounds`), so none can be
+ * ruled out at a glance (#197). The right answer then takes only the places
+ * the bounds leave room for: for 5-12-13, nothing whole fits between 12 and 13,
+ * so 13 is always the smallest. If fewer than two whole wrong answers fit at
+ * all, as for 3-4-5, half ones (like 5.5) make up the rest.
  */
-export function answerChoices(rng: () => number, correct: number, maxMiss: number): number[] {
-    const miss = () => 1 + Math.floor(rng() * maxMiss);
-    const firstMiss = miss();
-    let secondMiss = miss();
-    while (secondMiss === firstMiss) {
-        secondMiss = miss();
-    }
+export function answerChoices(
+    rng: () => number,
+    correct: number,
+    maxMiss: number,
+    bounds?: { above: number; below: number },
+): number[] {
+    const above = bounds?.above ?? -Infinity;
+    const below = bounds?.below ?? Infinity;
+    const fits = (value: number) => value > above && value < below;
+    const misses = Array.from({ length: maxMiss }, (_, i) => i + 1);
+    const smaller = misses.map((miss) => correct - miss).filter(fits);
+    const larger = misses.map((miss) => correct + miss).filter(fits);
 
-    // How many wrong answers are smaller than the right one: 0, 1 or 2, each a third of the time.
-    const smallerCount = Math.floor(rng() * 3);
-    let options: number[];
-    if (smallerCount === 0) {
-        options = [correct, correct + firstMiss, correct + secondMiss];
-    } else if (smallerCount === 1) {
-        options = [correct, correct - firstMiss, correct + secondMiss];
+    let wrong: number[];
+    if (smaller.length + larger.length >= 2) {
+        // How many wrong answers are smaller than the right one: 0, 1 or 2, each
+        // equally likely among the ones the bounds leave room for.
+        const possibleCounts = [0, 1, 2].filter((count) => smaller.length >= count && larger.length >= 2 - count);
+        const smallerCount = possibleCounts[Math.floor(rng() * possibleCounts.length)];
+        const smallerPool = [...smaller];
+        const largerPool = [...larger];
+        wrong = [
+            ...Array.from({ length: smallerCount }, () => takeRandom(smallerPool, rng)),
+            ...Array.from({ length: 2 - smallerCount }, () => takeRandom(largerPool, rng)),
+        ];
     } else {
-        options = [correct, correct - firstMiss, correct - secondMiss];
+        const halves = misses.flatMap((miss) => [correct - miss + 0.5, correct + miss - 0.5]).filter(fits);
+        wrong = pickPreferringWholes(rng, [...smaller, ...larger], halves, 2);
     }
+    const options = [correct, ...wrong];
 
     for (let i = options.length - 1; i > 0; i--) {
         const j = Math.floor(rng() * (i + 1));
@@ -181,8 +239,9 @@ const DUEL_MAX_MISS = 3;
  * Makes the duel question for a game. The same seed always gives the same
  * question. Winning the duel skips Level 1, so the triangle is one of Level 1's,
  * small enough to solve in your head during a race. Both wrong answers are
- * within 3 of `c`, so the player has to work it out rather than rule out
- * answers that are far off.
+ * within 3 of `c`, longer than the longer leg and shorter than a + b, so the
+ * player has to work it out rather than rule out answers that can't be the
+ * longest side (#197).
  */
 export function makeDuelQuestion(seed: number): DuelQuestion {
     if (!Number.isInteger(seed) || seed < 0) {
@@ -192,7 +251,7 @@ export function makeDuelQuestion(seed: number): DuelQuestion {
 
     const levelTriples = triplesByLevel[0];
     const [a, b, c] = levelTriples[Math.floor(rng() * levelTriples.length)];
-    const options = answerChoices(rng, c, DUEL_MAX_MISS);
+    const options = answerChoices(rng, c, DUEL_MAX_MISS, hypotenuseBounds(a, b));
 
     return { a, b, c, options, correct: options.indexOf(c) };
 }

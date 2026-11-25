@@ -71,6 +71,55 @@ describe('makeChasm', () => {
         }
     });
 
+    // #197: a wrong log shorter than the longer leg, or as long as both legs
+    // together, can be ruled out without doing the math.
+    it('makes every wrong log longer than the longer leg and shorter than a + b, over many seeds', () => {
+        for (let seed = 0; seed < 1000; seed++) {
+            for (let level = 1; level <= 3; level++) {
+                for (let index = 0; index < triplesByLevel[level - 1].length; index++) {
+                    const { a, b, c, logs } = makeChasm(seed, level, index);
+                    const wrong = logs.filter((log) => log !== c);
+
+                    expect(wrong).toHaveLength(2);
+                    for (const log of wrong) {
+                        expect(log).toBeGreaterThan(Math.max(a, b));
+                        expect(log).toBeLessThan(a + b);
+                    }
+                }
+            }
+        }
+    });
+
+    it('uses a half-meter wrong log only when too few whole lengths fit, and at most one', () => {
+        for (let seed = 0; seed < 1000; seed++) {
+            for (let level = 1; level <= 3; level++) {
+                for (let index = 0; index < triplesByLevel[level - 1].length; index++) {
+                    const { a, b, logs } = makeChasm(seed, level, index);
+                    const halves = logs.filter((log) => !Number.isInteger(log));
+                    const wholeWrongsThatFit = a + b - Math.max(a, b) - 2; // whole numbers strictly between, minus c
+
+                    expect(halves.length).toBe(wholeWrongsThatFit >= 2 ? 0 : 2 - wholeWrongsThatFit);
+                    expect(halves.length).toBeLessThanOrEqual(1);
+                    for (const log of halves) {
+                        expect(Number.isInteger(log * 2)).toBe(true);
+                    }
+                }
+            }
+        }
+    });
+
+    it('offers 5 m, 6 m and a half-meter log for the 3-4-5 gap', () => {
+        const index = (seed: number) => [0, 1, 2, 3, 4].find((i) => makeChasm(seed, 1, i).c === 5)!;
+        const halfLogs = new Set<number>();
+        for (let seed = 0; seed < 200; seed++) {
+            const logs = [...makeChasm(seed, 1, index(seed)).logs].sort((x, y) => x - y);
+            expect(logs).toContain(5);
+            expect(logs).toContain(6);
+            logs.filter((log) => !Number.isInteger(log)).forEach((log) => halfLogs.add(log));
+        }
+        expect(halfLogs).toEqual(new Set([4.5, 5.5, 6.5]));
+    });
+
     it('should vary the correct log position across chasms and seeds', () => {
         let samePositionCount = 0;
     
@@ -147,6 +196,46 @@ describe('answerChoices', () => {
             expect(share).toBeLessThan(0.39);
         }
     });
+
+    describe('with bounds', () => {
+        it('keeps every answer strictly between the bounds, over many seeds', () => {
+            for (const seed of seeds) {
+                const options = answerChoices(makeRng(seed), 10, 3, { above: 8, below: 14 });
+                expect(options).toContain(10);
+                expect(new Set(options).size).toBe(3);
+                for (const option of options) {
+                    expect(option).toBeGreaterThan(8);
+                    expect(option).toBeLessThan(14);
+                    expect(Math.abs(option - 10)).toBeLessThanOrEqual(3);
+                }
+            }
+        });
+
+        it('still spreads the right answer over every place the bounds leave room for', () => {
+            // Only 9 fits below 10, so 10 can be the smallest or the middle, never the largest.
+            const places = seeds.map((seed) => answerChoices(makeRng(seed), 10, 3, { above: 8, below: 14 }))
+                .map((options) => options.filter((option) => option < 10).length);
+            expect(new Set(places)).toEqual(new Set([0, 1]));
+            for (const place of [0, 1]) {
+                const share = places.filter((p) => p === place).length / seeds.length;
+                expect(share).toBeGreaterThan(0.44);
+                expect(share).toBeLessThan(0.56);
+            }
+        });
+
+        it('makes up the rest with one half answer when only one whole wrong answer fits, as for 3-4-5', () => {
+            for (const seed of seeds) {
+                const options = answerChoices(makeRng(seed), 5, 3, { above: 4, below: 7 });
+                expect(options).toContain(5);
+                expect(options).toContain(6);
+                expect(options.filter((option) => !Number.isInteger(option))).toHaveLength(1);
+                for (const option of options) {
+                    expect(option).toBeGreaterThan(4);
+                    expect(option).toBeLessThan(7);
+                }
+            }
+        });
+    });
 });
 
 describe('makeDuelQuestion', () => {
@@ -177,6 +266,24 @@ describe('makeDuelQuestion', () => {
                 expect(option).toBeGreaterThan(0);
                 expect(Math.abs(option - q.c)).toBeLessThanOrEqual(3);
             }
+        }
+    });
+
+    it('makes every answer longer than the longer leg and shorter than a + b, over many seeds (#197)', () => {
+        for (let seed = 0; seed < 3000; seed++) {
+            const q = makeDuelQuestion(seed);
+            for (const option of q.options) {
+                expect(option).toBeGreaterThan(Math.max(q.a, q.b));
+                expect(option).toBeLessThan(q.a + q.b);
+            }
+        }
+    });
+
+    it('never offers 8 for 6-8-10, since 8 can\'t be the longest side', () => {
+        const duels = Array.from({ length: 3000 }, (_, seed) => makeDuelQuestion(seed)).filter((q) => q.c === 10);
+        expect(duels.length).toBeGreaterThan(0);
+        for (const q of duels) {
+            expect(q.options).not.toContain(8);
         }
     });
 
