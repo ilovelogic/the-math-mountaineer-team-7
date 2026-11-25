@@ -3,6 +3,7 @@ import type { Shop, Step } from '../content/levels';
 import { settings } from '../content/settings';
 import { DECLINE } from '../content/shopText';
 import type { Place, PlayerProgress, SavedProgress } from '../model/PlayerProgress';
+import { medalFor } from '../model/medals';
 import { checkPick, makeChasm, makeDuelQuestion, type Chasm, type DuelQuestion } from '../model/problems';
 import { pointsFor, skippedLevelPoints, ziplinePoints } from '../model/rules';
 import { checkZiplineAnswer, makeZiplineProblem, type ZiplineProblem } from '../model/zipline';
@@ -35,7 +36,7 @@ export interface GameFlowOptions {
   save?: (saved: SavedProgress) => void;
   /** Loads the latest checkpoint for recovery after a screen failure. */
   load?: () => SavedProgress | null;
-  /** Plays a sound, such as view/audio's `play`. GameFlow plays the Level done and medal sounds as those steps start. */
+  /** Plays a sound, such as view/audio's `play`. GameFlow plays the Level done sound and the earned medal's sound as those steps start. */
   playCue?: (cue: Cue) => void;
   /** Starts a new game when the player picks Play again on the last screen (#194). */
   playAgain?: () => void;
@@ -105,7 +106,12 @@ export class GameFlow {
         this.progress,
         step.kind === 'chasm' ? step.index + 1 : undefined,
       );
-      if (step.kind === 'levelDone' || step.kind === 'medal') this.options.playCue?.(step.kind);
+      if (step.kind === 'levelDone') this.options.playCue?.('levelDone');
+      if (step.kind === 'medal') {
+        // Each medal has its own sound, picked by the same rule MedalController uses to draw it.
+        const medal = medalFor(this.progress.points, settings.medalLimits);
+        this.options.playCue?.(`medal-${medal}`);
+      }
 
       const screen = this.makeScreen(request);
       const id = ++this.current;
@@ -283,20 +289,35 @@ export class GameFlow {
     return levelDoneAfter(this.steps, duelIndex).position + 1;
   }
 
-  /** The level and topic to move to, when the step at `index` is a chasm. */
+  /**
+   * The level and topic to move to at the step at `index`. A chasm has its own. A shop
+   * belongs to the level whose chasms come after it, so a duel win that skips Level 1 shows
+   * Level 2 at the clothing shop, never the skipped level (#196). A shop game with its own
+   * topic, like the zipline's, shows that topic. Other steps keep the current place, except
+   * before any topic is set: a new game's opening scenes look ahead to the first chasm, so
+   * the Hud never shows a blank topic (#226).
+   */
   private placeOf(index: number): Place | undefined {
-  const step = this.steps[index];
+    const step = this.steps[index];
 
-  if (step.kind === 'chasm') {
-    return { level: step.level, topic: step.topic };
+    if (step.kind === 'chasm') {
+      return { level: step.level, topic: step.topic };
+    }
+
+    if (step.kind === 'shopOffer' || step.kind === 'shopGame') {
+      const chasm = nextChasm(this.steps, index);
+      const level = chasm?.level ?? this.progress.level;
+      const topic = (step.kind === 'shopGame' ? step.topic : undefined) ?? chasm?.topic ?? this.progress.topic;
+      return { level, topic };
+    }
+
+    if (!this.progress.topic) {
+      const chasm = nextChasm(this.steps, index);
+      if (chasm) return { level: chasm.level, topic: chasm.topic };
+    }
+
+    return undefined;
   }
-
-  if (step.kind === 'shopGame' && step.topic) {
-    return { level: this.progress.level, topic: step.topic };
-  }
-
-  return undefined;
-}
 
   /** Positions in `steps` of the level's chasm steps, in order. */
   private chasmStepsOf(level: number): number[] {
@@ -327,6 +348,17 @@ export class GameFlow {
 // - switch (step.kind) with a return in every case: TypeScript checks every kind of step is handled.
 // - this.options.save?.(...): calls save only if it was passed in; `?.` skips the call when it's undefined.
 // - .at(-1): the last item of an array, or undefined when it's empty.
+
+/** The first chasm step after `index`, or undefined when no chasm comes after it. */
+function nextChasm(steps: readonly Step[], index: number): Extract<Step, { kind: 'chasm' }> | undefined {
+  for (let position = index + 1; position < steps.length; position++) {
+    const step = steps[position];
+    if (step.kind === 'chasm') return step;
+  }
+  return undefined;
+}
+// Optional documentation
+// - Extract<Step, { kind: 'chasm' }>: just the chasm kind of Step, so the caller can read its level and topic.
 
 /**
  * Declining a shop's offer skips the step after it, so that step must be the same shop's

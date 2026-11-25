@@ -1,7 +1,7 @@
 import { SaveStore } from '../../src/model/SaveStore';
 import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
+import { steps, TOPIC_3D, type Step } from '../../src/content/levels';
 import { friendItems } from '../../src/content/friendItems';
-import { steps, type Step } from '../../src/content/levels';
 import { settings } from '../../src/content/settings';
 import { ACCEPT, DECLINE } from '../../src/content/shopText';
 import { DUEL_RESULT } from '../../src/controller/DuelShopController';
@@ -272,7 +272,8 @@ describe('controller/GameFlow', () => {
     );
 
     expect(() => flow.run()).toThrow('Original screen failure');
-    expect(progress.toJSON()).toEqual(original);
+    // Only the opening scene's look-ahead topic (#226) is set; the other seed's checkpoint isn't applied.
+    expect(progress.toJSON()).toEqual({ ...original, topic: TOPIC });
     expect(attempts).toBe(1);
   });
 
@@ -423,7 +424,26 @@ it('saves checkpoints to actual storage after every step', () => {
   it('plays the Level done and medal sounds as those steps start, and no others', () => {
     play();
     playToMedal(DUEL_RESULT.notWon);
-    expect(cues).toEqual(['levelDone', 'levelDone', 'medal']);
+    expect(cues).toEqual(['levelDone', 'levelDone', 'medal-diamond']);
+  });
+
+  it('plays the sound for the medal earned, on both sides of each medal limit (#203)', () => {
+    const { diamond, gold, silver, bronze } = settings.medalLimits;
+    const heard = (points: number) => {
+      progress = new PlayerProgress(SEED);
+      progress.addPoints(points);
+      cues = [];
+      play([{ kind: 'medal' }]);
+      return cues;
+    };
+    expect(heard(diamond)).toEqual(['medal-diamond']);
+    expect(heard(diamond - 1)).toEqual(['medal-gold']);
+    expect(heard(gold)).toEqual(['medal-gold']);
+    expect(heard(gold - 1)).toEqual(['medal-silver']);
+    expect(heard(silver)).toEqual(['medal-silver']);
+    expect(heard(silver - 1)).toEqual(['medal-bronze']);
+    expect(heard(bronze)).toEqual(['medal-bronze']);
+    expect(heard(bronze - 1)).toEqual(['medal-none']);
   });
 
   it('plays the Level done sound again when a save resumes on that step', () => {
@@ -720,6 +740,91 @@ describe('controller/GameFlow math duel (#55, #134)', () => {
   });
 });
 
+// Issue #196: each shop shows the level of the chasms after it, so the Hud never shows a
+// level the player skipped.
+const CLOTHING_OFFER = steps.findIndex((step) => step.kind === 'shopOffer' && step.shop === 'clothing');
+const ZIPLINE_GAME = CLOTHING_OFFER + 1;
+/** The level and topic the Hud was last given. */
+const hudPlace = () => {
+  const [shown] = hud.update.mock.lastCall!;
+  return { level: shown.level, topic: shown.topic };
+};
+
+describe('controller/GameFlow Hud level at the shops (#196)', () => {
+  it('shows Level 2 at the clothing shop after a duel win skips Level 1', () => {
+    play(steps, REAL_DUEL);
+    last().report({ kind: 'choice', index: DUEL_RESULT.skipLevel });
+    expect(last().request.kind).toBe('shopOffer');
+    expect(hudPlace()).toEqual({ level: 2, topic: TOPIC });
+    expect(saves.at(-1)).toMatchObject({ step: CLOTHING_OFFER, level: 2 });
+  });
+
+  it('shows Level 2 and the zipline’s topic in the zipline game after a duel win', () => {
+    play(steps, REAL_DUEL);
+    last().report({ kind: 'choice', index: DUEL_RESULT.skipLevel });
+    last().report({ kind: 'choice', index: ACCEPT });
+    expect(last().request.kind).toBe('shopGame');
+    expect(hudPlace()).toEqual({ level: 2, topic: TOPIC_3D });
+  });
+
+  it('shows Level 2 at the clothing shop on the normal path, after Level 1’s chasms', () => {
+    play();
+    while (last().request.kind !== 'shopOffer' || (last().request as { shop: string }).shop !== 'clothing') {
+      const request = last().request;
+      if (request.kind === 'chasm') pickRight();
+      else if (request.kind === 'shopOffer') pickOffer(DECLINE);
+      else done();
+    }
+    expect(hudPlace()).toEqual({ level: 2, topic: TOPIC });
+    pickOffer(ACCEPT);
+    expect(hudPlace()).toEqual({ level: 2, topic: TOPIC_3D });
+  });
+
+  it('shows Level 1 at the supply shop, before Level 1’s chasms', () => {
+    play(steps, REAL_DUEL - 1);
+    expect(hudPlace()).toEqual({ level: 1, topic: TOPIC });
+  });
+
+  it('shows Level 2 when a save at the zipline game is loaded', () => {
+    progress = PlayerProgress.fromJSON({ version: 2, seed: SEED, level: 1, step: ZIPLINE_GAME, points: 50, topic: TOPIC, answers: [] });
+    play(steps, ZIPLINE_GAME);
+    expect(hudPlace()).toEqual({ level: 2, topic: TOPIC_3D });
+  });
+
+  it('keeps the current level at a shop with no chasms after it', () => {
+    const before = { level: progress.level, topic: progress.topic };
+    play(ZIPLINE_SCRIPT, ZIPLINE);
+    expect(hudPlace()).toEqual(before);
+  });
+});
+
+// Issue #226: a new game starts with no topic, so the opening scenes look ahead to the
+// first chasm and the Hud never shows "Topic:" with nothing after it.
+describe('controller/GameFlow Hud topic in the opening scenes (#226)', () => {
+  it('shows Level 1 with the 2D topic on a new game’s first Hud update', () => {
+    expect(progress.topic).toBe('');
+    play();
+    expect(last().request).toEqual({ kind: 'dialogue', script: 'intro' });
+    expect(hud.update).toHaveBeenCalledTimes(1);
+    expect(hudPlace()).toEqual({ level: 1, topic: TOPIC });
+  });
+
+  it('never gives the Hud a blank topic from the intro to the first chasm', () => {
+    play();
+    while (last().request.kind !== 'chasm') {
+      if (last().request.kind === 'shopOffer') pickOffer(DECLINE);
+      else done();
+    }
+    expect(hud.update.mock.calls.map(([shown]) => shown.topic)).not.toContain('');
+  });
+
+  it('keeps the current place in a scene with no chasm after it', () => {
+    const script: Step[] = [{ kind: 'dialogue', script: 'reunion' }, { kind: 'medal' }];
+    play(script);
+    expect(hudPlace()).toEqual({ level: 1, topic: '' });
+  });
+});
+
 // Issue #192: winning the duel skips Level 1, so the crossing scene has to come before the
 // supply shop for every player to see it before their first chasm.
 describe('controller/GameFlow crossing scene before the duel (#192)', () => {
@@ -774,6 +879,7 @@ function requestAt(index: number): ScreenRequest {
 // - it.each([...] as [string, Step[]][])(name, fn): runs the same test once per row, passing the row's items to fn; %s in the name is filled in from the row, and the `as` tells TypeScript each row is a label and a script.
 // - (_, script) =>: `_` names a parameter the test doesn't use, here the row's label.
 // - expect(() => ...).toThrow(text): passes only if calling the function throws an error whose message contains `text`.
+// - const { diamond, gold, silver, bronze } = settings.medalLimits: makes four constants from the properties with those names, so each limit reads as its medal.
 describe('level attempt history (#87)', () => {
   it('keeps both scores after restarting a level and loading a save', () => {
     play(steps, steps.findIndex((step) => step.kind === 'chasm'));

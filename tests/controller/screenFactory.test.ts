@@ -19,6 +19,7 @@ import { makeChasm, makeDuelQuestion } from '../../src/model/problems';
 import type { PickResult } from '../../src/model/rules';
 import { makeZiplineProblem } from '../../src/model/zipline';
 import type { Layers } from '../../src/view/stage';
+import { OwnerProgress } from '../../src/view/OwnerProgress';
 import { standInLoadedImages } from '../standInImage';
 
 /**
@@ -129,6 +130,17 @@ describe('createScreenFactory', () => {
     const screen = makeScreen({ kind: 'shopGame', shop: 'clothing', problem: makeZiplineProblem(1) });
     expect(screen).toBeInstanceOf(ZiplineShopController);
     expect(startAndRead(screen)).toContain(ziplineText.deal.text);
+  });
+
+  it('passes an OwnerProgress timer into the duel controller', () => {
+    const screen = makeScreen({
+      kind: 'shopGame',
+      shop: 'supplies',
+      question: makeDuelQuestion(1),
+    });
+
+    expect(screen).toBeInstanceOf(DuelShopController);
+    expect((screen as DuelShopController)['timer']).toBeInstanceOf(OwnerProgress);
   });
 
   it('builds the math duel for the supply shop’s mini-game, opening on the store owner’s challenge', () => {

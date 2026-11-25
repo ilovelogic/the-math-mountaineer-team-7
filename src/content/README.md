@@ -40,14 +40,14 @@ Lists the game's script, which is every step in the order the player meets it, s
    - `shopGame`: The shop's mini-game, the math duel (#55) or the zipline (#61). A supplies `shopGame` must have a Level done step somewhere after it, since winning the duel skips to the step after it, and GameFlow checks this when it starts.
 
 **The current script**\
-Starts with the intro, then the "how crossing works" scene, then the supply shop and its math duel, followed by three levels of three chasms each. The crossing scene comes before the shop so every player sees it before their first chasm, even one who skips Level 1 (#192). Levels 1 and 2 end with a Level done step, while Level 3 goes straight to the medal. Winning the duel and taking the shortcut skips Level 1 for its 30 points, going straight to the start of Level 2. Level 2 opens at the clothing shop, whose zipline challenge pays 50 points for the right answer. As a result of each chasm being its own step, a closed tab loses at most one chasm.
+Starts with the intro, then the "how crossing works" scene, then the supply shop and its math duel, followed by three levels of three chasms each. The crossing scene comes before the shop so every player sees it before their first chasm, even one who skips Level 1 (#192). Levels 1 and 2 end with a Level done step, while Level 3 ends with the reunion scene, where the player finds their friend (#204), and then the medal. Winning the duel and taking the shortcut skips Level 1 for its 30 points, going straight to the start of Level 2. Level 2 opens at the clothing shop, whose zipline challenge pays 50 points for the right answer. As a result of each chasm being its own step, a closed tab loses at most one chasm.
 
 ---
 
 ## dialogueScripts
 
 **Purpose**\
-Stores the story text, with one scene per key. Each scene is a list of boxes, and each box has a speaker and a line of text. Today, there are four scenes, which are `intro` (the avalanche and the missing friend), `howCrossingWorks` (the trail of the friend's items, and how to pick a log), and the two Level done messages, `levelDoneAllPoints` and `levelDoneUnder100`. The Level done scenes mark where the level number goes with `{level}`, which `model/levelDone` fills in, so the same words serve every level.
+Stores the story text, with one scene per key. Each scene is a list of boxes, and each box has a speaker and a line of text. Today, there are five scenes, which are `intro` (the avalanche and the missing friend), `howCrossingWorks` (the trail of the friend's items, and how to pick a log), `reunion` (finding the friend at the end, in a single box), and the two Level done messages, `levelDoneAllPoints` and `levelDoneUnder100`. The Level done scenes mark where the level number goes with `{level}`, which `model/levelDone` fills in, so the same words serve every level.
 
 **Adding a scene**\
 Add a new key with its boxes, and then add a `dialogue` step naming that key in `levels`.

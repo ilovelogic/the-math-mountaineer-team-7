@@ -20,6 +20,12 @@ export const IMAGE_FILES: Record<string, string> = {
   friend: 'images/friend.png',
   friendWaving: 'images/friend-waving.png',
   friendSitting: 'images/friend-sitting.png',
+  /**
+   * The same two poses exported at 4x (200 × 260 and 180 × 260) for the reunion's close-up (#204),
+   * which draws the characters at twice their usual size, so they stay sharp where the 1x files would blur.
+   */
+  playerCelebrating4x: 'images/player-celebrating-4x.png',
+  friendWaving4x: 'images/friend-waving-4x.png',
   shopOwnerSupplies: 'images/shopowner-supplies.png',
   shopOwnerClothing: 'images/shopowner-clothing.png',
   shopOwnerCelebrating: 'images/shopowner-celebrating.png',
@@ -64,7 +70,13 @@ export const SOUND_FILES: Record<string, string> = {
   tooShort: 'sounds/too-short.mp3',
   tooLong: 'sounds/too-long.mp3',
   levelDone: 'sounds/level-done.mp3',
-  medal: 'sounds/medal.mp3',
+  // One for each medal, plus none, rising from a single note to a long run so a better
+  // medal sounds bigger (#203).
+  'medal-none': 'sounds/medal-none.mp3',
+  'medal-bronze': 'sounds/medal-bronze.mp3',
+  'medal-silver': 'sounds/medal-silver.mp3',
+  'medal-gold': 'sounds/medal-gold.mp3',
+  'medal-diamond': 'sounds/medal-diamond.mp3',
 };
 
 /** How long one file may take before it is given up on, so a slow file never holds up the game. */

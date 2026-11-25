@@ -21,6 +21,7 @@ May import Konva, other `view/` files, and `model/` or `content/` to read what t
   - [ChasmSolutionScreen](#chasmsolutionscreen)
   - [DialogueBox](#dialoguebox)
   - [DialogueScenery](#dialoguescenery)
+  - [ReunionCelebration](#reunioncelebration)
   - [MedalScreen](#medalscreen)
   - [ShopOfferScreen](#shopofferscreen)
   - [DuelScreen](#duelscreen)
@@ -92,10 +93,10 @@ Shows players that the game is working while images and sounds load, instead of 
 ### audio
 
 **Purpose**\
-Plays the sound for one outcome (#25): **`play(cue)`**, where the cue is `'fits'`, `'tooShort'`, `'tooLong'`, `'levelDone'` or `'medal'`. The first three match `PickResult`, so a pick's result can be passed straight in. It starts the sound over if it's already playing, so quick repeat picks are each heard, and if the browser refuses to play it (for example before the player has clicked anything), the sound is skipped and the game carries on.
+Plays the sound for one outcome (#25): **`play(cue)`**, where the cue is `'fits'`, `'tooShort'`, `'tooLong'`, `'levelDone'`, or one of the medal sounds from `'medal-diamond'` down to `'medal-none'` (#203), one for each `Medal` in `model/medals`. The first three match `PickResult`, so a pick's result can be passed straight in. It starts the sound over if it's already playing, so quick repeat picks are each heard, and if the browser refuses to play it (for example before the player has clicked anything), the sound is skipped and the game carries on.
 
-**Not heard in the game yet**\
-GameFlow plays a pick's sound through its `playCue` option, but `main.ts` doesn't pass `play` in yet, and nothing plays `'levelDone'` or `'medal'`. So the sounds are loaded and ready, but the game is silent for now.
+**Where each sound plays**\
+ChasmController plays a pick's sound as soon as the log is picked, through a `playCue` the screen factory passes in. GameFlow plays the Level done sound, and the earned medal's sound, worked out with `medalFor`, as those steps start. `main.ts` gives both of them `play`.
 
 ---
 
@@ -160,7 +161,15 @@ Either way, a click reports the button's position, and the DialogueController de
 Draws what a dialogue scene shows above its dialog box (#201): a background image and the characters from the scene's mockup. It draws only on the background and sprites layers, so the dialog box on the ui layer always stays on top and readable. The backgrounds are Figma's level backgrounds, exported at 4x so they stay sharp when the stage scales up.
 
 **How it's used**\
-**`sceneryForScript`** gives the scenery for a scene in `content/dialogueScripts`: the intro shows the mountaineer and the friend on Level 1's mountains, and "how crossing works" shows the mountaineer. A scene with no scenery of its own gets the mountains alone. **`levelDoneScenery`** takes the same numbers as `levelDoneLines`: with every point, the mountaineer celebrates in front of the next level's background, and otherwise stands in front of the level they may restart. The screen factory passes the result to DialogueController, which draws a **`DialogueScenery`** when the scene starts and **`destroy`**s it with the box.
+**`sceneryForScript`** gives the scenery for a scene in `content/dialogueScripts`: the intro shows the mountaineer and the friend on Level 1's mountains, and "how crossing works" shows the mountaineer. The reunion (#204) is a close-up: its `closeUp` area stretches the middle of Level 3's glacier over the whole stage, and the mountaineer celebrates at 2x, drawn from a 4x export so it stays sharp. Its `celebrate` flag adds a [ReunionCelebration](#reunioncelebration) in front. A scene with no scenery of its own gets the mountains alone. **`levelDoneScenery`** takes the same numbers as `levelDoneLines`: with every point, the mountaineer celebrates in front of the next level's background, and otherwise stands in front of the level they may restart. The screen factory passes the result to DialogueController, which draws a **`DialogueScenery`** when the scene starts and **`destroy`**s it with the box, which also stops any celebration.
+
+### ReunionCelebration
+
+**Purpose**\
+The moving part of the reunion at the end of the game (#204), like the "Reunion option 4: Close-up with hearts" mockup. The friend hops for joy beside the mountaineer, two pixel hearts float up and fade between them, and confetti in the theme's orange, teal, purple and gold falls until the player presses Continue. Small confetti falls slowly behind the characters and large confetti falls faster in front, so the close-up has some depth.
+
+**How it's used**\
+DialogueScenery makes one on the sprites layer when a scene's scenery has `celebrate: true`, and **`destroy`** stops it and removes everything it drew. Everything moves in one `Konva.Animation`, and each frame places every shape from the elapsed time with **`hopHeight`**, **`heartProgress`** and **`fallenY`**, which are exported so tests can check positions at any moment. The hearts are drawn from a small pixel map in the code, so they need no image file.
 
 ### MedalScreen
 
