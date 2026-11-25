@@ -272,7 +272,8 @@ describe('controller/GameFlow', () => {
     );
 
     expect(() => flow.run()).toThrow('Original screen failure');
-    expect(progress.toJSON()).toEqual(original);
+    // Only the opening scene's look-ahead topic (#226) is set; the other seed's checkpoint isn't applied.
+    expect(progress.toJSON()).toEqual({ ...original, topic: TOPIC });
     expect(attempts).toBe(1);
   });
 
@@ -794,6 +795,33 @@ describe('controller/GameFlow Hud level at the shops (#196)', () => {
     const before = { level: progress.level, topic: progress.topic };
     play(ZIPLINE_SCRIPT, ZIPLINE);
     expect(hudPlace()).toEqual(before);
+  });
+});
+
+// Issue #226: a new game starts with no topic, so the opening scenes look ahead to the
+// first chasm and the Hud never shows "Topic:" with nothing after it.
+describe('controller/GameFlow Hud topic in the opening scenes (#226)', () => {
+  it('shows Level 1 with the 2D topic on a new game’s first Hud update', () => {
+    expect(progress.topic).toBe('');
+    play();
+    expect(last().request).toEqual({ kind: 'dialogue', script: 'intro' });
+    expect(hud.update).toHaveBeenCalledTimes(1);
+    expect(hudPlace()).toEqual({ level: 1, topic: TOPIC });
+  });
+
+  it('never gives the Hud a blank topic from the intro to the first chasm', () => {
+    play();
+    while (last().request.kind !== 'chasm') {
+      if (last().request.kind === 'shopOffer') pickOffer(DECLINE);
+      else done();
+    }
+    expect(hud.update.mock.calls.map(([shown]) => shown.topic)).not.toContain('');
+  });
+
+  it('keeps the current place in a scene with no chasm after it', () => {
+    const script: Step[] = [{ kind: 'dialogue', script: 'reunion' }, { kind: 'medal' }];
+    play(script);
+    expect(hudPlace()).toEqual({ level: 1, topic: '' });
   });
 });
 
