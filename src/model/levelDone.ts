@@ -10,10 +10,17 @@ import type { DialogueLine } from './Dialogue';
  * and choice 1 moves on.
  */
 export function levelDoneLines(level: number, points: number, possiblePoints: number): DialogueLine[] {
+  // Calculate percentage from this level's points only.
+  const percentage = possiblePoints > 0
+    ? Math.round((points / possiblePoints) * 100)
+    : 0;
+
   const scene = earnedAllPoints(points, possiblePoints) ? dialogueScripts.levelDoneAllPoints : dialogueScripts.levelDoneUnder100;
   return scene.map((line) => ({
     ...line,
-    text: fillLevel(line.text, level),
+    text: line.text.includes('{percent}')
+        ? fillLevel(line.text, level).replaceAll('{percent}', String(percentage))
+        : `${fillLevel(line.text, level)} (${percentage}%)`,
     choices: line.choices.map((choice) => fillLevel(choice, level)),
   }));
 }
