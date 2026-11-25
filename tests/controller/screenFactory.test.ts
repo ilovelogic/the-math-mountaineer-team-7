@@ -105,7 +105,7 @@ describe('createScreenFactory', () => {
     const drawn = startAndRead(makeScreen({ kind: 'levelDone', level: 1, points: 40, possiblePoints: 50 }));
     expect(drawn).toEqual(
       expect.arrayContaining([
-        'Do you want to restart Level 1 so you can get closer to earning your desired medal? (80%)',
+        'You earned 80% of the points on Level 1. Do you want to restart it so you can get closer to earning your desired medal?',
         'Begin level 1 again',
         'Continue on to next level',
       ]),

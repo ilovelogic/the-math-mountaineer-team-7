@@ -46,7 +46,7 @@ export const dialogueScripts = {
     levelDoneUnder100: [
         {
           speaker: "Narrator",
-          text: "Do you want to restart Level {level} so you can get closer to earning your desired medal?",
+          text: "You earned {percent}% of the points on Level {level}. Do you want to restart it so you can get closer to earning your desired medal?",
           choices: ["Begin level {level} again", "Continue on to next level"]
         }
     ],

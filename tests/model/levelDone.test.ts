@@ -22,7 +22,7 @@ describe('levelDoneLines', () => {
     expect(levelDoneLines(1, 40, 50)).toEqual([
       {
         speaker: 'Narrator',
-        text: 'Do you want to restart Level 1 so you can get closer to earning your desired medal? (80%)',
+        text: 'You earned 80% of the points on Level 1. Do you want to restart it so you can get closer to earning your desired medal?',
         choices: ['Begin level 1 again', 'Continue on to next level'],
       },
     ]);
@@ -62,11 +62,11 @@ describe('levelDoneLines', () => {
   });
 
   it('rounds the percentage for a partial level', () => {
-    expect(levelDoneLines(2, 20, 30)[0].text).toContain('(67%)');
+    expect(levelDoneLines(2, 20, 30)[0].text).toContain('You earned 67% of the points on Level 2.');
   });
 
   it('shows 0% when no points are earned', () => {
-    expect(levelDoneLines(3, 0, 50)[0].text).toContain('(0%)');
+    expect(levelDoneLines(3, 0, 50)[0].text).toContain('You earned 0% of the points on Level 3.');
   });
 
   it('handles zero possible points without dividing by zero', () => {
