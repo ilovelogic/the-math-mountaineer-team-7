@@ -62,7 +62,7 @@ export const dialogueScripts = {
     results: [
       {
         speaker: "Narrator",
-        text: "Here is how you did. Use it to see what to practice next.",
+        text: "Here is how you did this time. Use the feedback to know what to work extra hard on when you play again.",
         choices: ["Play again"],
       },
     ],
