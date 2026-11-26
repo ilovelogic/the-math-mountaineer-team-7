@@ -10,7 +10,7 @@ We present a fun and educational game for all those 8th graders out there! Stude
 
 - [Where the Project Stands](#where-the-project-stands)
 - [Getting Started](#getting-started)
-- [Features So Far](#features-so-far)
+- [Features](#features)
 - [Architecture Overview](#architecture-overview)
 - [Project Structure](#project-structure)
 - [Design Docs](#design-docs)
@@ -20,14 +20,13 @@ We present a fun and educational game for all those 8th graders out there! Stude
 
 ## Where the Project Stands
 
-*Up-to-date as of November 16, 2026, the end of Sprint 2*
+*Up-to-date as of November 25, 2026, the end of Sprint 3, when the game was finished*
 
-In Sprint 1, we built and tested the core game: the chasm problems and screen, the points and medals, the player's progress and its saving, the Hud, the dialogue, and GameFlow, which plays the game's steps in order with a controller for each screen. In Sprint 2, we made it a game that teaches. It opens on a title screen with New game and Continue, shows a loading screen when files are slow, and offers a hint at every chasm. After a pick, the chasm shows what happened to the log and the mountaineer, and after a wrong one, the player crosses with the right log and can first see how to find it, worked out with that chasm's numbers. Level 2 opens at the clothing shop, whose zipline challenge brings in the Pythagorean theorem in 3D for 50 bonus points, and the game keeps the score of every attempt at each level and the level and topic of every answer. Right after the intro and the scene on how crossing works, the supply shop offers a math duel, a race against the store owner, and winning it skips Level 1. `npm run dev` plays all of it, from the title to the medal, and the game is online at the link above.
+In Sprint 1, we built and tested the core game: the chasm problems and screen, the points and medals, the player's progress and its saving, the Hud, the dialogue, and GameFlow, which plays the game's steps in order with a controller for each screen.
 
-What this means for our team:
-   - **Model, view, and content code can be built and tested on its own.** (Nothing in those folders needs the game to be running.)
-   - **To see a screen you're working on**, play the game with `npm run dev`. To jump straight to it, change the step `flow.run()` starts from in `main.ts` on your own branch, and leave that change out of your PR.
-   - **To find something to pick up**, the [task dependencies](https://www.figma.com/design/gtavIfNmnKuW2m81SbVA6L?node-id=179-425) show what's finished, what's due before the next standup and what's due by the end of the sprint, with one page per sprint, and the [project board](https://github.com/users/ilovelogic/projects/4) has every task.
+In Sprint 2, we made it a game that teaches. It opens on a title screen with New game and Continue, shows a loading screen when files are slow, and offers a hint at every chasm. After a pick, the game plays that outcome's sound and the chasm shows what happened to the log and the mountaineer, and after a wrong one, the player crosses with the right log and can first see how to find it, worked out with that chasm's numbers. Level 2 opens at the clothing shop, whose zipline challenge brings in the Pythagorean theorem in 3D for 50 bonus points. The game keeps the score of every attempt at each level and the level and topic of every answer, and from those answers it picks the topic most worth reviewing. After the intro, the supply shop offers a math duel, a race against the store owner, and winning it skips Level 1 and earns its 30 points.
+
+In Sprint 3, we finished the game. The scene on how crossing works moved ahead of the supply shop, so a player who wins the duel and skips Level 1 still learns how to cross, and each level went from five chasms to three. Each chasm now has one of the friend's items waiting on its far side, each medal has its own sound, and the Level done message shows the percentage of the level's points the player earned. The game ends with the reunion, where the friend hops and confetti falls, then the medal, and See Results opens a results page with each level's score and the topic and level most worth reviewing. Play again starts a new game. `npm run dev` plays all of it, from the title to the results, and the game is online at the link above.
 
 ---
 
@@ -62,28 +61,29 @@ These are the same two checks CI runs on every pull request, so if both pass on 
 
 ---
 
-## Features So Far
+## Features
 
 These are grouped by what they're for. Each links to its section in the folder docs, which share greater detail.
 
 1. **The canvas and the look of the game**:
    - [stage](src/view/README.md#stage): The game draws in a fixed 960 × 540 space, and the stage scales it to the largest 16:9 box that fits the browser window, with tests across many window sizes.
-   - [theme](src/view/README.md#theme): Every color from the Figma mockups, and the text styles we use so far, kept in one place in the code.
+   - [theme](src/view/README.md#theme): Every color from the Figma mockups, and the game's text styles, kept in one place in the code.
    - [fonts and assets](src/view/README.md#fonts-and-assets): The Inter font and the game's images and sounds ship with the game and load once, before anything is drawn. A file that fails is swapped for a placeholder instead of stopping the game.
    - [loadingScreen](src/view/README.md#loadingscreen) and [Loading](src/controller/README.md#loading): A loading screen with a progress bar, shown only when loading takes longer than a second.
    - [Shared components](src/view/README.md#shared-components): The button, log button, top bar, dialog box and right triangle from the mockups, for every screen to reuse.
 
 2. **Crossing a chasm**:
    - [problems](src/model/README.md#problems): Generates the details of each chasm. Each chasm is a whole-number right triangle (like 5-12-13) with three logs, one of which fits. Chasms come from the game's seed, so a saved game rebuilds the same ones.
-   - [ChasmScreen](src/view/README.md#chasmscreen): Draws the cliffs, the triangle with its side lengths, the mountaineer, the log pile, and a clickable button for each log, and then shows what happened after a pick: the log across the gap, falling in, or reaching past the far edge.
+   - [ChasmScreen](src/view/README.md#chasmscreen): Draws the cliffs, the triangle with its side lengths, the mountaineer, the log pile, and a clickable button for each log, with one of the friend's items on the far side, and then shows what happened after a pick: the log across the gap, falling in, or reaching past the far edge.
+   - [friendItems](src/content/README.md#frienditems): The items the friend left on the trail, one per chasm, with a theme for each level: candy, then foreign coins, then jewelry.
    - [ChasmController](src/controller/README.md#the-screen-controllers): Takes the first pick, and after a wrong one lets the player cross with the right log, first seeing how to find it if they choose.
    - [ChasmSolutionScreen](src/view/README.md#chasmsolutionscreen): The "How to find the right log" page, with the chasm's triangle and the worked steps from [problems](src/model/README.md#problems).
    - [The hint](src/controller/README.md#the-hint): A Hint button that shows the formula, without ever changing the points.
-   - [rules](src/model/README.md#rules): Ensures only the log that fits earns the corresponding 10 points, gives the zipline's 50, and counts right picks by topic.
-   - [audio](src/view/README.md#audio): A sound for each outcome, ready to play, though the game doesn't play them yet.
+   - [rules](src/model/README.md#rules): Ensures only the log that fits earns the corresponding 10 points, gives the zipline's 50 and a skipped Level 1's 30, and finds the topic and level most worth reviewing.
+   - [audio](src/view/README.md#audio): Plays a sound for each pick's outcome, for Level done, and for each medal.
 
 3. **Story and progress**:
-   - [dialogueScripts](src/content/README.md#dialoguescripts): The intro, the "how crossing works" scene, the reunion with the friend, and the two Level done messages.
+   - [dialogueScripts](src/content/README.md#dialoguescripts): The intro, the "how crossing works" scene, the reunion with the friend, the two Level done messages, and the results page's message.
    - [Dialogue](src/model/README.md#dialogue): Tracks which dialogue box is showing, one box per click, and ignores fast double clicks.
    - [DialogueBox](src/view/README.md#dialoguebox): Shows each dialogue line in the shared dialog box, with a Continue button or the line's own choices.
    - [DialogueScenery](src/view/README.md#dialoguescenery): Draws each dialogue scene's background and characters behind the dialog box, like the mockups, with the next level's background after a level with every point.
@@ -94,29 +94,35 @@ These are grouped by what they're for. Each links to its section in the folder d
    - [Hud](src/view/README.md#hud): The top bar with topic, level and points, a "Level 1 of 3 · Chasm 2 of 3" line, and a "+10 points" tag after a correct pick.
 
 4. **The end of a level, and of the game**:
-   - [levelDone](src/model/README.md#leveldone): Picks the Level done message from the points earned on that level, either congratulations or an offer to restart it, and fills in the level number.
+   - [levelDone](src/model/README.md#leveldone): Picks the Level done message from the points earned on that level, either congratulations or an offer to restart it, and fills in the level number and the percentage of the level's points earned.
    - [medals](src/model/README.md#medals): Turns the final points into a diamond, gold, silver or bronze medal (or none), using the limits in settings.
    - [MedalScreen](src/view/README.md#medalscreen): Draws the medal the player earned, the medal requirements, and a See Results button.
+   - [ResultsScreen](src/view/ResultsScreen.ts): The results page that See Results opens, with each level's score (or that it was skipped), the topic and level most worth reviewing, and a Play again button that starts a new game.
 
 5. **The shops**:
    - [ShopOfferScreen](src/view/README.md#shopofferscreen): A shop asks whether the player wants to come in, and declining skips its mini-game.
    - [zipline](src/model/README.md#zipline), [ZiplineScreen](src/view/README.md#ziplinescreen) and [ZiplineShopController](src/controller/README.md#the-screen-controllers): The clothing shop's challenge, finding a store's space diagonal from three guesses, with a tutorial and a worked solution, for 50 bonus points.
-   - [DuelScreen](src/view/README.md#duelscreen) and [DuelShopController](src/controller/README.md#the-screen-controllers): The supply shop's math duel, a race against the store owner's timer, with a tutorial and a worked solution. Winning it skips Level 1.
+   - [DuelScreen](src/view/README.md#duelscreen) and [DuelShopController](src/controller/README.md#the-screen-controllers): The supply shop's math duel, a race against the store owner's timer, with a tutorial and a worked solution. Winning it skips Level 1 and gives its 30 points.
 
 6. **Running the game**:
-   - [GameFlow](src/controller/README.md#gameflow): Plays every step in order, one screen at a time, and decides what happens after each one, including scoring a pick, restarting a level, and saving a checkpoint.
-   - [The screen controllers](src/controller/README.md#the-screen-controllers): One controller for each kind of screen (chasm, dialogue, medal, shop offer, zipline, duel and title), each running it for GameFlow.
+   - [GameFlow](src/controller/README.md#gameflow): Plays every step in order, one screen at a time, and decides what happens after each one, including scoring a pick, restarting a level, saving a checkpoint, and starting a new game from Play again.
+   - [The screen controllers](src/controller/README.md#the-screen-controllers): One controller for each kind of screen (chasm, dialogue, medal and results, shop offer, zipline, duel and title), each running it for GameFlow.
    - [The screen factory](src/controller/README.md#the-screen-factory): Builds the right screen for each step GameFlow plays.
    - [Starting the game](src/controller/README.md#starting-the-game): Shows the title screen and starts a new game or the saved one.
 
-**Next up, in Sprint 3**: the skip-level rule (#58), the easier round after struggling (#88), the results at the end (#78, #81), playing the sounds in the game, and giving the three solution pages one shared look (#183).
+**Ideas for later**: These are on the board but weren't built.
+   - Load the backgrounds as images exported from Figma, so the medal and results screens stop drawing their own mountains (#138).
+   - Give the three solution pages one shared look for their squared paper and worked steps (#183).
+   - Let the player replay a level (#90).
+   - Label the medal with its name, since some medal colors are hard to tell apart (#215).
+   - Move the Continue button closer to the log choices, which sit on the other side of the screen (#214).
 
 ---
 
 ## Architecture Overview
 
 <img src="docs/images/module-view.png" width="900" />\
-*The module view showing which modules exist and what each one may use. Every module is built as of the end of Sprint 2; a faded box would mean one that isn't built yet. View the live version in [Figma](https://www.figma.com/board/UqaCm5s3LuddFWG7xfzhlS).*
+*The module view showing which modules exist and what each one may use, as of the end of Sprint 2. Sprint 3 added ResultsScreen, DialogueScenery and ReunionCelebration to `view/` and friendItems to `content/`, which this picture doesn't show yet. View the live version in [Figma](https://www.figma.com/board/UqaCm5s3LuddFWG7xfzhlS).*
 
 We follow MVC, with a fourth folder for data. Each of these is a folder in `src/` and offers its own README:
 
@@ -162,7 +168,7 @@ Each link here answers one question. The images in our docs are exported from th
    - [Mockups](https://www.figma.com/design/fsqgQpE8683nCpVlTI6OZd): What should each screen look like? The Resources page has the shared components, colors and text styles.
    - [Module view](https://www.figma.com/board/UqaCm5s3LuddFWG7xfzhlS) and its [supplementary board](https://www.figma.com/board/aRndxZrbIowLRfEmkPv8Fk): Which modules exist, what may each one use, and who owns it?
    - [Runtime (C&C) view](https://www.figma.com/design/LLtfHewfTMLycUXFUVuyEH): What happens, step by step, while the game runs?
-   - [Task dependencies](https://www.figma.com/design/gtavIfNmnKuW2m81SbVA6L?node-id=179-425): What's finished, what's due next, and what can I start now? There's one page per sprint, and this link opens Sprint 2.
+   - [Task dependencies](https://www.figma.com/design/gtavIfNmnKuW2m81SbVA6L?node-id=179-425): What's finished, what's due next, and what can I start now? There's one page per sprint.
    - [Project board](https://github.com/users/ilovelogic/projects/4): Every task, with its owner, sprint and status.
 
 In the diagrams, faded boxes and anything marked "Not built yet" are planned and not missing.
