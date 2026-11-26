@@ -219,7 +219,7 @@ Draws the zipline challenge at the clothing shop one page at a time, like the "M
    - **Tutorial and solution**: The same drawing on squared paper, with words on the tutorial and numbers on the solution.
    - **Right**: The zip line installed, running from the office down to the exit.
    - **Wrong**: The store owner up close.
-   - **Onward**: The trail outside the shop, with the player in the new outfit (`onwardDressed`) or in the usual clothes (`onwardPacked`), depending on the button picked on the right-answer page.
+   - **Onward**: The trail outside the shop, with the player in the disco outfit (`onwardDressed`) or in the usual clothes (`onwardPacked`), depending on the button picked on the right-answer page.
 
 The store is drawn by **`createZiplineDiagram`** in `view/ZiplineDiagram.ts`, at a fixed size whatever its numbers, so a player can't measure the drawing to find the answer.
 
