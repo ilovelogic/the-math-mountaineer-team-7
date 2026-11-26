@@ -88,7 +88,7 @@ export class ZiplineScreen {
       case 'onwardDressed':
       case 'onwardPacked':
         this.scene.add(new Konva.Image({ image: image('shopClothingOutside'), width: STAGE_WIDTH, height: STAGE_HEIGHT }));
-        this.figures.add(new Konva.Image({ image: image(page === 'onwardDressed' ? 'playerNewOutfit' : 'player'), ...OUTSIDE_PLAYER }));
+        this.figures.add(new Konva.Image({ image: image(page === 'onwardDressed' ? 'playerDiscoOutfit' : 'player'), ...OUTSIDE_PLAYER }));
         break;
     }
   }

@@ -64,8 +64,11 @@ export const ziplineText: Record<ZiplinePage, ZiplinePageText> = {
       'triangle with the floor diagonal and the {height}\u00a0m height, so x² = {floor} + {height}² = {squared}, and x = √{squared} = {diagonal}\u00a0m.',
     choices: ['Now continue along the trail'],
   },
+  // The outfit isn't worn after the shop, so this page tells the player why it comes off (#232).
   onwardDressed: {
-    text: 'And the adventure continues!',
+    text:
+      'Wow, you look so fashionable in that disco outfit! It’s a little itchy, though, so you pack it ' +
+      'in your backpack to save for parties. Now the adventure continues!',
     choices: ['Hike to the next chasm'],
   },
   onwardPacked: {

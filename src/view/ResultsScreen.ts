@@ -103,7 +103,7 @@ export function drawResultsScreen(
     
     // Worth reviewing at the bottom
     const reviewText = data.worthReviewing
-        ? `Worth reviewing: Level ${data.worthReviewing.level} — ${data.worthReviewing.topic}`
+        ? `Worth reviewing: ${data.worthReviewing.topic} (Level ${data.worthReviewing.level})`
         : 'Nothing to review: every pick was right!';
     
     panel.add(
